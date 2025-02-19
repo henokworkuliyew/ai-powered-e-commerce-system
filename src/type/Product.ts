@@ -1,9 +1,16 @@
 export type Product = {
-  id: number
+  id: string
   name: string
-  price: number
   description: string
-  image: string
+  price: number
+  brand: string
   category: string
-  rating: number
+  inStock: boolean
+  rating:number
+  images: {
+    color: string
+    colorCode: string
+    image: string
+  }[]
+  reviews: string[] 
 }

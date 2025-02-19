@@ -1,104 +1,261 @@
-import { Product } from "@/type/Product";
-
-export const  products:Product[] = [
+export const products = [
   {
-    id: 1,
+    id: '1',
     name: 'Wireless Bluetooth Earbuds',
-    price: 49.99,
     description:
       'High-quality wireless earbuds with noise cancellation and 12-hour battery life.',
-    image: 'https://example.com/images/earbuds.jpg',
+    price: 49.99,
+    brand: 'SoundPro',
     category: 'Electronics',
-    rating: 4.5,
+    inStock: true,
+    rating: 4,
+    images: [
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+      },
+      {
+        color: 'White',
+        colorCode: '#FFFFFF',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 2,
+    id: '2',
     name: 'Smartwatch Fitness Tracker',
-    price: 89.99,
     description:
       'Track your heart rate, steps, and sleep with this advanced smartwatch.',
-    image: 'https://example.com/images/smartwatch.jpg',
+    price: 89.99,
+    brand: 'FitTech',
     category: 'Wearables',
-    rating: 4.2,
+    inStock: true,
+    rating: 4,
+    images: [
+      {
+        color: 'Midnight Blue',
+        colorCode: '#191970',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 3,
+    id: '3',
     name: '4K Ultra HD Smart TV',
-    price: 499.99,
     description:
       '55-inch 4K Ultra HD Smart TV with HDR and built-in streaming apps.',
-    image: 'https://example.com/images/smart-tv.jpg',
+    price: 499.99,
+    brand: 'VisionPlus',
     category: 'Home Entertainment',
-    rating: 4.8,
+    inStock: true,
+    rating: 4,
+    images: [
+      {
+        color: 'Silver',
+        colorCode: '#C0C0C0',
+        image: 'https://images.unsplash.com/photo-1461151304267-38535e780c79',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image: 'https://images.unsplash.com/photo-1461151304267-38535e780c79',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 4,
-    name: 'Gaming Laptop',
-    price: 1299.99,
-    description:
-      'Powerful gaming laptop with RTX 3060 GPU, 16GB RAM, and 1TB SSD.',
-    image: 'https://example.com/images/gaming-laptop.jpg',
-    category: 'Computers',
-    rating: 4.7,
-  },
-  {
-    id: 5,
+    id: '5',
     name: 'Noise-Cancelling Headphones',
-    price: 199.99,
     description:
       'Premium over-ear headphones with active noise cancellation and 30-hour battery life.',
-    image: 'https://example.com/images/headphones.jpg',
+    price: 199.99,
+    brand: 'AudioMaster',
     category: 'Audio',
-    rating: 4.6,
+    inStock: true,
+    rating: 4,
+    images: [
+      {
+        color: 'Space Gray',
+        colorCode: '#A9A9A9',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 6,
-    name: 'Wireless Mechanical Keyboard',
-    price: 79.99,
-    description:
-      'Compact wireless mechanical keyboard with RGB lighting and long battery life.',
-    image: 'https://example.com/images/keyboard.jpg',
-    category: 'Accessories',
-    rating: 4.4,
-  },
-  {
-    id: 7,
+    id: '7',
     name: 'Portable Bluetooth Speaker',
-    price: 59.99,
     description:
       'Waterproof Bluetooth speaker with 20-hour playtime and deep bass.',
-    image: 'https://example.com/images/speaker.jpg',
+    price: 59.99,
+    brand: 'BassBoom',
     category: 'Audio',
-    rating: 4.3,
+    inStock: true,
+    rating: 4,
+    images: [
+      {
+        color: 'Red',
+        colorCode: '#FF0000',
+        image:
+          'https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg',
+      },
+      {
+        color: 'Blue',
+        colorCode: '#0000FF',
+        image:
+          'https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image:
+          'https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 8,
+    id: '8',
     name: 'Smart Home Security Camera',
-    price: 129.99,
     description:
       '1080p HD security camera with motion detection and night vision.',
-    image: 'https://example.com/images/security-camera.jpg',
+    price: 129.99,
+    brand: 'SafeHome',
     category: 'Smart Home',
-    rating: 4.5,
+    inStock: true,
+    rating: 3,
+    images: [
+      {
+        color: 'White',
+        colorCode: '#FFFFFF',
+        image:
+          'https://images.pexels.com/photos/3568518/pexels-photo-3568518.jpeg',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image:
+          'https://images.pexels.com/photos/3568518/pexels-photo-3568518.jpeg',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 9,
+    id: '9',
     name: 'Electric Standing Desk',
-    price: 299.99,
     description:
       'Adjustable height electric standing desk for home or office use.',
-    image: 'https://example.com/images/standing-desk.jpg',
+    price: 299.99,
+    brand: 'ErgoWorks',
     category: 'Furniture',
-    rating: 4.6,
+    inStock: true,
+    rating: 3,
+    images: [
+      {
+        color: 'Walnut',
+        colorCode: '#5D3A1A',
+        image:
+          'https://images.pexels.com/photos/4352247/pexels-photo-4352247.jpeg',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image:
+          'https://images.pexels.com/photos/4352247/pexels-photo-4352247.jpeg',
+      },
+    ],
+    reviews: [],
   },
   {
-    id: 10,
+    id: '10',
     name: 'Wireless Charging Pad',
-    price: 29.99,
     description:
       'Fast wireless charging pad compatible with all Qi-enabled devices.',
-    image: 'https://example.com/images/wireless-charger.jpg',
+    price: 29.99,
+    brand: 'ChargeIt',
     category: 'Accessories',
-    rating: 4.1,
+    inStock: true,
+    rating: 3,
+    images: [
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image:
+          'https://images.pexels.com/photos/341523/pexels-photo-341523.jpeg',
+      },
+      {
+        color: 'White',
+        colorCode: '#FFFFFF',
+        image:
+          'https://images.pexels.com/photos/341523/pexels-photo-341523.jpeg',
+      },
+    ],
+    reviews: [],
+  },
+  {
+    id: '12',
+    name: 'Gaming Mouse',
+    description: 'High-precision gaming mouse with customizable RGB lighting.',
+    price: 49.99,
+    brand: 'GameGear',
+    category: 'Accessories',
+    inStock: true,
+    rating: 5,
+    images: [
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image:
+          'https://images.pexels.com/photos/2115257/pexels-photo-2115257.jpeg',
+      },
+      {
+        color: 'Red',
+        colorCode: '#FF0000',
+        image:
+          'https://images.pexels.com/photos/2115257/pexels-photo-2115257.jpeg',
+      },
+    ],
+    reviews: [],
+  },
+  {
+    id: '13',
+    name: 'External SSD',
+    description:
+      '1TB external SSD with fast data transfer speeds and compact design.',
+    price: 99.99,
+    brand: 'FastDrive',
+    category: 'Storage',
+    inStock: true,
+    rating: 3,
+    images: [
+      {
+        color: 'Silver',
+        colorCode: '#C0C0C0',
+        image:
+          'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg',
+      },
+      {
+        color: 'Black',
+        colorCode: '#000000',
+        image:
+          'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg',
+      },
+    ],
+    reviews: [],
   },
 ]
+
+export default products
