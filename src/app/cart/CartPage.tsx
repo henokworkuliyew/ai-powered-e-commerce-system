@@ -7,9 +7,10 @@ import { ShoppingCart, X, ArrowLeft, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
+import Button from '@/components/Button'
 
 function Cart() {
-  const { cartProducts, handleRemoveProductFromCart, handleUpdateQuantity } =
+  const { cartProducts, handleRemoveProductFromCart, handleUpdateQuantity ,clearCart} =
     useCart()
   const [isClient, setIsClient] = useState(false)
   const router = useRouter()
@@ -121,6 +122,14 @@ function Cart() {
               ))}
             </tbody>
           </table>
+          <div className='max-w-52 p-10'>
+            <Button
+              label="
+            Clear Cart"
+              onClick={() => {clearCart()}}
+              size="small"
+            />
+          </div>
         </div>
       </div>
 
@@ -145,10 +154,18 @@ function Cart() {
             <span>Total:</span> <span>${total.toFixed(2)}</span>
           </p>
         </div>
-        <button className="w-full mt-4 py-2 bg-orange-500 text-white rounded">
-          Proceed to Checkout
-        </button>
-        <Link href="/" className="block text-center mt-2 py-2 border rounded">
+        <div className="max-w-[400px] flex flex-row gap-6 mt-5">
+          <Button
+            label="Proceed to Checkout"
+            onClick={() => router.push('/cart/checkout')}
+            outline
+          />
+        </div>
+        <Link
+          href="/"
+          className="text-blue-500 hover:underline mt-4 inline-flex items-center"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
           Continue Shopping
         </Link>
       </div>
