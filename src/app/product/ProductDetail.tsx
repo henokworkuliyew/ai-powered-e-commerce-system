@@ -1,6 +1,6 @@
 'use client'
-
-import React, { useCallback ,useState} from 'react'
+import { MdCheckCircle } from 'react-icons/md'
+import React, { useCallback ,useEffect,useState} from 'react'
 import { Product } from '@/type/Product'
 import ProductImage from '@/components/ProductCard/ProductImage'
 import { Rating } from '@mui/material'
@@ -8,12 +8,14 @@ import Button from '@/components/Button'
 import { CartProduct, SelectedImg } from '@/type/CartProduct'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
 import { useCart } from '@/hooks/useCart'
- 
+import { toast } from 'react-toastify'
+import { useRouter } from 'next/navigation'
 interface ProductDetailsProps {
   product: Product
 }
 
 const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
+  const router = useRouter()
     const [cartProduct, setCartProduct] = useState<CartProduct>({
       id: product.id,
       name: product.name,
@@ -21,7 +23,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
       brand: product.brand,
       category: product.category,
       selectedImg: { ...product.images[0] },
-      qty: 2,
+      qty:1 ,
       price: product.price,
     })
 const handleColorSelect = useCallback(
@@ -31,7 +33,8 @@ const handleColorSelect = useCallback(
   [cartProduct.selectedImg]
 )
 const { handleAddProductToCart,cartProducts } = useCart()
-console.log('Tis is how add to cart',cartProducts)
+const [isProductInCart,setProductIncart] = useState(false)
+console.log('Cart product:',cartProduct)
 const handleQtyIncrease = useCallback(() => {
   if (cartProduct.qty === 50) {
     return
@@ -54,6 +57,32 @@ const handleQtyDecrease = useCallback(() => {
     }
   })
 }, [cartProduct])
+useEffect(() => {
+  setProductIncart(false)
+  if (cartProducts) {
+    const existItem = cartProducts.find((item) => item.id === product.id)
+    if (existItem) {
+      setProductIncart(true)
+      setCartProduct((prev) => ({
+        ...prev,
+        qty: existItem.qty, 
+      }))
+    }
+  }
+}, [cartProducts, product])
+
+const handleAddToCart = () => {
+  handleAddProductToCart(cartProduct)
+  toast.success('Product added to cart!', {
+    position: 'top-right',
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    icon: <MdCheckCircle className="text-green-500" />,
+  })
+}
 const Horizontal = () => {
   return <hr className="border-t-4  w-1/2 mb-5 mt-2" />
 }
@@ -89,22 +118,40 @@ const Horizontal = () => {
           <div className={product.inStock ? 'text-teal-400' : 'text-red-500'}>
             {product.inStock ? 'In Stock' : 'Out of Stock'}
           </div>
-          {/* <SetColor
+          {isProductInCart ? (
+            <>
+              <p className="flex flex-row gap-2 m-3">
+                <MdCheckCircle size={15} className="text-lime-600" />
+                <span>product added to Cart</span>
+              </p>
+              <div className="max-w-[400px] flex flex-row gap-6">
+                <Button
+                  label="Goto Cart"
+                  onClick={() => router.push('/cart')}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* <SetColor
          images={product.images} // Use the correct array of images
          cartProduct={cartProduct}
          handleColorSelect={handleColorSelect}
        /> */}
-          <Horizontal />
-          <SetQuantity
-            cartProduct={cartProduct}
-            handleQtyDecrease={handleQtyDecrease}
-            handleQtyIncrease={handleQtyIncrease}
-          />
-          <Horizontal />
-          <div className="max-w-[400px] flex flex-row gap-6">
-            <Button label="Add to Cart" onClick={() => handleAddProductToCart(cartProduct)} outline />
-            <Button label="Buy Now" onClick={() => {}} outline />
-          </div>
+              <Horizontal />
+              <SetQuantity
+                cartProduct={cartProduct}
+                handleQtyDecrease={handleQtyDecrease}
+                handleQtyIncrease={handleQtyIncrease}
+              />
+              <Horizontal />
+              <div className="max-w-[400px] flex flex-row gap-6">
+                <Button label="Add to Cart" onClick={handleAddToCart} outline />
+
+                <Button label="Buy Now" onClick={() => {}} outline />
+              </div>
+            </>
+          )}
         </div>
       </div>
       <ul className="list-none p-0">
@@ -130,3 +177,4 @@ const Horizontal = () => {
 }
 
 export default ProductDetail
+ 

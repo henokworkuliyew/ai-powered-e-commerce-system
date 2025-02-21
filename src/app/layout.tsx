@@ -1,8 +1,10 @@
 import './globals.css'
-import Footer from "@/components/footer/Footer"
-import Header from "@/components/header/Header"
+import Footer from '@/components/footer/Footer'
+import Header from '@/components/header/Header'
 import { CartContextProvider } from '@/hooks/useCart'
-import { Metadata } from "next"
+import { Metadata } from 'next'
+import { Toaster } from 'react-hot-toast'
+
 export const metadata: Metadata = {
   title: 'Gulit Gebeya',
   description: 'AI-powered e-commerce web app',
@@ -27,11 +29,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
+        <Toaster
+          toastOptions={{
+            style: {
+              background: 'rgb(51 65 85)',
+              color: '#fff',
+            },
+          }}
+        />
         <Header />
         <main className="flex-grow pt-24">
           <CartContextProvider>{children}</CartContextProvider>
         </main>
         <Footer />
+        
       </body>
     </html>
   )

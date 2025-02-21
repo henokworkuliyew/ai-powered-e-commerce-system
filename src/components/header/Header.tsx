@@ -22,15 +22,10 @@ const Header = () => {
         />
         <button
           className="text-gray-600 "
-          onClick={() => {
-            router.push('/product')
-          }}
         >
           <FaSearch />
         </button>
       </div>
-
-      {/* Cart & User Icons */}
       <div className="flex space-x-4 flex-shrink-0 justify-between">
         <button onClick={() => router.push('/cart')}>
           <FaShoppingCart className="text-xl text-lime-600" />
