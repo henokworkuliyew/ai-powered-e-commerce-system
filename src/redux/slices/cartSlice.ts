@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { CartProduct } from '@/type/CartProduct'
 
-
 const loadCartFromStorage = (): CartProduct[] => {
   if (typeof window === 'undefined') return []
   const storedCart = localStorage.getItem('cart')
