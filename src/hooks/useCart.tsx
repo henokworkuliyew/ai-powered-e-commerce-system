@@ -7,13 +7,18 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { toast } from 'react-hot-toast' 
+import { toast } from 'react-hot-toast'
+import Swal from 'sweetalert2'
+
+
+
 type CartContextType = {
   cartTotalQty: number
   cartProducts: CartProduct[]
   handleAddProductToCart: (product: CartProduct) => void
   handleRemoveProductFromCart: (productId: string) => void
   handleUpdateQuantity: (productId: string, qty: number) => void
+  clearCart: ()=>void
 }
 
 export const CartContext = createContext<CartContextType | null>(null)
@@ -80,6 +85,24 @@ console.log('Stringified:', JSON.stringify(cartProducts))
     
   }, [])
 
+const clearCart = useCallback(() => {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: 'Do you really want to clear the cart?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, clear it!',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      setCartProducts([])
+      toast.success('The whole cart has been cleared.')
+    }
+  })
+}, [])
+
+
 
   return (
     <CartContext.Provider
@@ -89,6 +112,7 @@ console.log('Stringified:', JSON.stringify(cartProducts))
         handleAddProductToCart,
         handleRemoveProductFromCart,
         handleUpdateQuantity,
+        clearCart
       }}
     >
       {children}
