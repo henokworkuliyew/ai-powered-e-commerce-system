@@ -1,10 +1,10 @@
 'use client'
 import { MdCheckCircle } from 'react-icons/md'
-import React, { useCallback ,useEffect,useState} from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Product } from '@/type/Product'
 import ProductImage from '@/components/ProductCard/ProductImage'
 import { Rating } from '@mui/material'
-import Button from '@/components/Button'
+import Button from '@/components/UI/Button'
 import { CartProduct, SelectedImg } from '@/type/CartProduct'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
 import { useCart } from '@/hooks/useCart'
@@ -16,76 +16,76 @@ interface ProductDetailsProps {
 
 const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   const router = useRouter()
-    const [cartProduct, setCartProduct] = useState<CartProduct>({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      brand: product.brand,
-      category: product.category,
-      selectedImg: { ...product.images[0] },
-      qty:1 ,
-      price: product.price,
-    })
-const handleColorSelect = useCallback(
-  (value: SelectedImg) => {
-    setCartProduct((prev: CartProduct) => ({ ...prev, selectedImg: value }))
-  },
-  [cartProduct.selectedImg]
-)
-const { handleAddProductToCart,cartProducts } = useCart()
-const [isProductInCart,setProductIncart] = useState(false)
-console.log('Cart product:',cartProduct)
-const handleQtyIncrease = useCallback(() => {
-  if (cartProduct.qty === 50) {
-    return
-  }
-  setCartProduct((prev) => {
-    return {
-      ...prev,
-      qty: prev.qty + 1,
-    }
+  const [cartProduct, setCartProduct] = useState<CartProduct>({
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    brand: product.brand,
+    category: product.category,
+    selectedImg: { ...product.images[0] },
+    qty: 1,
+    price: product.price,
   })
-}, [cartProduct])
-const handleQtyDecrease = useCallback(() => {
-  if (cartProduct.qty === 1) {
-    return
-  }
-  setCartProduct((prev) => {
-    return {
-      ...prev,
-      qty: prev.qty -1,
+  const handleColorSelect = useCallback(
+    (value: SelectedImg) => {
+      setCartProduct((prev: CartProduct) => ({ ...prev, selectedImg: value }))
+    },
+    [cartProduct.selectedImg]
+  )
+  const { handleAddProductToCart, cartProducts } = useCart()
+  const [isProductInCart, setProductIncart] = useState(false)
+  console.log('Cart product:', cartProduct)
+  const handleQtyIncrease = useCallback(() => {
+    if (cartProduct.qty === 50) {
+      return
     }
-  })
-}, [cartProduct])
-useEffect(() => {
-  setProductIncart(false)
-  if (cartProducts) {
-    const existItem = cartProducts.find((item) => item.id === product.id)
-    if (existItem) {
-      setProductIncart(true)
-      setCartProduct((prev) => ({
+    setCartProduct((prev) => {
+      return {
         ...prev,
-        qty: existItem.qty, 
-      }))
+        qty: prev.qty + 1,
+      }
+    })
+  }, [cartProduct])
+  const handleQtyDecrease = useCallback(() => {
+    if (cartProduct.qty === 1) {
+      return
     }
-  }
-}, [cartProducts, product])
+    setCartProduct((prev) => {
+      return {
+        ...prev,
+        qty: prev.qty - 1,
+      }
+    })
+  }, [cartProduct])
+  useEffect(() => {
+    setProductIncart(false)
+    if (cartProducts) {
+      const existItem = cartProducts.find((item) => item.id === product.id)
+      if (existItem) {
+        setProductIncart(true)
+        setCartProduct((prev) => ({
+          ...prev,
+          qty: existItem.qty,
+        }))
+      }
+    }
+  }, [cartProducts, product])
 
-const handleAddToCart = () => {
-  handleAddProductToCart(cartProduct)
-  toast.success('Product added to cart!', {
-    position: 'top-right',
-    autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    icon: <MdCheckCircle className="text-green-500" />,
-  })
-}
-const Horizontal = () => {
-  return <hr className="border-t-4  w-1/2 mb-5 mt-2" />
-}
+  const handleAddToCart = () => {
+    handleAddProductToCart(cartProduct)
+    toast.success('Product added to cart!', {
+      position: 'top-right',
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      icon: <MdCheckCircle className="text-green-500" />,
+    })
+  }
+  const Horizontal = () => {
+    return <hr className="border-t-4  w-1/2 mb-5 mt-2" />
+  }
   return (
     <div className="flex flex-col mr-5">
       <div className="grid grid-cols-1 md:grid-cols-2 md:w-full gap-10 ">
@@ -177,4 +177,3 @@ const Horizontal = () => {
 }
 
 export default ProductDetail
- 
