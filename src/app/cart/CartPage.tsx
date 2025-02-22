@@ -7,11 +7,15 @@ import { ShoppingCart, X, ArrowLeft, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
-import Button from '@/components/Button'
+import Button from '@/components/UI/Button'
 
 function Cart() {
-  const { cartProducts, handleRemoveProductFromCart, handleUpdateQuantity ,clearCart} =
-    useCart()
+  const {
+    cartProducts,
+    handleRemoveProductFromCart,
+    handleUpdateQuantity,
+    clearCart,
+  } = useCart()
   const [isClient, setIsClient] = useState(false)
   const router = useRouter()
 
@@ -122,11 +126,13 @@ function Cart() {
               ))}
             </tbody>
           </table>
-          <div className='max-w-52 p-10'>
+          <div className="max-w-52 p-10">
             <Button
               label="
             Clear Cart"
-              onClick={() => {clearCart()}}
+              onClick={() => {
+                clearCart()
+              }}
               size="small"
             />
           </div>
@@ -157,7 +163,7 @@ function Cart() {
         <div className="max-w-[400px] flex flex-row gap-6 mt-5">
           <Button
             label="Proceed to Checkout"
-            onClick={() => router.push('/cart/checkout')}
+            onClick={() => router.push('/register')}
             outline
           />
         </div>
