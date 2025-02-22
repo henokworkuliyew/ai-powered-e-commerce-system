@@ -37,12 +37,13 @@ export default function RootLayout({
             },
           }}
         />
+        <CartContextProvider>
         <Header />
         <main className="flex-grow pt-24">
-          <CartContextProvider>{children}</CartContextProvider>
+          {children}
         </main>
         <Footer />
-        
+        </CartContextProvider>
       </body>
     </html>
   )
