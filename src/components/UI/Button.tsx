@@ -1,5 +1,3 @@
-'use client'
-
 import { IconType } from 'react-icons'
 
 interface ButtonProps {
@@ -9,6 +7,7 @@ interface ButtonProps {
   small?: boolean
   custom?: string
   icon?: IconType
+  iconColor?: string
   size?: 'small' | 'medium' | 'large'
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
 }
@@ -21,13 +20,15 @@ const Button: React.FC<ButtonProps> = ({
   custom,
   size,
   icon: Icon,
-  onClick, 
+  iconColor = 'black',
+  onClick,
 }) => {
-   const sizeClasses = {
-     small: 'px-2 py-1 text-sm',
-     medium: 'px-4 py-2 text-base',
-     large: 'px-6 py-3 text-lg',
-   }
+  const sizeClasses = {
+    small: 'px-2 py-1 text-sm',
+    medium: 'px-4 py-2 text-base',
+    large: 'px-6 py-3 text-lg',
+  }
+
   return (
     <button
       onClick={onClick}
@@ -52,7 +53,7 @@ const Button: React.FC<ButtonProps> = ({
         ${size ? sizeClasses[size] : ''}
       `}
     >
-      {Icon && <Icon size={25} />}
+      {Icon && <Icon className="text-xl" style={{ color: iconColor }} />}
       {label}
     </button>
   )
