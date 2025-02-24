@@ -2,9 +2,10 @@
 import Input from '@/components/input/Input'
 import Button from '@/components/UI/Button'
 import Heading from '@/components/UI/Heading'
+import Link from 'next/link'
 import React, { useState } from 'react'
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
-
+import { AiOutlineGoogle } from 'react-icons/ai'
 const Register = () => {
   const [isLoading , setIsLoadig] = useState(false)
   const {register , handleSubmit ,formState:{errors}} = useForm<FieldValues>({
@@ -56,13 +57,25 @@ const Register = () => {
         errors={errors}
         required
       />
-      <div className='mt-5'>
+      <div className="mt-5 mb-5">
         <Button
           label={isLoading ? 'Loading' : 'Sign Up'}
           onClick={handleSubmit(onSubmit)}
           outline
         />
+        <span className="text-sm mt-3 flex flex-row gap-2">
+          Already have an account?{' '}
+          <Link className="underline" href="/login">
+            <Heading text="Login" level={6} gradient />
+          </Link>
+        </span>
       </div>
+      <Button
+        label={isLoading ? 'Loading' : 'Sign Up with Google'}
+        icon={AiOutlineGoogle}
+        iconColor="green"
+        onClick={() => {}}
+      />
     </div>
   )
 }
