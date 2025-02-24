@@ -21,7 +21,7 @@ const Heading: React.FC<HeadingProps> = ({
     3: 'text-3xl md:text-4xl text-center',
     4: 'text-2xl md:text-3xl',
     5: 'text-xl md:text-2xl',
-    6: 'text-lg md:text-xl',
+    6: 'text-sm md:text-sm',
   }
 
   const baseStyles = `font-bold tracking-wide transition-transform transform hover:scale-105 
