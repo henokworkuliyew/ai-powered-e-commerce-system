@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -38,11 +38,9 @@ export default function RootLayout({
           }}
         />
         <CartContextProvider>
-        <Header />
-        <main className="flex-grow pt-24">
-          {children}
-        </main>
-        <Footer />
+          <Header />
+          <main className="flex-grow pt-24">{children}</main>
+          <Footer />
         </CartContextProvider>
       </body>
     </html>
