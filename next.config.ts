@@ -8,7 +8,7 @@ const nextConfig = {
     domains: ['images.unsplash.com', 'images.pexels.com'],
   },
   experimental: {
-    turbo: false,
+    turbo: {},
   },
 }
 
