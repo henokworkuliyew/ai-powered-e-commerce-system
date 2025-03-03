@@ -3,14 +3,19 @@ import Input from '@/components/input/Input'
 import Button from '@/components/UI/Button'
 import Heading from '@/components/UI/Heading'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
 import { AiOutlineGoogle } from 'react-icons/ai'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-const Register = () => {
+import { SafeUser } from '@/type/SafeUser'
+
+interface RegisterProps {
+  currentUser: SafeUser | null  
+}
+const Register:React.FC<RegisterProps> = ({currentUser}) => {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const {
@@ -26,6 +31,14 @@ const Register = () => {
     },
   })
 
+  useEffect(() => {
+    if (currentUser) {  
+      router.push('/cart')
+      router.refresh()
+      console.log('User is already logged in')
+    }
+  }
+  , [])
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     console.log('Submitting data:', data)
     setIsLoading(true)
@@ -108,7 +121,18 @@ const Register = () => {
         label={isLoading ? 'Loading' : 'Sign Up with Google'}
         icon={AiOutlineGoogle}
         iconColor="green"
-        onClick={() => {}}
+        onClick={() => {
+          signIn('google', { redirect: false }).then((callback) => {
+            console.log('Google SignIn Callback:', callback)
+            if (callback?.ok) {
+              router.push('/cart')
+              router.refresh()
+            }
+            if (callback?.error) {
+              toast.error('Google authentication failed!')
+            }
+          })
+        }}
       />
     </div>
   )
