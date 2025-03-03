@@ -1,11 +1,13 @@
 import React from 'react'
 import Login from './Login'
 import WrapForm from '@/components/UI/WrapForm'
+import { getCurrentUser } from '@/action/CurrentUser'
 
-const page = () => {
+const page = async () => {
+  const currentUser = await getCurrentUser()
   return (
     <WrapForm>
-      <Login />
+      <Login currentUser={currentUser} />
     </WrapForm>
   )
 }
