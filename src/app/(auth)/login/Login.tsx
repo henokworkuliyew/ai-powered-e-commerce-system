@@ -2,12 +2,20 @@
 import Input from '@/components/input/Input'
 import Button from '@/components/UI/Button'
 import Heading from '@/components/UI/Heading'
+import { SafeUser } from '@/type/SafeUser'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
 import { AiOutlineGoogle } from 'react-icons/ai'
-
-const Login = () => {
+ 
+interface LoginProps {
+  currentUser: SafeUser | null
+}
+const Login:React.FC<LoginProps> = ({currentUser}) => {
+  const router = useRouter()
   const [isLoading, setIsLoadig] = useState(false)
   const {
     register,
@@ -20,9 +28,30 @@ const Login = () => {
       
     },
   })
+  useEffect(() => {
+    if (currentUser) {
+      router.push('/cart')
+      router.refresh()
+      console.log('User is already logged in')
+    }
+  }, [currentUser])
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoadig(true)
-    console.log(data)
+    signIn('credentials', {
+      ...data,
+      redirect: false,
+    }).then((callback) => {
+      setIsLoadig(false)
+      if (callback?.ok) {
+        router.push('/')
+        router.refresh()
+        toast.success('Login successful')
+      }
+        
+      if (callback?.error) {
+        console.error(callback.error)
+      }
+    })
   }
   return (
     <div>
@@ -61,10 +90,21 @@ const Login = () => {
         </span>
       </div>
       <Button
-        label={isLoading ? 'Loading' : 'Login with Google'}
+        label={isLoading ? 'Loading' : 'Sign Up with Google'}
         icon={AiOutlineGoogle}
         iconColor="green"
-        onClick={() => {}}
+        onClick={() => {
+          signIn('google', { redirect: false }).then((callback) => {
+            console.log('Google SignIn Callback:', callback)
+            if (callback?.ok) {
+              router.push('/cart')
+              router.refresh()
+            }
+            if (callback?.error) {
+              toast.error('Google authentication failed!')
+            }
+          })
+        }}
       />
     </div>
   )
