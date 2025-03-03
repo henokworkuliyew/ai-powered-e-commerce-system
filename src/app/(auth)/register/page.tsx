@@ -1,13 +1,16 @@
 import WrapForm from '@/components/UI/WrapForm'
 import React from 'react'
 import Register from './Register'
+import { getCurrentUser } from '@/action/CurrentUser'
 
-const page = () => {
+const page = async () => {
+  const currentUser = await getCurrentUser()
   return (
-   <WrapForm>
-   <Register/>
-   </WrapForm>
+    <WrapForm>
+      <Register currentUser={currentUser} />
+    </WrapForm>
   )
 }
+
 
 export default page
