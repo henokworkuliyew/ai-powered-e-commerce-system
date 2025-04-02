@@ -4,11 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Product } from '@/type/Product'
 import ProductImage from '@/components/ProductCard/ProductImage'
 import { Rating } from '@mui/material'
-<<<<<<< HEAD
 import Button from '@/components/ui/Button'
-=======
-import Button from '@/components/UI/Button'
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 import { CartProduct, SelectedImg } from '@/type/CartProduct'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
 import { useCart } from '@/hooks/useCart'
