@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+
  const products = [
-=======
-export const products = [
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
   {
     id: '1',
     name: 'Wireless Bluetooth Earbuds',
@@ -11,11 +9,9 @@ export const products = [
     price: 49.99,
     brand: 'SoundPro',
     category: 'Electronics',
-<<<<<<< HEAD
+
     inStock: 'In Stock',
-=======
-    inStock: true,
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
     rating: 4,
     images: [
       {
@@ -39,11 +35,9 @@ export const products = [
     price: 89.99,
     brand: 'FitTech',
     category: 'Wearables',
-<<<<<<< HEAD
+
     inStock: 45,
-=======
-    inStock: true,
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
     rating: 4,
     images: [
       {
@@ -67,11 +61,9 @@ export const products = [
     price: 499.99,
     brand: 'VisionPlus',
     category: 'Home Entertainment',
-<<<<<<< HEAD
+
     inStock: 'Out of Stock',
-=======
-    inStock: true,
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
     rating: 4,
     images: [
       {
@@ -95,11 +87,9 @@ export const products = [
     price: 199.99,
     brand: 'AudioMaster',
     category: 'Audio',
-<<<<<<< HEAD
+
     inStock: 'In Stock',
-=======
-    inStock: true,
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
     rating: 4,
     images: [
       {
@@ -116,7 +106,7 @@ export const products = [
     reviews: [],
   },
   {
-<<<<<<< HEAD
+
     id: '67c1a0ba99e4635f721a8ccb',
     name: 'Portable Bluetooth Speaker',
     description:
@@ -125,16 +115,7 @@ export const products = [
     brand: 'BassBoom',
     category: 'Audio',
     inStock: 'Low Stock',
-=======
-    id: '7',
-    name: 'Portable Bluetooth Speaker',
-    description:
-      'Waterproof Bluetooth speaker with 20-hour playtime and deep bass.',
-    price: 59.99,
-    brand: 'BassBoom',
-    category: 'Audio',
-    inStock: true,
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
     rating: 4,
     images: [
       {
@@ -159,11 +140,9 @@ export const products = [
     reviews: [],
   },
   {
-<<<<<<< HEAD
+
     id: '65d3f2c57f3a2b0012c8a6e5',
-=======
-    id: '8',
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
     name: 'Smart Home Security Camera',
     description:
       '1080p HD security camera with motion detection and night vision.',
@@ -176,22 +155,16 @@ export const products = [
       {
         color: 'White',
         colorCode: '#FFFFFF',
-<<<<<<< HEAD
+
         image: '/product-image/security-camera.png',
-=======
-        image:
-          'https://images.pexels.com/photos/3568518/pexels-photo-3568518.jpeg',
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
       },
       {
         color: 'Black',
         colorCode: '#000000',
-<<<<<<< HEAD
+
         image: '/product-image/security-camera.png',
-=======
-        image:
-          'https://images.pexels.com/photos/3568518/pexels-photo-3568518.jpeg',
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
       },
     ],
     reviews: [],

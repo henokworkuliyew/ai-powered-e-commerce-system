@@ -1,11 +1,9 @@
 'use client'
 import Input from '@/components/input/Input'
-import Button from '@/components/UI/Button'
-<<<<<<< HEAD
+import Button from '@/components/ui/Button'
+
 import Heading from '@/components/ui/Heading'
-=======
-import Heading from '@/components/UI/Heading'
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
@@ -17,15 +15,11 @@ import { useRouter } from 'next/navigation'
 import { SafeUser } from '@/type/SafeUser'
 
 interface RegisterProps {
-<<<<<<< HEAD
+
   currentUser: SafeUser | null
 }
 const Register: React.FC<RegisterProps> = ({ currentUser }) => {
-=======
-  currentUser: SafeUser | null  
-}
-const Register:React.FC<RegisterProps> = ({currentUser}) => {
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const {
@@ -37,29 +31,20 @@ const Register:React.FC<RegisterProps> = ({currentUser}) => {
       name: '',
       email: '',
       password: '',
-<<<<<<< HEAD
-=======
-     
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
     },
   })
 
   useEffect(() => {
-<<<<<<< HEAD
+
     if (currentUser) {
-=======
-    if (currentUser) {  
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
       router.push('/cart')
       router.refresh()
       console.log('User is already logged in')
     }
-<<<<<<< HEAD
+
   }, [])
-=======
-  }
-  , [])
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     console.log('Submitting data:', data)
     setIsLoading(true)
@@ -71,11 +56,8 @@ const Register:React.FC<RegisterProps> = ({currentUser}) => {
         signIn('credentials', {
           email: data.email,
           password: data.password,
-<<<<<<< HEAD
           redirect: false,
-=======
-          redirect: false, 
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
         }).then((callback) => {
           if (callback?.ok) {
             router.push('/cart')
@@ -87,11 +69,9 @@ const Register:React.FC<RegisterProps> = ({currentUser}) => {
           }
         })
       })
-<<<<<<< HEAD
+
       .catch((error) => toast.error('Something went wrong!', error))
-=======
-      .catch((error) => toast.error('Something went wrong!',error))
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
       .finally(() => setIsLoading(false))
   }
 

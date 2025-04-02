@@ -12,11 +12,6 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 const router = useRouter()
-<<<<<<< HEAD
-
-=======
-console.log("product id is:",product.id)
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 return (
   <div
     className="col-span-1 cursor-pointer  rounded-sm p-2 transition hover:scale-110 text-center text-sm"

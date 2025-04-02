@@ -2,11 +2,9 @@ import React from 'react'
 
 export default function Footer() {
   return (
-<<<<<<< HEAD
+
     <footer className="bg-slate-300 text-gray-800 w-full  bottom-0">
-=======
-    <footer className="bg-slate-300 text-gray-800 bottom-0 mt-4">
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
       <div className="container mx-auto px-6 py-10">
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">

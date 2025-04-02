@@ -7,18 +7,15 @@ import { ShoppingCart, X, ArrowLeft, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
-import Button from '@/components/UI/Button'
-<<<<<<< HEAD
+import Button from '@/components/ui/Button'
+
 import { SafeUser } from '@/type/SafeUser'
 
 interface currentUserProps {
   currentUser: SafeUser | null
 }
 const Cart:React.FC<currentUserProps>=(({currentUser})=> {
-=======
 
-function Cart() {
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
   const {
     cartProducts,
     handleRemoveProductFromCart,
@@ -171,7 +168,7 @@ function Cart() {
         </div>
         <div className="max-w-[400px] flex flex-row gap-6 mt-5">
           <Button
-<<<<<<< HEAD
+
             label={currentUser ? 'Checkout' : 'Login to Checkout'}
             onClick={() => {
               if (currentUser) {
@@ -180,10 +177,7 @@ function Cart() {
                 router.push('/login')
               }
             }}
-=======
-            label="Proceed to Checkout"
-            onClick={() => router.push('/register')}
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
             outline
           />
         </div>
@@ -198,9 +192,8 @@ function Cart() {
     </div>
   )
 }
-<<<<<<< HEAD
+
 )
-=======
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
 
 export default Cart
