@@ -19,11 +19,10 @@ type CartContextType = {
   handleRemoveProductFromCart: (productId: string) => void
   handleUpdateQuantity: (productId: string, qty: number) => void
   clearCart: ()=>void
-<<<<<<< HEAD
+
   paymentIntent: string | null
   handlePaymentIntent: (value: string | null) => void
-=======
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
 }
 
 export const CartContext = createContext<CartContextType | null>(null)
@@ -56,7 +55,7 @@ export const CartContextProvider = ({
   if (storedCart !== localStorage.getItem('cart')) {
     localStorage.setItem('cart', storedCart)
   }
-<<<<<<< HEAD
+
   const gulitPaymentIntent = localStorage.getItem('gulitPaymentIntent')
   const paymentIntent: string | null = gulitPaymentIntent
     ? JSON.parse(gulitPaymentIntent)
@@ -67,11 +66,7 @@ export const CartContextProvider = ({
 }, [cartProducts])
 
  const [ paymentIntent , setPaymentIntent ] = useState<string | null>(null)
-=======
-}, [cartProducts])
 
-
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 
   const handleAddProductToCart = useCallback((product: CartProduct) => {
     setCartProducts((prev) => {
@@ -86,12 +81,9 @@ export const CartContextProvider = ({
     })
     toast.success('Product added to cart!')
   }, [])
-<<<<<<< HEAD
 
-=======
-console.log('Cart products:', cartProducts)
-console.log('Stringified:', JSON.stringify(cartProducts))
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
+
 
   const handleRemoveProductFromCart = useCallback((productId: string) => {
     setCartProducts((prev) => prev.filter((p) => p.id !== productId))
@@ -107,14 +99,13 @@ console.log('Stringified:', JSON.stringify(cartProducts))
     
   }, [])
 
-<<<<<<< HEAD
+
   const handlePaymentIntent = useCallback((value: string | null) => {
     setPaymentIntent(value)
     localStorage.setItem('chapaTxRef', JSON.stringify(value)) 
   }, [])
 
-=======
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
 const clearCart = useCallback(() => {
   Swal.fire({
     title: 'Are you sure?',
@@ -142,13 +133,11 @@ const clearCart = useCallback(() => {
         handleAddProductToCart,
         handleRemoveProductFromCart,
         handleUpdateQuantity,
-<<<<<<< HEAD
+
         clearCart,
         paymentIntent,
         handlePaymentIntent
-=======
-        clearCart
->>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
+
       }}
     >
       {children}
