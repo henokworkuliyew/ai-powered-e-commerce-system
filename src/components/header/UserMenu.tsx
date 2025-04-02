@@ -75,6 +75,7 @@ const UserMenu:React.FC<UserMenuProps> = ({currentUser}) => {
               </button>{' '}
             </div>
           ) : (
+<<<<<<< HEAD
             <div>
               <button
                 onClick={() => {
@@ -95,6 +96,17 @@ const UserMenu:React.FC<UserMenuProps> = ({currentUser}) => {
                 <FiLogOut className="mr-2" /> Register
               </button>
             </div>
+=======
+            <button
+              onClick={() => {
+                signOut()
+                setIsOpen(false)
+              }}
+              className="flex w-full items-center px-4 py-2 text-red-600 hover:bg-gray-100 transition"
+            >
+              <FiLogOut className="mr-2" /> Logout
+            </button>
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
           )}
         </div>
       )}

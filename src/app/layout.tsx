@@ -1,5 +1,8 @@
 import './globals.css'
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 import Footer from '@/components/footer/Footer'
 import Header from '@/components/header/Header'
 import { CartContextProvider } from '@/hooks/useCart'

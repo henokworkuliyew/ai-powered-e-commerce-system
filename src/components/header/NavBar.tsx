@@ -2,7 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { FaSearch, FaShoppingCart, FaBell } from 'react-icons/fa'
+<<<<<<< HEAD
 import Heading from '../ui/Heading'
+=======
+import Heading from '../UI/Heading'
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 import { useCart } from '@/hooks/useCart'
 import { useState, useEffect } from 'react'
 import UserMenu from './UserMenu'
@@ -11,10 +15,20 @@ import { SafeUser } from '@/type/SafeUser'
 interface HeaderProps {
   currentUser: SafeUser | null
 }
+<<<<<<< HEAD
 const Header: React.FC<HeaderProps> = ({ currentUser }) => {
   const router = useRouter()
   const { cartProducts } = useCart()
   const [cartCount, setCartCount] = useState(0)
+=======
+const Header:React.FC<HeaderProps> = ({currentUser}) => {
+  const router = useRouter()
+  const { cartProducts } = useCart()
+  const [cartCount, setCartCount] = useState(0)
+  
+
+ 
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 
   useEffect(() => {
     const totalQty = cartProducts?.reduce((acc, item) => acc + item.qty, 0) || 0

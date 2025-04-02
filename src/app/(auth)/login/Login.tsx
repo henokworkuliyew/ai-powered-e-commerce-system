@@ -1,7 +1,12 @@
 'use client'
 import Input from '@/components/input/Input'
+<<<<<<< HEAD
 import  Button  from '@/components/ui/Button'
 import Heading from '@/components/ui/Heading'
+=======
+import Button from '@/components/UI/Button'
+import Heading from '@/components/UI/Heading'
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
 import { SafeUser } from '@/type/SafeUser'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
@@ -10,11 +15,19 @@ import React, { useEffect, useState } from 'react'
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { AiOutlineGoogle } from 'react-icons/ai'
+<<<<<<< HEAD
 
 interface LoginProps {
   currentUser: SafeUser | null
 }
 const Login: React.FC<LoginProps> = ({ currentUser }) => {
+=======
+ 
+interface LoginProps {
+  currentUser: SafeUser | null
+}
+const Login:React.FC<LoginProps> = ({currentUser}) => {
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
   const router = useRouter()
   const [isLoading, setIsLoadig] = useState(false)
   const {
@@ -23,8 +36,14 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
     formState: { errors },
   } = useForm<FieldValues>({
     defaultValues: {
+<<<<<<< HEAD
       email: '',
       password: '',
+=======
+          email: '',
+      password: '',
+      
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
     },
   })
   useEffect(() => {
@@ -46,7 +65,11 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
         router.refresh()
         toast.success('Login successful')
       }
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
       if (callback?.error) {
         console.error(callback.error)
       }
@@ -89,7 +112,11 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
         </span>
       </div>
       <Button
+<<<<<<< HEAD
         label={isLoading ? 'Loading' : 'SignIn with Google'}
+=======
+        label={isLoading ? 'Loading' : 'Sign Up with Google'}
+>>>>>>> 0bf8cd0d973f32e2f804b37a161a531be8b1356f
         icon={AiOutlineGoogle}
         iconColor="green"
         onClick={() => {

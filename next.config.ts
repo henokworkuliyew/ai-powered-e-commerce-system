@@ -1,7 +1,15 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+  },
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+  images: {
+    domains: ['images.unsplash.com', 'images.pexels.com'],
+  },
+  experimental: {
+    turbo: {},
+  },
+}
 
-export default nextConfig;
+module.exports = nextConfig
