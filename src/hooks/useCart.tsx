@@ -32,7 +32,7 @@ export const CartContextProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  
+
   const [cartProducts, setCartProducts] = useState<CartProduct[]>(() => {
     if (typeof window === 'undefined') return []
     try {

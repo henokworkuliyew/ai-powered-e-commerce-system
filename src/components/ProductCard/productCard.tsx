@@ -18,15 +18,19 @@ return (
   <div
     className="col-span-1 cursor-pointer  rounded-sm p-2 transition hover:scale-110 text-center text-sm"
     onClick={() => {
+
       router.push(`/product/${product._id}`)
+
     }}
   >
     <div className="flex flex-col items-center w-full gap-1">
       <div className="aspect-square overflow-hidden relative w-full h-36">
         <Image
+
           src={ product?.images?.[0]?.views?.front || '/placeholder.png'}
           alt={product?.name || 'Product Image'}
           fill
+
           className="w-full h-36 object-cover rounded-md"
         />
       </div>
@@ -34,7 +38,9 @@ return (
         {truncateText(product?.name || 'No Name Available')}
       </div>
       <div>
+
         <Rating value={  3} readOnly />
+
       </div>
       {/* <div>{product?.reviews.length} reviews</div> */}
       <div className="pb-5">{FormatPrice(product?.price)}</div>

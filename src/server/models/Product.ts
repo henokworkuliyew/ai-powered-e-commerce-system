@@ -1,10 +1,13 @@
+
 import { Schema, Document, Types, models, model } from 'mongoose'
+
 
 export interface IProduct extends Document {
   name: string
   description: string
   category: Types.ObjectId
   brand: string
+
   images: {
     color: string
     colorCode: string
@@ -17,6 +20,7 @@ export interface IProduct extends Document {
   inStock: boolean
   quantity: number
   price: number
+
 }
 
 const ProductSchema = new Schema<IProduct>({
@@ -24,6 +28,7 @@ const ProductSchema = new Schema<IProduct>({
   description: { type: String, required: true, trim: true },
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
   brand: { type: String, required: true, trim: true },
+
   images: [
     {
       color: { type: String, required: true, trim: true },
@@ -41,3 +46,4 @@ const ProductSchema = new Schema<IProduct>({
 })
 
 export const Product = models.Product || model<IProduct>('Product', ProductSchema)
+

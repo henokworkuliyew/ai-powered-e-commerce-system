@@ -11,6 +11,8 @@ interface UserMenuProps {
     currentUser : SafeUser | null
 }
 const UserMenu:React.FC<UserMenuProps> = ({currentUser}) => {
+
+
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)

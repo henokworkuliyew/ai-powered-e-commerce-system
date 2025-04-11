@@ -1,4 +1,6 @@
+
 import  { Schema, Document, Types, models, model } from 'mongoose'
+
 
 export interface IReview extends Document {
   userId: Types.ObjectId
@@ -16,4 +18,6 @@ const ReviewSchema = new Schema<IReview>({
   createdDate: { type: Date, default: Date.now },
 })
 
+
 export const Review = models.Review || model<IReview>('Review', ReviewSchema)
+

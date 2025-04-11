@@ -41,7 +41,9 @@ export async function POST(req: Request) {
           : undefined,
         name: item.name,
         description:item.description,
+
         category: item.category.name,
+
         brand: item.brand,
         selectedImg: {
           color: item.selectedImg.color,

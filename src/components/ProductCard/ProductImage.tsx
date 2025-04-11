@@ -13,7 +13,9 @@ const ProductImage: React.FC<ProductImageProps> = ({
   product,
   handleColorSelect,
 }) => {
+
  const images: SelectedImg[] = product.images ? product.images : []
+
 
 
 // const productRating =
@@ -53,7 +55,9 @@ const ProductImage: React.FC<ProductImageProps> = ({
            }`}
          >
            <Image
+
              src={image.views.front}
+
              alt={image.color}
              fill
              className="object-contain"
@@ -63,7 +67,9 @@ const ProductImage: React.FC<ProductImageProps> = ({
      </div>
      <div className="col-span-5 relative aspect-square">
        <Image
+
          src={cartProduct.selectedImg.views.front}
+
          alt={cartProduct.name}
          fill
          className="object-contain

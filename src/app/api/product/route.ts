@@ -1,11 +1,14 @@
 import { getCurrentUser } from '@/action/CurrentUser'
 import dbConnect from '@/lib/dbConnect'
+
 import Category from '@/server/models/Category'
+
 import { Product } from '@/server/models/Product'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const currentUser = await getCurrentUser()
+
   if (!currentUser || currentUser.role !== 'MANAGER') {
     return NextResponse.error()
   }
@@ -82,6 +85,7 @@ export async function POST(req: Request) {
       {
         status: 201,
       }
+
     )
   } catch (error) {
     if (error instanceof Error) {
@@ -115,3 +119,4 @@ export async function GET() {
     )
   }
 }
+

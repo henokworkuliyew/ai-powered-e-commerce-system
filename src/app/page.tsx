@@ -1,5 +1,5 @@
 import { ProductCard } from "@/components/ProductCard/productCard"
-// import products from "@/lib/data"
+
 import { Product } from "@/type/Product"
 
 
@@ -17,6 +17,7 @@ export default async function Home() {
   const data = await res.json()
   
   const products: Product[] = data.products || []
+
 
   return (
     <div className="grid grid-cols-2 gap-8 w-full  sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">

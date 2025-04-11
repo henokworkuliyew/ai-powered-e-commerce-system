@@ -10,7 +10,9 @@ import SetQuantity from '@/components/ProductCard/SetQuantity'
 import { useCart } from '@/hooks/useCart'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
+
 import ReviewForm from '@/components/review/ReveiwForm'
+
 interface ProductDetailsProps {
   product: Product
 }
@@ -18,6 +20,7 @@ interface ProductDetailsProps {
 const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   const router = useRouter()
   const [cartProduct, setCartProduct] = useState<CartProduct>({
+
     id: product._id,
     name: product.name,
     description: product.description,
@@ -29,6 +32,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     selectedImg: {
     ...product.images[0], 
   },
+    
     qty: 1,
     price: product.price,
   })
@@ -66,7 +70,9 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   useEffect(() => {
     setProductIncart(false)
     if (cartProducts) {
+
       const existItem = cartProducts.find((item) => item.id === product._id)
+
       if (existItem) {
         setProductIncart(true)
         setCartProduct((prev) => ({
@@ -110,12 +116,16 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
           <span className="font-semibold">Customer Reveiw:</span>
           <div className="flex flex-row gap-3 ml-10">
             <Rating value={product.rating} readOnly />
+
             <div>({} reviews)</div>
+
           </div>
           <Horizontal />
           <div>
             <span className="font-semibold">Category:</span>
+
             {product.category.name}
+
           </div>
           <div>
             <span className="font-semibold">Brand:</span>
@@ -167,7 +177,9 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
             <span>User comments ...</span>
             <div className="flex flex-col ml-4">
               <span className="font-semibold">Your comments</span>
+
               <ReviewForm productId={cartProduct.id} />
+
             </div>
           </div>
         </li>

@@ -4,7 +4,9 @@ interface CheckboxProps{
     id:string
     label:string
     disabled?:boolean
+
     required?:boolean
+
     register:UseFormRegister<FieldValues>
 }
 
@@ -12,7 +14,9 @@ const CheckBox: React.FC<CheckboxProps> = ({
   id,
   label,
   disabled,
+
   required ,
+
   register,
 }) => {
   return (
@@ -21,6 +25,7 @@ const CheckBox: React.FC<CheckboxProps> = ({
         autoComplete="off"
         id={id}
         disabled={disabled}
+
         {...register(id, { required })}
         placeholder=""
         type="checkbox"
@@ -29,6 +34,7 @@ const CheckBox: React.FC<CheckboxProps> = ({
       <label htmlFor={id} className="font-medium cursor-pointer">
         {label}
       </label>
+
     </div>
   )
 }

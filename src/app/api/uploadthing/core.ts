@@ -10,7 +10,9 @@ const auth = (req: Request) => ({ id: "fakeId" });
 export const ourFileRouter = {
   imageUploader: f({
     image: {
+
       maxFileSize: '8MB',
+
     },
   })
     .middleware(async ({ req }) => {
@@ -24,6 +26,7 @@ export const ourFileRouter = {
       console.log('Upload complete for userId:', metadata.userId)
 
       console.log('file url', file.ufsUrl)
+
 
      return {
        uploadedBy: metadata.userId,

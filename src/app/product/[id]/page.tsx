@@ -1,10 +1,13 @@
 'use client'
+
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+
 import ProductDetail from '../ProductDetail'
 
 const Page = () => {
   const params = useParams()
+
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -55,6 +58,7 @@ const Page = () => {
   }
 
   if (!product) {
+
     return <div>Product not found</div>
   }
 

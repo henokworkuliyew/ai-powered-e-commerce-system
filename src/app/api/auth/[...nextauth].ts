@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await dbConnect()
 
-        
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Invalid email or password!')
         }

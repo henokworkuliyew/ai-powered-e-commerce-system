@@ -89,7 +89,9 @@ const Cart:React.FC<currentUserProps>=(({currentUser})=> {
                       className="cursor-pointer"
                     >
                       <Image
+
                         src={product.selectedImg.views.front}
+
                         alt={product.name}
                         width={50}
                         height={50}
