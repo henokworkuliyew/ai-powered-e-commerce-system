@@ -1,5 +1,4 @@
 import './globals.css'
-
 import Footer from '@/components/footer/Footer'
 import Header from '@/components/header/Header'
 import { CartContextProvider } from '@/hooks/useCart'
@@ -38,11 +37,13 @@ export default async function RootLayout({
             },
           }}
         />
-        <CartContextProvider>
-          <Header />
-          <main className="flex-grow pt-24">{children}</main>
-          <Footer />
-        </CartContextProvider>
+        
+          <CartContextProvider>
+            <Header />
+            <main className="flex-grow pt-24">{children}</main>
+            <Footer />
+          </CartContextProvider>
+       
       </body>
     </html>
   )
