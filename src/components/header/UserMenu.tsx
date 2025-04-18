@@ -60,7 +60,7 @@ const UserMenu:React.FC<UserMenuProps> = ({currentUser}) => {
                 <FiUser className="mr-2" /> Profile
               </button>
               <button
-                onClick={() => handleMenuClick('/orders')}
+                onClick={() => handleMenuClick('/checkout/orders')}
                 className="flex w-full items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
               >
                 <FiShoppingBag className="mr-2" /> My Orders
