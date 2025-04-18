@@ -8,9 +8,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  console.log('Product ID is:', params.id)
+  
   const { id } = params
-  console.log('Product ID is:', id)
+  
   try {
     await dbConnect()
 

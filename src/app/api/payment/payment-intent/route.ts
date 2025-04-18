@@ -3,6 +3,7 @@ import { Order } from '@/server/models/Order'
 import { CartProduct } from '@/type/CartProduct'
 import { NextResponse } from 'next/server'
 import mongoose from 'mongoose'
+import dbConnect from '@/lib/dbConnect'
 
 const CHAPA_SECRET_KEY = process.env.CHAPA_SECRET_KEY as string
 const CHAPA_BASE_URL = 'https://api.chapa.co/v1/transaction/initialize'
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
         name: item.name,
         description:item.description,
 
-        category: item.category.name,
+        category: item.category? item.category : 'Uncategorized',
 
         brand: item.brand,
         selectedImg: {
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
         amount: total,
         currency: 'ETB',
         tx_ref,
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/orders`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cart`,
         description: 'E-commerce payment',
         email: currentUser.email,
@@ -108,6 +109,30 @@ export async function POST(req: Request) {
     console.error('Error in payment process:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}
+
+
+export async function GET() {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    await dbConnect()
+
+    const userOrders = await Order.find({ user: user._id }).sort({
+      createDate: -1,
+    })
+
+    return NextResponse.json({ orders: userOrders })
+  } catch (error) {
+    console.error('Error fetching user orders:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch orders' },
       { status: 500 }
     )
   }
