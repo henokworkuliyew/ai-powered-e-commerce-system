@@ -17,7 +17,7 @@ export const shipmentData = [
     status: 'In Transit',
     carrier: 'UPS',
     dateShipped: '2023-03-16',
-    dateDelivered: null,
+    dateDelivered: '2023-03-18',
     items: 2,
   },
   {
@@ -26,8 +26,8 @@ export const shipmentData = [
     customer: 'Robert Johnson',
     status: 'Processing',
     carrier: 'USPS',
-    dateShipped: null,
-    dateDelivered: null,
+    dateShipped: 'not shipped',
+    dateDelivered: 'not delivered',
     items: 5,
   },
   {
@@ -47,7 +47,7 @@ export const shipmentData = [
     status: 'In Transit',
     carrier: 'FedEx',
     dateShipped: '2023-03-17',
-    dateDelivered: null,
+    dateDelivered: 'not delivered',
     items: 4,
   },
 ]
@@ -103,3 +103,68 @@ export const orders = [
   },
 ]
 
+export const mockReviews = [
+    {
+      id: '1',
+      userId: 'user1',
+      userName: 'John Doe',
+      userImage: '/placeholder.png',
+      rating: 5,
+      title: 'Absolutely love it!',
+      comment:
+        'This product exceeded my expectations! The quality is outstanding and it arrived earlier than expected. I would definitely recommend it to anyone looking for a reliable and stylish option.',
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+      helpful: 12,
+      notHelpful: 1,
+      verified: true,
+    },
+    {
+      id: '2',
+      userId: 'user2',
+      userName: 'Jane Smith',
+      userImage: '/placeholder.png',
+      rating: 4,
+      title: 'Great product with minor issues',
+      comment:
+        'Great product overall, but I wish it came in more color options.',
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
+      helpful: 8,
+      notHelpful: 0,
+      verified: true,
+    },
+    {
+      id: '3',
+      userId: 'user3',
+      userName: 'Mike Johnson',
+      userImage: '/placeholder.png',
+      rating: 3,
+      title: 'Decent for the price',
+      comment:
+        "It's decent for the price, but there are some quality issues I noticed after a few days of use.",
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(), // 10 days ago
+      helpful: 3,
+      notHelpful: 2,
+      verified: false,
+    },
+  ]
+
+  // Mock Q&A data
+ export const mockQuestions = [
+    {
+      id: 'q1',
+      question: 'Is this product suitable for outdoor use?',
+      answer:
+        'Yes, this product is designed to withstand outdoor conditions and is water-resistant.',
+      askedBy: 'Customer123',
+      answeredBy: 'StoreSupport',
+      date: new Date(Date.now() - 86400000 * 15).toISOString(),
+    },
+    {
+      id: 'q2',
+      question: 'Does it come with a warranty?',
+      answer: 'Yes, all our products come with a 1-year manufacturer warranty.',
+      askedBy: 'ShopperXYZ',
+      answeredBy: 'ProductSpecialist',
+      date: new Date(Date.now() - 86400000 * 30).toISOString(),
+    },
+  ]

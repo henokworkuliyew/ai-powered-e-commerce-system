@@ -1,6 +1,5 @@
 export type Product = {
-
-  _id: string
+  _id?: string
   id: string
   name: string
   description: string
@@ -19,8 +18,8 @@ export type Product = {
     }
   }[]
   inStock: boolean
-  quantity: number
+  quantity?: number
   rating: number
   price: number
-
+  selectedSize?: string
 }

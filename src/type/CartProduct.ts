@@ -10,6 +10,7 @@ export type CartProduct = {
   selectedImg: SelectedImg
   qty: number
   price: number
+  selectedSize?: string
 }
 export type SelectedImg = {
   color: string

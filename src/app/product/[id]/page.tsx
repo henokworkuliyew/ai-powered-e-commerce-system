@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 
 import ProductDetail from '../ProductDetail'
+import Loading from '@/components/Loading'
 
 const Page = () => {
   const params = useParams()
@@ -50,7 +51,7 @@ const Page = () => {
   }, [params?._id])
 
   if (loading) {
-    return <div>Loading...</div>
+    return <Loading/>
   }
 
   if (error) {
@@ -63,7 +64,7 @@ const Page = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-11">
+    <div className="grid grid-cols-1 gap-11 p-3">
       <ProductDetail product={product} />
     </div>
   )
