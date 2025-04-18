@@ -1,9 +1,11 @@
 'use client'
 
-import Button from '@/components/ui/Button'
+import type React from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/useCart'
-import React, { useState, useEffect } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
+
+import { Button } from '@/components/ui/button2'
 import ShippingAddressForm from './CheckoutForm'
 
 type PaymentData = {
@@ -12,7 +14,7 @@ type PaymentData = {
   order: { _id: string; amount: number }
 }
 
-const CheckoutPageForm = () => {
+const Checkout = () => {
   const { cartProducts } = useCart()
   const [loading, setLoading] = useState(false)
   const [checkoutUrl, setCheckoutUrl] = useState('')
@@ -33,7 +35,6 @@ const CheckoutPageForm = () => {
     }
   }, [checkoutUrl])
 
-  
   const validateForm = () => {
     if (
       !address.name ||
@@ -51,7 +52,7 @@ const CheckoutPageForm = () => {
   }
 
   const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault() 
+    e.preventDefault()
 
     if (!validateForm()) return
 
@@ -70,7 +71,7 @@ const CheckoutPageForm = () => {
         body: JSON.stringify({ items: cartProducts, address }),
       })
       const data: PaymentData = await response.json()
-
+      console.log('Payment Data:', data)
       if (data?.checkoutUrl) {
         setCheckoutUrl(data.checkoutUrl)
       } else {
@@ -91,6 +92,13 @@ const CheckoutPageForm = () => {
     }
   }
 
+  const handleSelectChange = (name: string, value: string) => {
+    setAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
   return (
     <div className="w-full">
       {!error && (
@@ -103,13 +111,17 @@ const CheckoutPageForm = () => {
                 [e.target.name]: e.target.value,
               }))
             }
+            onSelectChange={handleSelectChange}
           />
 
           <Button
-            label={loading ? 'Processing...' : 'Proceed to Payment'}
+            className="w-full bg-yellow-500"
+           
             disabled={loading}
-            outline
-          />
+            type="submit"
+          >
+            {loading ? 'Processing...' : 'Proceed to Payment'}
+          </Button>
         </form>
       )}
       {error && (
@@ -121,4 +133,4 @@ const CheckoutPageForm = () => {
   )
 }
 
-export default CheckoutPageForm
+export default Checkout
