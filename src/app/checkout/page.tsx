@@ -1,15 +1,14 @@
 import WrapForm from '@/components/ui/WrapForm'
-import React from 'react'
 import Checkout from './Checkout'
 
-const page = () => {
+const CheckoutPage = () => {
   return (
-    <div className="p-8">
-      <WrapForm>
+    <div className="p-8 ">
+      <WrapForm >
         <Checkout />
       </WrapForm>
     </div>
   )
 }
 
-export default page
+export default CheckoutPage
