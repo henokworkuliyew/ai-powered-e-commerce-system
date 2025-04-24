@@ -71,10 +71,10 @@ export const CartContextProvider = ({
 
   const handleAddProductToCart = useCallback((product: CartProduct) => {
     setCartProducts((prev) => {
-      const existItem = prev.find((p) => p.id === product.id)
+      const existItem = prev.find((p) => p._id === product._id)
       if (existItem) {
         return prev.map((p) =>
-          p.id === product.id ? { ...p, qty: p.qty + product.qty } : p
+          p._id === product._id ? { ...p, qty: p.qty + product.qty } : p
         )
       } else {
         return [...prev, product]
@@ -87,14 +87,14 @@ export const CartContextProvider = ({
 
 
   const handleRemoveProductFromCart = useCallback((productId: string) => {
-    setCartProducts((prev) => prev.filter((p) => p.id !== productId))
+    setCartProducts((prev) => prev.filter((p) => p._id !== productId))
     toast.success('Product removed from cart!')
   }, [])
 
   const handleUpdateQuantity = useCallback((productId: string, qty: number) => {
     setCartProducts((prev) => {
       return prev.map((p) =>
-        p.id === productId && p.qty !== qty ? { ...p, qty } : p
+        p._id === productId && p.qty !== qty ? { ...p, qty } : p
       )
     })
     
