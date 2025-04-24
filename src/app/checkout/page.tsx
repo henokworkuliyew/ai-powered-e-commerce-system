@@ -1,12 +1,13 @@
-import WrapForm from '@/components/ui/WrapForm'
+//import WrapForm from '@/components/ui/WrapForm'
+import { Toaster } from '@/components/ui/toaster'
 import Checkout from './Checkout'
 
 const CheckoutPage = () => {
   return (
-    <div className="p-8 ">
-      <WrapForm >
+    <div className="p-8 bg-slate-100">
+         <Toaster/>
         <Checkout />
-      </WrapForm>
+      
     </div>
   )
 }

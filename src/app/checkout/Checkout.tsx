@@ -1,136 +1,248 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect } from 'react'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/use-toast'
+import {
+  AddressForm,
+  type AddressData,
+} from '@/components/checkout/address-form'
+import { OrderSummary } from '@/components/checkout/order-summary'
 import { useCart } from '@/hooks/useCart'
-import { toast } from 'sonner'
+import { MapPin, CreditCard } from 'lucide-react'
 
-import { Button } from '@/components/ui/button2'
-import ShippingAddressForm from './CheckoutForm'
-
-type PaymentData = {
-  checkoutUrl: string
-  tx_ref: string
-  order: { _id: string; amount: number }
-}
-
-const Checkout = () => {
+export default function CheckoutPage() {
+  const router = useRouter()
   const { cartProducts } = useCart()
   const [loading, setLoading] = useState(false)
-  const [checkoutUrl, setCheckoutUrl] = useState('')
-  const [error, setError] = useState(false)
-  const [address, setAddress] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    street: '',
-    city: '',
-    country: '',
-    zipCode: '',
-  })
+  const [sameAsBilling, setSameAsBilling] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    if (checkoutUrl) {
-      window.location.href = checkoutUrl
-    }
-  }, [checkoutUrl])
+    setIsMounted(true)
+  }, [])
 
-  const validateForm = () => {
-    if (
-      !address.name ||
-      !address.email ||
-      !address.phone ||
-      !address.street ||
-      !address.city ||
-      !address.country ||
-      !address.zipCode
-    ) {
-      toast.error('Please fill in all required fields.')
-      return false
-    }
-    return true
-  }
+  const [shippingAddress, setShippingAddress] = useState<AddressData>({
+    fullName: '',
+    phoneNumber: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'Ethiopia',
+  })
 
-  const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const [billingAddress, setBillingAddress] = useState<AddressData>({
+    fullName: '',
+    phoneNumber: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'Ethiopia',
+  })
 
-    if (!validateForm()) return
+  const subtotal = cartProducts.reduce(
+    (total, item) => total + item.price * item.qty,
+    0
+  )
+  const shipping = 150
+  const tax = Math.round(subtotal * 0.15)
+  const total = subtotal + shipping + tax
 
-    if (cartProducts.length === 0) {
-      toast.error('Your cart is empty')
-      return
-    }
-
-    setLoading(true)
-    setError(false)
-
-    try {
-      const response = await fetch('/api/payment/payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cartProducts, address }),
-      })
-      const data: PaymentData = await response.json()
-      console.log('Payment Data:', data)
-      if (data?.checkoutUrl) {
-        setCheckoutUrl(data.checkoutUrl)
-      } else {
-        setError(true)
-        toast.error('Failed to generate payment link')
-      }
-    } catch (error) {
-      setError(true)
-      if (error instanceof Error) {
-        console.error('Checkout Error:', error.message)
-        toast.error(error.message)
-      } else {
-        console.error('Unknown error:', error)
-        toast.error('An unexpected error occurred. Please try again.')
-      }
-    } finally {
-      setLoading(false)
+  const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setShippingAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    if (sameAsBilling) {
+      setBillingAddress((prev) => ({
+        ...prev,
+        [name]: value,
+      }))
     }
   }
 
-  const handleSelectChange = (name: string, value: string) => {
-    setAddress((prev) => ({
+  const handleBillingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setBillingAddress((prev) => ({
       ...prev,
       [name]: value,
     }))
   }
 
-  return (
-    <div className="w-full">
-      {!error && (
-        <form onSubmit={handleCheckout}>
-          <ShippingAddressForm
-            address={address}
-            onAddressChange={(e) =>
-              setAddress((prev) => ({
-                ...prev,
-                [e.target.name]: e.target.value,
-              }))
-            }
-            onSelectChange={handleSelectChange}
-          />
+  const handleSameAsBillingChange = (checked: boolean) => {
+    setSameAsBilling(checked)
+    if (checked) {
+      setBillingAddress(shippingAddress)
+    }
+  }
 
-          <Button
-            className="w-full bg-yellow-500"
-           
-            disabled={loading}
-            type="submit"
-          >
-            {loading ? 'Processing...' : 'Proceed to Payment'}
-          </Button>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const addressResponse = await fetch('/api/addresses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shipping: shippingAddress,
+          billing: sameAsBilling ? shippingAddress : billingAddress,
+        }),
+      })
+
+      if (!addressResponse.ok) throw new Error('Failed to create addresses')
+
+      const addressData = await addressResponse.json()
+
+      const orderItems = cartProducts.map((item) => ({
+        productId: item._id,
+        name: item.name,
+        quantity: item.qty,
+        unitPrice: item.price,
+        subtotal: item.price * item.qty,
+        imageUrl: item.selectedImg.views.front,
+      }))
+
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: orderItems,
+          subtotal,
+          tax,
+          shipping,
+          total,
+          shippingAddressId: addressData.shippingAddressId,
+          billingAddressId: addressData.billingAddressId,
+        }),
+      })
+
+      if (!orderResponse.ok) throw new Error('Failed to create order')
+
+      const orderData = await orderResponse.json()
+
+      toast({
+        title: 'Order created successfully',
+        description: 'Redirecting to payment page...',
+      })
+
+      router.push(`/checkout/orders/${orderData.order.id}/pay`)
+    } catch (error) {
+      console.error('Error creating order:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to create order. Please try again.',
+        variant: 'destructive',
+      })
+      setLoading(false)
+    }
+  }
+
+  if (!isMounted) return null
+
+  return (
+    <div className="container mx-auto py-10">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Checkout</h1>
+        <p className="text-muted-foreground mb-8">
+          Complete your purchase by providing your shipping and payment details
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <Card className="border-gray-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-gray-50 border-b border-gray-200">
+                  <CardTitle className="flex items-center gap-2 text-gray-800">
+                    <MapPin className="h-5 w-5" />
+                    Shipping Address
+                  </CardTitle>
+                  <CardDescription>
+                    Enter your shipping information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <AddressForm
+                    type="shipping"
+                    address={shippingAddress}
+                    onChange={handleShippingChange}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-gray-50 border-b border-gray-200 flex flex-row items-center">
+                  <div className="space-y-1.5">
+                    <CardTitle className="flex items-center gap-2 text-gray-800">
+                      <CreditCard className="h-5 w-5" />
+                      Billing Address
+                    </CardTitle>
+                    <CardDescription>
+                      Enter your billing information
+                    </CardDescription>
+                  </div>
+                  <div className="ml-auto flex items-center space-x-2">
+                    <Checkbox
+                      id="sameAsBilling"
+                      checked={sameAsBilling}
+                      onCheckedChange={handleSameAsBillingChange}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                    <Label htmlFor="sameAsBilling" className="font-medium">
+                      Same as shipping
+                    </Label>
+                  </div>
+                </CardHeader>
+                {!sameAsBilling && (
+                  <CardContent className="pt-6">
+                    <AddressForm
+                      type="billing"
+                      address={billingAddress}
+                      onChange={handleBillingChange}
+                    />
+                  </CardContent>
+                )}
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <OrderSummary
+                cartItems={cartProducts}
+                loading={loading}
+                onSubmit={() => {
+                  const form = document.querySelector('form')
+                  if (form) form.requestSubmit()
+                }}
+              />
+
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-600">
+                <p className="mb-2 font-medium">Secure Checkout</p>
+                <p>
+                  Your payment information is processed securely. We do not
+                  store credit card details nor have access to your credit card
+                  information.
+                </p>
+              </div>
+            </div>
+          </div>
         </form>
-      )}
-      {error && (
-        <div className="text-red-600 mt-2">
-          Something went wrong. Please try again.
-        </div>
-      )}
+      </div>
     </div>
   )
 }
-
-export default Checkout
