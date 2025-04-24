@@ -21,14 +21,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const router = useRouter()
   const { handleAddProductToCart, cartProducts } = useCart()
   const [isHovered, setIsHovered] = useState(false)
-
-  const isInCart = cartProducts?.some((item) => item.id === product._id)
+ 
+  const isInCart = cartProducts?.some((item) => item._id === product._id)
 
   const handleQuickAdd = (e: React.MouseEvent): void => {
     e.stopPropagation() 
 
     const cartProduct = {
-      id: product.id,
       _id: product._id,
       name: product.name,
       description: product.description,

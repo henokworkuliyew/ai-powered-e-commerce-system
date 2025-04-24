@@ -79,7 +79,7 @@ const EditStockDialog: React.FC<EditStockDialogProps> = ({
             </Label>
             <Input
               id="product-id"
-              value={item.id}
+              value={item._id}
               className="col-span-3"
               disabled
             />

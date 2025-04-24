@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
-import { Rating } from '@mui/material'
+import React, { useState, useRef, JSX } from 'react'
 import Button from '@/components/ui/Button'
 import { toast } from 'react-toastify'
 import { MdCheckCircle, MdClose, MdImage, MdSend } from 'react-icons/md'
@@ -96,7 +95,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         onReviewSubmitted()
       }
     } catch (error) {
-      toast.error('Failed to submit review. Please try again.')
+      if(error instanceof Error){
+        console.log(productId)
+toast.error('Failed to submit review. Please try again.')
+      }
+      
     } finally {
       setIsSubmitting(false)
     }
