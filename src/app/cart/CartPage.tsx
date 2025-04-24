@@ -59,7 +59,7 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
     (total, product) => total + product.price * product.qty,
     0
   )
-
+  
   const discountRate = 10
   const discount = (discountRate / 100) * subtotal
   const taxRate = 8
@@ -111,11 +111,11 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {cartProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-4">
                         <div
-                          onClick={() => router.push(`/product/${product.id}`)}
+                          onClick={() => router.push(`/product/${product._id}`)}
                           role="button"
                           tabIndex={0}
                           className="cursor-pointer flex-shrink-0"
@@ -135,7 +135,7 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
                           <h3
                             className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
                             onClick={() =>
-                              router.push(`/product/${product.id}`)
+                              router.push(`/product/${product._id}`)
                             }
                           >
                             {product.name}
@@ -159,12 +159,12 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
                           cartProduct={product}
                           handleQtyDecrease={() => {
                             if (product.qty > 1) {
-                              handleUpdateQuantity(product.id, product.qty - 1)
+                              handleUpdateQuantity(product._id, product.qty - 1)
                             }
                           }}
                           handleQtyIncrease={() => {
                             if (product.qty < 50) {
-                              handleUpdateQuantity(product.id, product.qty + 1)
+                              handleUpdateQuantity(product._id, product.qty + 1)
                             }
                           }}
                           showLabel={false}
@@ -179,7 +179,7 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
                         <button
                           className="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-50"
                           onClick={() =>
-                            handleRemoveProductFromCart(product.id)
+                            handleRemoveProductFromCart(product._id)
                           }
                           title="Remove from cart"
                         >
