@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import type { Product } from '@/type/Product'
 export function useProductData() {
   const [brands, setBrands] = useState<string[]>([])
-  const [categories, setCategories] = useState<
-    { name: string; subCategories: string[] }[]
-  >([])
+  const [categories, setCategories] = useState<{ name: string; subCategories: string[] }[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

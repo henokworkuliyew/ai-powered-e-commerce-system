@@ -21,10 +21,10 @@ const CartItem: React.FC<CartItemProps> = ({
   const router = useRouter()
 
   return (
-    <tr key={product.id}>
+    <tr key={product._id}>
       <td className="px-4 py-2 flex items-center space-x-3 mt-8">
         <div
-          onClick={() => router.push(`/product/${product.id}`)}
+          onClick={() => router.push(`/product/${product._id}`)}
           role="button"
           tabIndex={0}
           className="cursor-pointer"
@@ -47,12 +47,12 @@ const CartItem: React.FC<CartItemProps> = ({
           cartProduct={product}
           handleQtyDecrease={() => {
             if (product.qty > 1) {
-              handleUpdateQuantity(product.id, product.qty - 1)
+              handleUpdateQuantity(product._id, product.qty - 1)
             }
           }}
           handleQtyIncrease={() => {
             if (product.qty < 50) {
-              handleUpdateQuantity(product.id, product.qty + 1)
+              handleUpdateQuantity(product._id, product.qty + 1)
             }
           }}
           showLabel={false}
@@ -65,7 +65,7 @@ const CartItem: React.FC<CartItemProps> = ({
         <div className="flex items-center justify-center space-x-2">
           <button
             className="text-red-600 hover:text-red-800"
-            onClick={() => handleRemoveProductFromCart(product.id)}
+            onClick={() => handleRemoveProductFromCart(product._id)}
           >
             <Trash2 className="w-5 h-5" />
           </button>

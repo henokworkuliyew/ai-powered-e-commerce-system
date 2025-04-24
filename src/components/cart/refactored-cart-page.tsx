@@ -84,7 +84,7 @@ const Cart: React.FC<CartPageProps> = ({ currentUser }) => {
             <tbody>
               {cartProducts.map((product) => (
                 <CartItem
-                  key={product.id}
+                  key={product._id}
                   product={product}
                   handleRemoveProductFromCart={handleRemoveProductFromCart}
                   handleUpdateQuantity={handleUpdateQuantity}

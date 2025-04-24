@@ -71,12 +71,12 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   const Horizontal = () => {
     return <hr className="border-t-4 w-1/2 mb-5 mt-2" />
   }
-
+  console.log('cartProducts', cartProducts)
   useEffect(() => {
 
      setProductInCart(false)
     if (cartProducts) {
-      const existItem = cartProducts.find((item) => item.id === product._id)
+      const existItem = cartProducts.find((item) => item._id === product._id)
 
       if (existItem) {
         setProductInCart(true)
@@ -286,7 +286,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             {product?.name || 'No Name Available'}
           </h2>
           <p className="text-sm text-gray-500">
-            SKU: {product._id.substring(0, 8).toUpperCase()}
+            SKU: {product._id}
           </p>
         </div>
         <WishlistButton productId={product._id} />

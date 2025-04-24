@@ -24,8 +24,8 @@ interface ProductDetailsProps {
 const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   const router = useRouter()
   const [cartProduct, setCartProduct] = useState<CartProduct>({
-    id: product.id ,
-    _id: product._id,
+    _id: product._id ,
+    //_id: product._id,
     name: product.name,
     description: product.description,
     brand: product.brand,
@@ -38,7 +38,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
     selectedSize: 'M',
   })
-
+  
   const handleColorSelect = useCallback(
     (value: SelectedImg) => {
       setCartProduct((prev: CartProduct) => ({ ...prev, selectedImg: value }))
