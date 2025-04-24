@@ -1,16 +1,35 @@
-import mongoose from 'mongoose'
+import mongoose, { Schema, type Document } from 'mongoose'
 
-const AddressSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  street: { type: String, required: true },
-  city: { type: String, required: true },
-  country: { type: String, required: true },
-  zipCode: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-})
+export interface IAddress extends Document {
+  userId: mongoose.Types.ObjectId
+  fullName: string
+  phoneNumber: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  isDefault: boolean
+  createdAt: Date
+  updatedAt: Date
+}
 
-export const Addresss =
-  mongoose.models.Address || mongoose.model('Address', AddressSchema)
+const AddressSchema = new Schema<IAddress>(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    fullName: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    addressLine1: { type: String, required: true },
+    addressLine2: { type: String },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    country: { type: String, required: true },
+    isDefault: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+)
+
+export default mongoose.models.Address ||
+  mongoose.model<IAddress>('Address', AddressSchema)
