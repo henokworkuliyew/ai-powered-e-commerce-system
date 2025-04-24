@@ -1,8 +1,6 @@
 export type CartProduct = {
 
-  _id?: string
-
-  id: string
+  _id: string
   name: string
   description: string
   brand: string
@@ -15,7 +13,6 @@ export type CartProduct = {
 export type SelectedImg = {
   color: string
   colorCode: string
-
   views: {
     front: string
     side: string

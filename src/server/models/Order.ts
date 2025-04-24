@@ -1,48 +1,92 @@
-import mongoose from 'mongoose'
+import mongoose, { Schema, type Document } from 'mongoose'
 
-const OrderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  amount: { type: Number, required: true },
-  currency: { type: String, required: true, default: 'ETB' },
-  status: {
-    type: String,
-    enum: ['pending', 'completed', 'cancelled'],
-    default: 'pending',
-    required: true,
-  },
-  deliveryStatus: {
-    type: String,
-    enum: ['pending', 'shipped', 'in transit', 'delivered', 'returned'],
-    default: 'pending',
-    required: true,
-  },
-  createDate: { type: Date, default: Date.now },
-  paymentIntentId: { type: String, unique: true, required: true },
-  products: [
-    {
-      name: { type: String, required: true },
-      description: { type: String, required: true },
-      category: { type: String, required: true },
-      brand: { type: String, required: true },
-      selectedImg: {
-        color: { type: String, required: true },
-        colorCode: { type: String, required: true },
-        image: { type: String, required: true },
-      },
-      quantity: { type: Number, required: true },
-      price: { type: Number, required: true },
-    },
-  ],
-  address: {
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    country: { type: String, required: true },
-    zipCode: { type: String, required: true },
-  },
+export type OrderStatus =
+  | 'pending'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded'
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded'
+
+export interface IOrderItem {
+  productId: mongoose.Types.ObjectId
+  name: string
+  quantity: number
+  unitPrice: number
+  subtotal: number
+  imageUrl?: string
+}
+
+export interface IOrder extends Document {
+  userId: mongoose.Types.ObjectId
+  orderNumber: string
+  orderStatus: OrderStatus
+  paymentStatus: PaymentStatus
+  items: IOrderItem[]
+  subtotal: number
+  tax: number
+  shipping: number
+  
+  shippingAddressId: mongoose.Types.ObjectId
+  billingAddressId: mongoose.Types.ObjectId
+  transactionRef?: string // Added for Chapa payment tracking
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+const OrderItemSchema = new Schema<IOrderItem>({
+  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  unitPrice: { type: Number, required: true },
+  subtotal: { type: Number, required: true },
+  imageUrl: { type: String },
 })
 
-export const Order =
-  mongoose.models.Order || mongoose.model('Order', OrderSchema)
+const OrderSchema = new Schema<IOrder>(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    orderNumber: { type: String, required: true, unique: true },
+    orderStatus: {
+      type: String,
+      enum: [
+        'pending',
+        'processing',
+        'shipped',
+        'delivered',
+        'cancelled',
+        'refunded',
+      ],
+      default: 'pending',
+      required: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'refunded'],
+      default: 'pending',
+      required: true,
+    },
+    items: [OrderItemSchema],
+    subtotal: { type: Number, required: true },
+    tax: { type: Number, required: true },
+    shipping: { type: Number, required: true },
+    shippingAddressId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Address',
+      required: true,
+    },
+    billingAddressId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Address',
+      required: true,
+    },
+    transactionRef: { type: String }, 
+    notes: { type: String },
+  },
+  { timestamps: true }
+)
+
+export default mongoose.models.Order ||
+  mongoose.model<IOrder>('Order', OrderSchema)
