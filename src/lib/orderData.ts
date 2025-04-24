@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/pages/api/auth/[...nextauth]'
-import { Order } from '@/app/checkout/orders/types'
+import { Order } from '@/app/checkout/orders/myorder/types'
 
 
 export async function GET() {
