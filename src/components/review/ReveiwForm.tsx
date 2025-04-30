@@ -1,34 +1,54 @@
 'use client'
 
-import React, { useState, useRef, JSX } from 'react'
-import Button from '@/components/ui/Button'
+import type React from 'react'
+import { useState, useRef } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import { MdCheckCircle, MdClose, MdImage, MdSend } from 'react-icons/md'
 import { FaStar } from 'react-icons/fa'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Button } from '@/components/ui/button2'
 
 interface ReviewFormProps {
   productId: string
   onReviewSubmitted?: () => void
 }
 
+interface ReviewFormData {
+  rating: number
+  title?: string
+  comment: string
+  images?: { url: string; alt?: string }[]
+}
+
 const ReviewForm: React.FC<ReviewFormProps> = ({
   productId,
   onReviewSubmitted,
-}): JSX.Element => {
-  const [rating, setRating] = useState<number | null>(0)
-  const [comment, setComment] = useState('')
-  const [title, setTitle] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+}) => {
   const [showForm, setShowForm] = useState(false)
-  const [images, setImages] = useState<string[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [images, setImages] = useState<{ url: string; alt?: string }[]>([])
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [errors, setErrors] = useState({
-    rating: false,
-    comment: false,
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm<ReviewFormData>({
+    defaultValues: {
+      rating: 0,
+      comment: '',
+      title: '',
+      images: [],
+    },
   })
+
+  const ratingValue = watch('rating')
 
   const ratingLabels: Record<number, string> = {
     1: 'Poor',
@@ -38,43 +58,35 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     5: 'Excellent',
   }
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-
-    // Validate form
-    const newErrors = {
-      rating: !rating || rating === 0,
-      comment: !comment.trim(),
-    }
-
-    setErrors(newErrors)
-
-    if (newErrors.rating || newErrors.comment) {
-      return
-    }
-
+  const onSubmit = async (data: ReviewFormData) => {
     setIsSubmitting(true)
 
     try {
-      // Here you would normally submit the review to your API
-      // const formData = new FormData()
-      // formData.append('productId', productId)
-      // formData.append('rating', rating.toString())
-      // formData.append('title', title)
-      // formData.append('comment', comment)
-      // images.forEach((image, index) => {
-      //   formData.append(`image-${index}`, image)
-      // })
+     
+      const reviewData = {
+        productId,
+        rating: data.rating,
+        title: data.title || undefined,
+        comment: data.comment,
+        images: images.length > 0 ? images : undefined,
+      }
 
-      // const response = await fetch('/api/reviews', {
-      //   method: 'POST',
-      //   body: formData
-      // })
+     
+      const response = await fetch('/api/product/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      })
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const result = await response.json()
 
-      toast.success('Your review has been submitted!', {
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit review')
+      }
+
+      toast.success('Your review has been submitted and is pending approval!', {
         position: 'top-right',
         autoClose: 3000,
         hideProgressBar: false,
@@ -85,9 +97,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       })
 
       // Reset form
-      setRating(0)
-      setComment('')
-      setTitle('')
+      reset()
       setImages([])
       setShowForm(false)
 
@@ -95,23 +105,28 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         onReviewSubmitted()
       }
     } catch (error) {
-      if(error instanceof Error){
-        console.log(productId)
-toast.error('Failed to submit review. Please try again.')
-      }
-      
+      console.error('Error submitting review:', error)
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to submit review. Please try again.'
+      )
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
-    if (!files) return
+    if (!files || files.length === 0) return
 
     // In a real app, you would upload these to your server/cloud storage
     // For now, we'll just create object URLs
-    const newImages = Array.from(files).map((file) => URL.createObjectURL(file))
+    const newImages = Array.from(files).map((file) => ({
+      url: URL.createObjectURL(file),
+      alt: file.name,
+    }))
+
     setImages((prev) => [...prev, ...newImages])
 
     // Reset the input
@@ -120,18 +135,18 @@ toast.error('Failed to submit review. Please try again.')
     }
   }
 
-  const removeImage = (index: number): void => {
+  const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const CustomRatingInput = (): JSX.Element => (
+  const CustomRatingInput = () => (
     <div className="flex flex-col items-center">
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((value) => (
           <button
             key={value}
             type="button"
-            onClick={() => setRating(value)}
+            onClick={() => setValue('rating', value)}
             onMouseEnter={() => setHoverRating(value)}
             onMouseLeave={() => setHoverRating(null)}
             className="focus:outline-none transition-transform hover:scale-110"
@@ -141,7 +156,7 @@ toast.error('Failed to submit review. Please try again.')
                 (
                   hoverRating !== null
                     ? value <= hoverRating
-                    : value <= (rating || 0)
+                    : value <= ratingValue
                 )
                   ? 'text-yellow-400'
                   : 'text-gray-300'
@@ -150,9 +165,9 @@ toast.error('Failed to submit review. Please try again.')
           </button>
         ))}
       </div>
-      {(rating || hoverRating) && (
+      {(ratingValue > 0 || hoverRating) && (
         <div className="text-sm font-medium mt-1 text-teal-600">
-          {ratingLabels[hoverRating || rating || 0]}
+          {ratingLabels[hoverRating || ratingValue || 0]}
         </div>
       )}
     </div>
@@ -162,11 +177,12 @@ toast.error('Failed to submit review. Please try again.')
     return (
       <div className="mt-6">
         <Button
-          label="Write a Review"
           onClick={() => setShowForm(true)}
-          outline
-          icon={MdSend}
-        />
+          className="flex items-center gap-2"
+        >
+          <MdSend className="h-4 w-4" />
+          Write a Review
+        </Button>
       </div>
     )
   }
@@ -179,7 +195,7 @@ toast.error('Failed to submit review. Please try again.')
         exit={{ opacity: 0, y: -20 }}
       >
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="mt-6 bg-gray-50 p-6 rounded-lg shadow-sm"
         >
           <div className="flex justify-between items-center mb-6">
@@ -199,11 +215,21 @@ toast.error('Failed to submit review. Please try again.')
               <span className="text-red-500">*</span>
             </label>
             <div className="flex justify-center">
-              <CustomRatingInput />
+              <Controller
+                name="rating"
+                control={control}
+                rules={{ required: 'Please select a rating', min: 1 }}
+                render={({ field }) => (
+                  <div>
+                    <CustomRatingInput />
+                    <input type="hidden" {...field} value={field.value || 0} />
+                  </div>
+                )}
+              />
             </div>
             {errors.rating && (
               <p className="mt-1 text-sm text-red-500 text-center">
-                Please select a rating
+                {errors.rating.message || 'Please select a rating'}
               </p>
             )}
           </div>
@@ -215,13 +241,18 @@ toast.error('Failed to submit review. Please try again.')
             >
               Review Title
             </label>
-            <input
-              type="text"
-              id="review-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              placeholder="Summarize your experience (optional)"
+            <Controller
+              name="title"
+              control={control}
+              render={({ field }) => (
+                <input
+                  type="text"
+                  id="review-title"
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Summarize your experience (optional)"
+                  {...field}
+                />
+              )}
             />
           </div>
 
@@ -232,20 +263,30 @@ toast.error('Failed to submit review. Please try again.')
             >
               Your Review <span className="text-red-500">*</span>
             </label>
-            <textarea
-              id="review-comment"
-              value={comment}
-              onChange={(e) => {
-                setComment(e.target.value)
-                if (e.target.value.trim())
-                  setErrors({ ...errors, comment: false })
+            <Controller
+              name="comment"
+              control={control}
+              rules={{
+                required: 'Please write a review',
+                minLength: {
+                  value: 10,
+                  message: 'Your review must be at least 10 characters',
+                },
               }}
-              rows={4}
-              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              placeholder="What did you like or dislike about this product? How was your experience using it?"
-            ></textarea>
+              render={({ field }) => (
+                <textarea
+                  id="review-comment"
+                  rows={4}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="What did you like or dislike about this product? How was your experience using it?"
+                  {...field}
+                ></textarea>
+              )}
+            />
             {errors.comment && (
-              <p className="mt-1 text-sm text-red-500">Please write a review</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.comment.message}
+              </p>
             )}
             <p className="text-xs text-gray-500 mt-1">
               Your review helps other shoppers make informed decisions and
@@ -264,8 +305,8 @@ toast.error('Failed to submit review. Please try again.')
                   className="relative w-20 h-20 border rounded-md overflow-hidden group"
                 >
                   <Image
-                    src={image || '/placeholder.svg'}
-                    alt={`Review image ${index + 1}`}
+                    src={image.url || '/placeholder.svg'}
+                    alt={image.alt || `Review image ${index + 1}`}
                     fill
                     className="object-cover"
                   />
@@ -303,17 +344,20 @@ toast.error('Failed to submit review. Please try again.')
 
           <div className="flex gap-3">
             <Button
-              label={isSubmitting ? 'Submitting...' : 'Submit Review'}
+              type="submit"
               disabled={isSubmitting}
-              onClick={(e) => handleSubmit(e)}
-              outline
-              icon={MdSend}
-            />
+              className="flex items-center gap-2"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Review'}
+              {!isSubmitting && <MdSend className="h-4 w-4" />}
+            </Button>
             <Button
-              label="Cancel"
+              type="button"
+              variant="outline"
               onClick={() => setShowForm(false)}
-              outline={false}
-            />
+            >
+              Cancel
+            </Button>
           </div>
         </form>
       </motion.div>
