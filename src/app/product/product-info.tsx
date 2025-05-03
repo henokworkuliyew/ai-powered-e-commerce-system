@@ -22,7 +22,12 @@ import { toast } from 'react-toastify'
 import { FormatPrice } from '@/hooks/utils/formatPrice'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
-import { Review } from '@/type/Review'
+
+interface ReviewStats {
+  totalReviews: number
+  averageRating: number
+  ratingDistribution: Record<number, number>
+}
 
 interface ProductInfoProps {
   product: Product
@@ -32,7 +37,7 @@ interface ProductInfoProps {
   handleAddToCart: () => void
   handleBuyNow: () => void
   setCartProduct: React.Dispatch<React.SetStateAction<CartProduct>>
-  mockReviews: Review[]
+  reviewStats: ReviewStats | null
   selectedSize: string
   setSelectedSize: React.Dispatch<React.SetStateAction<string>>
 }
@@ -45,7 +50,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   handleAddToCart,
   handleBuyNow,
   setCartProduct,
-  mockReviews,
+  reviewStats,
   selectedSize,
   setSelectedSize,
 }) => {
@@ -67,14 +72,13 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     setEmail('')
   }
 
-   const { cartProducts} = useCart()
+  const { cartProducts } = useCart()
   const Horizontal = () => {
     return <hr className="border-t-4 w-1/2 mb-5 mt-2" />
   }
-  console.log('cartProducts', cartProducts)
-  useEffect(() => {
 
-     setProductInCart(false)
+  useEffect(() => {
+    setProductInCart(false)
     if (cartProducts) {
       const existItem = cartProducts.find((item) => item._id === product._id)
 
@@ -87,6 +91,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       }
     }
   }, [cartProducts, product])
+
   const SizeGuideModal = () => (
     <AnimatePresence>
       {showSizeGuide && (
@@ -285,17 +290,15 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           <h2 className="text-3xl font-medium text-stone-900">
             {product?.name || 'No Name Available'}
           </h2>
-          <p className="text-sm text-gray-500">
-            SKU: {product._id}
-          </p>
+          <p className="text-sm text-gray-500">SKU: {product._id}</p>
         </div>
         <WishlistButton productId={product._id} />
       </div>
 
       <div className="flex items-center gap-3 mt-2">
         <RatingDisplay
-          rating={product.rating || 0}
-          reviewCount={mockReviews.length}
+          rating={reviewStats?.averageRating || product.rating || 0}
+          reviewCount={reviewStats?.totalReviews || 0}
         />
         <button
           onClick={() => {
