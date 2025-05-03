@@ -1,5 +1,5 @@
 'use client'
-import { useCallback,  useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import type React from 'react'
 
 import { MdCheckCircle, MdSecurity, MdLoop } from 'react-icons/md'
@@ -8,24 +8,54 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Product } from '@/type/Product'
 import type { CartProduct, SelectedImg } from '@/type/CartProduct'
+import type { Review } from '@/type/Review'
 import { useCart } from '@/hooks/useCart'
 import RecentlyViewed from '@/components/ProductCard/RecentlyViewed'
 import ProductGallery from './product-gallery'
 import ProductInfo from './product-info'
-import Button from '@/components/ui/Button'
+
 import ReviewList from '@/components/review/ReviewList'
 import ReviewForm from '@/components/review/ReveiwForm'
-import { mockQuestions, mockReviews } from '@/lib/mockData'
+
+import { QuestionForm } from './questions/Questions'
+
+interface ReviewStats {
+  totalReviews: number
+  averageRating: number
+  ratingDistribution: Record<number, number>
+}
 
 interface ProductDetailsProps {
   product: Product
 }
 
+interface Answer {
+  _id: string
+  content: string
+  answeredBy: string
+  isStaff: boolean
+  isVerifiedPurchase?: boolean
+  helpfulVotes?: number
+  createdAt: string
+  updatedAt: string
+}
+
+interface Question {
+  _id: string
+  productId: string
+  question: string
+  askedBy: string
+  isVerifiedPurchase?: boolean
+  status: 'pending' | 'published' | 'rejected'
+  answers: Answer[]
+  helpfulVotes?: number
+  createdAt: string
+  updatedAt: string
+}
 const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   const router = useRouter()
   const [cartProduct, setCartProduct] = useState<CartProduct>({
-    _id: product._id ,
-    //_id: product._id,
+    _id: product._id,
     name: product.name,
     description: product.description,
     brand: product.brand,
@@ -35,10 +65,73 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     },
     qty: 1,
     price: product.price,
-
     selectedSize: 'M',
   })
-  
+
+  // State for reviews
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null)
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [reviewsError, setReviewsError] = useState<string | null>(null)
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [questionsLoading, setQuestionsLoading] = useState(false)
+  // Fetch reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!product._id) return
+
+      try {
+        setReviewsLoading(true)
+        const response = await fetch(
+          `/api/product/review?productId=${product._id}`
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch reviews')
+        }
+
+        const data = await response.json()
+        setReviews(data.reviews)
+        setReviewStats(data.stats)
+      } catch (err) {
+        setReviewsError(
+          err instanceof Error ? err.message : 'An error occurred'
+        )
+      } finally {
+        setReviewsLoading(false)
+      }
+    }
+
+   
+    const fetchQuestions = async () => {
+
+      if (!product._id) return
+
+      try {
+        setQuestionsLoading(true)
+        const response = await fetch(
+          `/api/product/questions?productId=${product._id}`
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch questions')
+        }
+
+        const data = await response.json()
+        setQuestions(data)
+        console.log('Fetched questions:', questions)
+      } catch (err) {
+        console.error('Error fetching questions:', err)
+      } finally {
+        setQuestionsLoading(false)
+      }
+    }
+     fetchReviews()
+    fetchQuestions()
+  }, [product._id])
+
+
+
   const handleColorSelect = useCallback(
     (value: SelectedImg) => {
       setCartProduct((prev: CartProduct) => ({ ...prev, selectedImg: value }))
@@ -76,8 +169,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }, [cartProduct])
 
- 
-
   const handleAddToCart = (): void => {
     handleAddProductToCart(cartProduct)
     toast.success('Product added to cart!', {
@@ -92,9 +183,33 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   const handleBuyNow = (): void => {
-   // handleAddProductToCart(cartProduct)
+    // handleAddProductToCart(cartProduct)
     router.push('/checkout')
   }
+
+
+  const handleReviewSubmitted = async () => {
+    
+    if (!product._id) return
+
+    try {
+      const response = await fetch(
+        `/api/product/review?productId=${product._id}`
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews')
+      }
+
+      const data = await response.json()
+      setReviews(data.reviews)
+      setReviewStats(data.stats)
+    } catch (err) {
+      console.error('Error refreshing reviews:', err)
+    }
+  }
+
+ console.log('questiond', questions)
 
   return (
     <div className="flex flex-col mr-5">
@@ -113,14 +228,12 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
           handleAddToCart={handleAddToCart}
           handleBuyNow={handleBuyNow}
           setCartProduct={setCartProduct}
-          mockReviews={mockReviews}
+          reviewStats={reviewStats}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
         />
-       
       </div>
 
-     
       <div id="product-tabs" className="mt-10">
         <div className="border-b border-gray-200">
           <div className="flex flex-wrap -mb-px">
@@ -142,7 +255,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
               }`}
               onClick={() => setActiveTab('reviews')}
             >
-              Reviews ({mockReviews.length})
+              Reviews ({reviewStats?.totalReviews || 0})
             </button>
             <button
               className={`py-2 px-4 font-medium text-sm border-b-2 ${
@@ -152,7 +265,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
               }`}
               onClick={() => setActiveTab('questions')}
             >
-              Q&A ({mockQuestions.length})
+              Q&A ({questions.length})
             </button>
             <button
               className={`py-2 px-4 font-medium text-sm border-b-2 ${
@@ -175,7 +288,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
               </h3>
               <p className="mb-4">{product.description}</p>
 
-              
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h4 className="font-medium mb-3">Features</h4>
@@ -214,7 +326,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
                 </div>
               </div>
 
-             
               <div className="mt-8">
                 <h4 className="font-medium mb-3">Care Instructions</h4>
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -247,10 +358,27 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
           {activeTab === 'reviews' && (
             <div>
-              <ReviewList reviews={mockReviews} productId={product._id ||''} />
-              <div className="mt-8">
-                <ReviewForm productId={product._id || ''} />
-              </div>
+              {reviewsLoading ? (
+                <div className="text-center py-8">Loading reviews...</div>
+              ) : reviewsError ? (
+                <div className="text-center py-8 text-red-500">
+                  {reviewsError}
+                </div>
+              ) : (
+                <>
+                  <ReviewList
+                    reviews={reviews}
+                    stats={reviewStats}
+                    productId={product._id || ''}
+                  />
+                  <div className="mt-8">
+                    <ReviewForm
+                      productId={product._id || ''}
+                      onReviewSubmitted={handleReviewSubmitted}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -260,16 +388,30 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
                 <h3 className="text-lg font-semibold mb-4">
                   Customer Questions
                 </h3>
+                {questionsLoading && (
+                  <div className="text-center py-8">Loading questions...</div>
+                )}
+                {questions.length === 0 && !questionsLoading && ( 
+                    
+                    <div className="text-center py-8 text-gray-500">
+                      No questions have been asked yet.
+                    </div>
+                  )}
 
-                {mockQuestions.map((q) => (
-                  <div key={q.id} className="border-b pb-4 mb-4">
+                {questions.map((q) => (
+                  <div key={q._id} className="border-b pb-4 mb-4">
                     <div className="flex items-start gap-2">
                       <FaQuestion className="text-teal-600 mt-1 flex-shrink-0" />
                       <div>
                         <p className="font-medium">{q.question}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           Asked by {q.askedBy} •{' '}
-                          {new Date(q.date).toLocaleDateString()}
+                          {new Date(q.createdAt).toLocaleDateString() +
+                            ' at ' +
+                            new Date(
+                              q.createdAt
+                            ).toLocaleTimeString() 
+                            }
                         </p>
                       </div>
                     </div>
@@ -277,10 +419,43 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
                     <div className="flex items-start gap-2 mt-3 ml-6">
                       <MdCheckCircle className="text-green-600 mt-1 flex-shrink-0" />
                       <div>
-                        <p>{q.answer}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Answered by {q.answeredBy}
+                        <p>
+                          {q.answers.length > 0
+                            ? q.answers[0].content
+                            : 'No answers yet.'}
                         </p>
+                        {q.answers.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Answered by {q.answers[0].answeredBy} •{' '}
+                            {new Date(
+                              q.answers[0].createdAt
+                            ).toLocaleDateString() +
+                              ' at ' +
+                              new Date(
+                                q.answers[0].createdAt
+                              ).toLocaleTimeString() +
+                              ' UTC'}
+                          </p>
+                        )}
+                        {q.answers.length > 1 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Answered by{' '}
+                            {q.answers.length > 0
+                              ? q.answers[0].answeredBy
+                              : 'N/A'}{' '}
+                            •{' '}
+                            {q.answers.length > 0
+                              ? new Date(
+                                  q.answers[0].createdAt
+                                ).toLocaleDateString() +
+                                ' at ' +
+                                new Date(
+                                  q.answers[0].createdAt
+                                ).toLocaleTimeString() +
+                                ' UTC'
+                              : 'N/A'}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -289,35 +464,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h4 className="font-medium mb-3">Ask a Question</h4>
-                <form className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="question"
-                      className="block text-sm font-medium mb-1"
-                    >
-                      Your Question
-                    </label>
-                    <textarea
-                      id="question"
-                      rows={3}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="What would you like to know about this product?"
-                    ></textarea>
-                  </div>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      className="flex-1 px-3 py-2 border rounded-md"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Your email"
-                      className="flex-1 px-3 py-2 border rounded-md"
-                    />
-                  </div>
-                  <Button label="Submit Question" outline />
-                </form>
+                <QuestionForm product={product} />
               </div>
             </div>
           )}
@@ -408,7 +555,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
         </div>
       </div>
 
-      
       <RecentlyViewed currentProductId={product._id || ''} />
     </div>
   )
