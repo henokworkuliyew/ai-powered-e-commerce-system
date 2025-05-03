@@ -1,8 +1,7 @@
 'use client'
 
-import React from 'react'
+import type React from 'react'
 import { useState, useEffect } from 'react'
-import { Rating } from '@mui/material'
 import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -13,37 +12,33 @@ import {
   FaStar,
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Button } from '@/components/ui/button2'
+import type { Review } from '@/type/Review'
 
-interface Review {
-  id: string
-  userId: string
-  userName: string
-  userImage?: string
-  rating: number
-  comment: string
-  title?: string
-  createdAt: string
-  helpful: number
-  notHelpful: number
-  verified?: boolean
+interface ReviewStats {
+  totalReviews: number
+  averageRating: number
+  ratingDistribution: Record<number, number>
 }
 
 interface ReviewListProps {
   reviews: Review[]
+  stats: ReviewStats | null
   productId: string
 }
 
 const ReviewList: React.FC<ReviewListProps> = ({
   reviews,
-  productId,
-}): JSX.Element => {
+  stats,
+  
+}) => {
   const [expandedReviews, setExpandedReviews] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<'recent' | 'highest' | 'lowest'>(
     'recent'
   )
   const [filterRating, setFilterRating] = useState<number | null>(null)
   const [showFilters, setShowFilters] = useState(false)
-  const [filteredReviews, setFilteredReviews] = useState<Review[]>(reviews)
+  const [filteredReviews, setFilteredReviews] = useState<Review[]>([])
   const [activeFilter, setActiveFilter] = useState<
     'all' | 'positive' | 'negative' | 'verified'
   >('all')
@@ -54,12 +49,12 @@ const ReviewList: React.FC<ReviewListProps> = ({
   useEffect(() => {
     let result = [...reviews]
 
-    // Apply rating filter
+
     if (filterRating !== null) {
       result = result.filter((review) => review.rating === filterRating)
     }
 
-    // Apply active filter
+   
     if (activeFilter === 'positive') {
       result = result.filter((review) => review.rating >= 4)
     } else if (activeFilter === 'negative') {
@@ -82,7 +77,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
     setFilteredReviews(result)
   }, [reviews, filterRating, sortBy, activeFilter])
 
-  const toggleExpand = (reviewId: string): void => {
+  const toggleExpand = (reviewId: string) => {
     setExpandedReviews((prev) =>
       prev.includes(reviewId)
         ? prev.filter((id) => id !== reviewId)
@@ -90,21 +85,10 @@ const ReviewList: React.FC<ReviewListProps> = ({
     )
   }
 
-  const ratingCounts = reviews.reduce((acc, review) => {
-    acc[review.rating] = (acc[review.rating] || 0) + 1
-    return acc
-  }, {} as Record<number, number>)
-
-  const totalReviews = reviews.length
-  const averageRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-      : 0
-
-  const handleHelpfulClick = (
+  const handleHelpfulClick = async (
     reviewId: string,
     type: 'helpful' | 'notHelpful'
-  ): void => {
+  ) => {
     setHelpfulClicked((prev) => {
       // If already clicked the same button, unclick it
       if (prev[reviewId] === type) {
@@ -116,8 +100,43 @@ const ReviewList: React.FC<ReviewListProps> = ({
       return { ...prev, [reviewId]: type }
     })
 
-    // In a real app, you would send this to your API
-    // For now, we'll just show a visual change
+    try {
+      // Send the vote to the API
+      await fetch(`/api/reviews/${reviewId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: type }),
+      })
+    } catch (error) {
+      console.error('Error voting on review:', error)
+    }
+  }
+
+  const handleReportReview = async (reviewId: string) => {
+    const reason = prompt('Please provide a reason for reporting this review:')
+    if (!reason) return
+
+    try {
+      const response = await fetch('/api/reviews/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reviewId, reason }),
+      })
+
+      if (response.ok) {
+        alert('Thank you for your report. We will review it shortly.')
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to report review. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error reporting review:', error)
+      alert('An error occurred. Please try again.')
+    }
   }
 
   const FilterButton = ({
@@ -129,17 +148,19 @@ const ReviewList: React.FC<ReviewListProps> = ({
     isActive: boolean
     onClick: () => void
   }) => (
-    <button
+    <Button
       onClick={onClick}
-      className={`px-3 py-1 rounded-full text-sm transition-colors ${
-        isActive
-          ? 'bg-teal-500 text-white'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
+      variant={isActive ? 'default' : 'outline'}
+      size="sm"
+      className={`rounded-full ${isActive ? 'bg-teal-500' : ''}`}
     >
       {label}
-    </button>
+    </Button>
   )
+
+  const averageRating = stats?.averageRating || 0
+  const totalReviews = stats?.totalReviews || 0
+  const ratingCounts = stats?.ratingDistribution || {}
 
   return (
     <div className="w-full">
@@ -289,7 +310,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
           {filteredReviews.length > 0 ? (
             filteredReviews.map((review, index) => (
               <motion.div
-                key={review.id}
+                key={review._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -298,8 +319,8 @@ const ReviewList: React.FC<ReviewListProps> = ({
                 <div className="flex items-start gap-4">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden border">
                     <Image
-                      src={review.userImage || '/placeholder.png'}
-                      alt={review.userName}
+                      src={review.userId?.image || '/placeholder.svg'}
+                      alt={review.userId?.name || 'User'}
                       fill
                       className="object-cover"
                     />
@@ -308,7 +329,9 @@ const ReviewList: React.FC<ReviewListProps> = ({
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium">{review.userName}</p>
+                          <p className="font-medium">
+                            {review.userId?.name || 'Anonymous User'}
+                          </p>
                           {review.verified && (
                             <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                               Verified Purchase
@@ -316,7 +339,18 @@ const ReviewList: React.FC<ReviewListProps> = ({
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <Rating value={review.rating} readOnly size="small" />
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <FaStar
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= review.rating
+                                    ? 'text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
                           <span className="text-xs text-gray-500">
                             {formatDistanceToNow(new Date(review.createdAt), {
                               addSuffix: true,
@@ -332,7 +366,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
 
                     <p
                       className={`mt-2 text-gray-700 ${
-                        expandedReviews.includes(review.id)
+                        expandedReviews.includes(review._id)
                           ? ''
                           : 'line-clamp-3'
                       }`}
@@ -342,20 +376,40 @@ const ReviewList: React.FC<ReviewListProps> = ({
 
                     {review.comment.length > 150 && (
                       <button
-                        onClick={() => toggleExpand(review.id)}
+                        onClick={() => toggleExpand(review._id)}
                         className="text-sm text-teal-600 mt-1 hover:underline"
                       >
-                        {expandedReviews.includes(review.id)
+                        {expandedReviews.includes(review._id)
                           ? 'Show less'
                           : 'Read more'}
                       </button>
                     )}
 
+                    {review.images && review.images.length > 0 && (
+                      <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                        {review.images.map((image, idx) => (
+                          <div
+                            key={idx}
+                            className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border"
+                          >
+                            <Image
+                              src={image || '/placeholder.svg'}
+                              alt={`Review image ${idx + 1}`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-4 mt-3">
                       <button
-                        onClick={() => handleHelpfulClick(review.id, 'helpful')}
+                        onClick={() =>
+                          handleHelpfulClick(review._id, 'helpful')
+                        }
                         className={`flex items-center gap-1 text-sm ${
-                          helpfulClicked[review.id] === 'helpful'
+                          helpfulClicked[review._id] === 'helpful'
                             ? 'text-teal-600 font-medium'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
@@ -364,16 +418,16 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         <span>
                           Helpful (
                           {review.helpful +
-                            (helpfulClicked[review.id] === 'helpful' ? 1 : 0)}
+                            (helpfulClicked[review._id] === 'helpful' ? 1 : 0)}
                           )
                         </span>
                       </button>
                       <button
                         onClick={() =>
-                          handleHelpfulClick(review.id, 'notHelpful')
+                          handleHelpfulClick(review._id, 'notHelpful')
                         }
                         className={`flex items-center gap-1 text-sm ${
-                          helpfulClicked[review.id] === 'notHelpful'
+                          helpfulClicked[review._id] === 'notHelpful'
                             ? 'text-red-600 font-medium'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
@@ -382,13 +436,16 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         <span>
                           Not helpful (
                           {review.notHelpful +
-                            (helpfulClicked[review.id] === 'notHelpful'
+                            (helpfulClicked[review._id] === 'notHelpful'
                               ? 1
                               : 0)}
                           )
                         </span>
                       </button>
-                      <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+                      <button
+                        onClick={() => handleReportReview(review._id)}
+                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                      >
                         <FaFlag size={14} />
                         <span>Report</span>
                       </button>
