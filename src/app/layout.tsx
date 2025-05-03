@@ -1,3 +1,4 @@
+import SessionProvider from '@/components/auth/SessionProvider'
 import './globals.css'
 import Footer from '@/components/footer/Footer'
 import Header from '@/components/header/Header'
@@ -37,13 +38,13 @@ export default async function RootLayout({
             },
           }}
         />
-        
+        <SessionProvider>
           <CartContextProvider>
             <Header />
             <main className="flex-grow pt-24">{children}</main>
             <Footer />
           </CartContextProvider>
-       
+        </SessionProvider>
       </body>
     </html>
   )
