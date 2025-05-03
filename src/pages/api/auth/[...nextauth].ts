@@ -1,9 +1,9 @@
-import NextAuth, { NextAuthOptions } from 'next-auth'
+import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcrypt'
 import dbConnect from '@/lib/dbConnect'
-import User from '@/server/models/User' 
+import User from '@/server/models/User'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,6 +16,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
+        remember: { label: 'Remember me', type: 'checkbox' },
       },
       async authorize(credentials) {
         await dbConnect()
@@ -37,14 +38,47 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid email or password!')
         }
 
-        return user
+        // Important: Convert Mongoose document to a plain object with explicit typing
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+          emailVerified: user.emailVerified,
+        }
       },
     }),
   ],
-  pages: { signIn: '/login' },
+  pages: {
+    signIn: '/login',
+    error: '/auth/error',
+  },
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
+    maxAge: 4 * 24 * 60 * 60,
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.role = user.role
+        token.emailVerified = user.emailVerified
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string
+        session.user.role = token.role as 'USER' | 'ADMIN' | 'MANAGER'
+        session.user.emailVerified = token.emailVerified as Date | null
+      }
+      return session
+    },
+  },
+  jwt: {
+    maxAge: 4 * 24 * 60 * 60,
   },
   debug: process.env.NODE_ENV === 'development',
 }
