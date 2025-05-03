@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
           )}
         </button>
 
-        <button>
+        <button onClick={() => router.push('/notifications')}>
           <FaBell className="text-2xl text-blue-500" />
         </button>
 
