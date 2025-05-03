@@ -202,7 +202,7 @@ export default function CheckoutPage() {
                       id="sameAsBilling"
                       checked={sameAsBilling}
                       onCheckedChange={handleSameAsBillingChange}
-                      className="data-[state=checked]:bg-primary"
+                      className="data-[state=checked]:bg-primary border-gray-800"
                     />
                     <Label htmlFor="sameAsBilling" className="font-medium">
                       Same as shipping
