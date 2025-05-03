@@ -12,10 +12,10 @@ export async function POST(request: Request) {
     const currentUser = await getCurrentUser()
     const data = await request.json()
     console.log('Received data:', data)
-    // Connect to the database
+    
     await dbConnect()
 
-    // Generate a unique order number
+    
     const orderNumber = generateOrderNumber()
      
     const order = new Order({
