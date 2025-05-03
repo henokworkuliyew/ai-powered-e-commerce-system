@@ -27,7 +27,7 @@ export interface IOrder extends Document {
   subtotal: number
   tax: number
   shipping: number
-  
+
   shippingAddressId: mongoose.Types.ObjectId
   billingAddressId: mongoose.Types.ObjectId
   transactionRef?: string // Added for Chapa payment tracking
@@ -82,7 +82,7 @@ const OrderSchema = new Schema<IOrder>(
       ref: 'Address',
       required: true,
     },
-    transactionRef: { type: String }, 
+    transactionRef: { type: String },
     notes: { type: String },
   },
   { timestamps: true }
