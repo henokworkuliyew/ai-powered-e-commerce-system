@@ -47,7 +47,7 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
     }).then((callback) => {
       setIsLoadig(false)
       if (callback?.ok) {
-        router.push('/')
+        router.push('/checkout')
         router.refresh()
         toast.success('Login successful')
       }
