@@ -35,7 +35,7 @@ export async function getCurrentUser() {
   }
 }
 
-// Check if user is authenticated and has required role
+
 export async function requireAuth(
   req: Request,
   roles?: ('USER' | 'ADMIN' | 'MANAGER')[]
@@ -65,8 +65,13 @@ export async function requireAuth(
   return { success: true, user: session.user }
 }
 
-// Helper to check if session is expired
-export function isSessionExpired(session: any) {
+
+interface Session {
+  expires: string
+  [key: string]: unknown 
+}
+
+export function isSessionExpired(session: Session | null | undefined): boolean {
   if (!session || !session.expires) return true
 
   const expiryDate = new Date(session.expires)
