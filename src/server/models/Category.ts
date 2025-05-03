@@ -1,5 +1,12 @@
 import { Schema, model, models } from 'mongoose'
 
+export interface ICategory {
+  name: string
+  subCategories?: string[]
+  icon?: string
+  createdAt: Date
+  updatedAt: Date
+}
 const CategorySchema = new Schema(
   {
     name: { type: String, required: true, unique: true },
