@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     })
 
     const chapaData = await chapaResponse.json()
-    console.log('✅ Chapa Verification Response:', chapaData)
+   
 
     if (chapaData.status !== 'success' || chapaData.data.status !== 'success') {
       return NextResponse.json(
