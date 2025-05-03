@@ -15,7 +15,6 @@ export async function POST(req: Request) {
 
   await dbConnect()
   const body = await req.json()
- console.log('Request body:', body.name)
   const {
     name,
     description,
@@ -28,7 +27,6 @@ export async function POST(req: Request) {
     
   } = body
 
-  console.log('Product images:', images)
 
   if (quantity < 1) {
     return new Response(
