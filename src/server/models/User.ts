@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IUser extends Document {
   name: string;
   email: string;
-  hashedPassword: string;
+  hashedPassword?: string;
   emailVerified?: Date;
   image?: string;
   createdAt: Date;
@@ -14,7 +14,7 @@ export interface IUser extends Document {
 const userSchema = new Schema<IUser>({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  hashedPassword: { type: String, required: true },
+  hashedPassword: { type: String, required: false },
   emailVerified: { type: Date },
   image: { type: String },
   createdAt: { type: Date, default: Date.now },
@@ -22,7 +22,7 @@ const userSchema = new Schema<IUser>({
   role: { type: String, enum: ['USER', 'ADMIN', 'MANAGER'], default: 'USER' },
 });
 
-// Prevents OverwriteModelError by checking if the model already exists
+
 const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
 
 export default User;
