@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import Address, { IAddress } from '@/server/models/Address'
+import Address from '@/server/models/Address'
 import connectDB from '@/lib/dbConnect'
 
 export async function GET(request: NextRequest) {
