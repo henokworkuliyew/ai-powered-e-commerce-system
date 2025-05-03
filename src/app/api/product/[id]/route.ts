@@ -1,4 +1,4 @@
-// Adjust the import path as necessary
+
 
 import dbConnect from "@/lib/dbConnect"
 import { Product } from "@/server/models/Product"
@@ -6,10 +6,10 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   
-  const { id } = params
+  const { id } = await context.params
   
   try {
     await dbConnect()
