@@ -18,7 +18,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-
 } from '@/components/ui/select'
 import {
   Table,
@@ -289,12 +288,12 @@ export default function ViewOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-lg">
-        <DialogHeader className="border-b border-gray-200 pb-4">
-          <DialogTitle className="text-xl font-bold text-purple-700">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white border-2 border-gray-300 shadow-xl rounded-lg">
+        <DialogHeader className="border-b border-gray-200 pb-4 bg-gradient-to-r from-cyan-100 to-blue-100 p-6 rounded-t-lg">
+          <DialogTitle className="text-xl font-bold text-cyan-700">
             Order #{order.orderNumber}
           </DialogTitle>
-          <DialogDescription className="text-gray-600">
+          <DialogDescription className="text-gray-500">
             Created on {formatDate(order.createdAt)}
           </DialogDescription>
         </DialogHeader>
@@ -302,14 +301,14 @@ export default function ViewOrderDialog({
         <div className="overflow-y-auto flex-1 p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-purple-700 border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold mb-3 text-cyan-700 border-b border-gray-100 pb-2">
                 Order Details
               </h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Order Status</Label>
-                    <div className="flex items-center justify-between mt-1 p-2 border rounded-md bg-white">
+                    <div className="flex items-center justify-between mt-1 p-2 border-2 rounded-md bg-white border-gray-300 shadow-sm">
                       {getOrderStatusBadge(orderStatus)}
                       <Select
                         value={orderStatus}
@@ -334,7 +333,7 @@ export default function ViewOrderDialog({
 
                   <div>
                     <Label>Payment Status</Label>
-                    <div className="flex items-center justify-between mt-1 p-2 border rounded-md bg-white">
+                    <div className="flex items-center justify-between mt-1 p-2 border-2 rounded-md bg-white border-gray-300 shadow-sm">
                       {getPaymentStatusBadge(paymentStatus)}
                       <Select
                         value={paymentStatus}
@@ -359,7 +358,7 @@ export default function ViewOrderDialog({
                 {order.transactionRef && (
                   <div>
                     <Label>Transaction Reference</Label>
-                    <div className="p-3 bg-purple-50 rounded-md text-sm font-mono border border-purple-100">
+                    <div className="p-3 bg-cyan-100 rounded-md text-sm font-mono border-2 border-cyan-200">
                       {order.transactionRef}
                     </div>
                   </div>
@@ -377,7 +376,7 @@ export default function ViewOrderDialog({
                 </div>
               </div>
 
-              <h3 className="text-lg font-semibold mt-6 mb-3 text-purple-700 border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold mt-6 mb-3 text-cyan-700 border-b border-gray-100 pb-2">
                 Customer Details
               </h3>
               {isLoadingAddress ? (
@@ -389,7 +388,7 @@ export default function ViewOrderDialog({
                   {addressError}
                 </div>
               ) : shippingAddress ? (
-                <div className="p-4 border rounded-md bg-white shadow-sm">
+                <div className="p-4 border-2 rounded-md bg-white shadow-md border-gray-300">
                   <p className="font-medium">{shippingAddress.fullName}</p>
                   <p>{shippingAddress.phoneNumber}</p>
                   <p>{shippingAddress.addressLine1}</p>
@@ -410,23 +409,23 @@ export default function ViewOrderDialog({
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-purple-700 border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold mb-3 text-cyan-700 border-b border-gray-100 pb-2">
                 Order Items
               </h3>
-              <div className="border rounded-md overflow-hidden shadow-sm">
+              <div className="border-2 rounded-md overflow-hidden shadow-md border-gray-300">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-purple-50">
-                      <TableHead className="font-semibold text-purple-900">
+                    <TableRow className="bg-cyan-50">
+                      <TableHead className="font-semibold text-cyan-900">
                         Item
                       </TableHead>
-                      <TableHead className="text-right font-semibold text-purple-900">
+                      <TableHead className="text-right font-semibold text-cyan-900">
                         Qty
                       </TableHead>
-                      <TableHead className="text-right font-semibold text-purple-900">
+                      <TableHead className="text-right font-semibold text-cyan-900">
                         Price
                       </TableHead>
-                      <TableHead className="text-right font-semibold text-purple-900">
+                      <TableHead className="text-right font-semibold text-cyan-900">
                         Total
                       </TableHead>
                     </TableRow>
@@ -455,7 +454,7 @@ export default function ViewOrderDialog({
                 </Table>
               </div>
 
-              <div className="mt-4 space-y-1 text-sm bg-purple-50 p-4 rounded-md">
+              <div className="mt-4 space-y-1 text-sm bg-cyan-100 p-4 rounded-md border-2 border-cyan-200">
                 <div className="flex justify-between py-1">
                   <span className="text-muted-foreground">Subtotal:</span>
                   <span>${order.subtotal.toFixed(2)}</span>
@@ -468,7 +467,7 @@ export default function ViewOrderDialog({
                   <span className="text-muted-foreground">Shipping:</span>
                   <span>${order.shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-2 border-t border-purple-200 font-medium text-base text-purple-900">
+                <div className="flex justify-between py-2 border-t border-cyan-200 font-medium text-base text-cyan-900">
                   <span>Total:</span>
                   <span>
                     ${(order.subtotal + order.tax + order.shipping).toFixed(2)}
@@ -479,18 +478,18 @@ export default function ViewOrderDialog({
           </div>
         </div>
 
-        <DialogFooter className="border-t p-4">
+        <DialogFooter className="border-t p-4 bg-gray-100 rounded-b-lg border-t-2 border-gray-200">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-purple-200 text-purple-700 hover:bg-purple-50"
+            className="border-gray-200 text-gray-600 hover:bg-gray-50"
           >
             Cancel
           </Button>
           <Button
             onClick={handleUpdateOrder}
             disabled={isLoading || !order}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="bg-cyan-600 hover:bg-cyan-700 text-white"
           >
             {isLoading ? 'Updating...' : 'Save Changes'}
           </Button>
