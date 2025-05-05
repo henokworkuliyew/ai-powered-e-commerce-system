@@ -32,7 +32,7 @@ const ShipmentSchema = new Schema<IShipment>(
   {
     orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
     trackingNumber: { type: String, required: true },
-    carrierId: { type: Schema.Types.ObjectId, ref: 'Carrier', required: true },
+    carrierId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     status: {
       type: String,
       enum: ['processing', 'in_transit', 'delivered', 'failed', 'returned'],
