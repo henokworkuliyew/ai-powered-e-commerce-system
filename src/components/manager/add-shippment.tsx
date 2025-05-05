@@ -14,11 +14,9 @@ import {
   Loader2,
   Truck,
   Package,
-  ShoppingBag,
-  CheckCircle2,
-  Bell,
   MapPin,
   Clock,
+  AlertCircle,
 } from 'lucide-react'
 import type { IOrder } from '@/server/models/Order'
 import type { IAddress } from '@/server/models/Address'
@@ -31,6 +29,8 @@ import { Switch } from '@/components/ui/switch'
 import type { Carrier } from '@/type/Carrier'
 import type { Shipment } from '@/type/Shipment'
 import { cn } from '@/lib/utils'
+import CarrierSelection from './carrier-selection'
+import ShipmentConfirmation from './shipment-confirmation'
 
 interface AddShipmentDialogProps {
   open: boolean
@@ -57,6 +57,7 @@ export default function AddShipmentDialog({
   const [notes, setNotes] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [carriers, setCarriers] = useState<Carrier[]>([])
+  const [activeCarriers, setActiveCarriers] = useState<Carrier[]>([])
   const [isLoadingCarriers, setIsLoadingCarriers] = useState(false)
   const [shippingAddress, setShippingAddress] = useState<{
     name: string
@@ -87,7 +88,9 @@ export default function AddShipmentDialog({
   const [error, setError] = useState<string | null>(null)
   const [newOrdersCount, setNewOrdersCount] = useState(0)
   const [estimatedDeliveryTime, setEstimatedDeliveryTime] = useState('')
-  const [localCarriers, setLocalCarriers] = useState<Carrier[]>([])
+  const [carrierAssignments, setCarrierAssignments] = useState<{
+    [key: string]: number
+  }>({})
 
   const fetchCarriers = async () => {
     setIsLoadingCarriers(true)
@@ -101,14 +104,41 @@ export default function AddShipmentDialog({
       }
 
       const data = await response.json()
-      console.log('Fetched carriers:', data.carriers)
+      const fetchedCarriers = data.carriers || []
+      setCarriers(fetchedCarriers)
 
-      setCarriers(data.carriers)
-      // Filter carriers for local delivery or use all carriers if none are specifically marked for local delivery
-      setLocalCarriers(data.carriers.filter((c: Carrier) => c.isActive) || [])
-    } catch (error: unknown) {
-      console.error('Error fetching carriers:', error)
-      setError('Failed to load carriers. Using default carriers instead.')
+      // Filter active carriers and sort by activation time (oldest first)
+      const active = fetchedCarriers
+        .filter((c: Carrier) => c.isActive)
+        .sort((a: Carrier, b: Carrier) => {
+          // Sort by activation time if available
+          if (a.activatedAt && b.activatedAt) {
+            return (
+              new Date(a.activatedAt).getTime() -
+              new Date(b.activatedAt).getTime()
+            )
+          } else if (a.activatedAt) {
+            return -1 // a has activatedAt, b doesn't, so a comes first
+          } else if (b.activatedAt) {
+            return 1 // b has activatedAt, a doesn't, so b comes first
+          }
+          return 0
+        })
+
+      setActiveCarriers(active)
+
+      const initialAssignments = fetchedCarriers.reduce(
+        (acc: { [key: string]: number }, carrier: Carrier) => {
+          acc[carrier._id] = 0
+          return acc
+        },
+        {}
+      )
+      setCarrierAssignments(initialAssignments)
+    } catch (error) {
+      if (error) {
+        setError('Failed to load carriers.')
+      }
     } finally {
       setIsLoadingCarriers(false)
     }
@@ -130,16 +160,16 @@ export default function AddShipmentDialog({
       const data = await response.json()
       setRecentOrders(data.orders || [])
 
-      // Count new unshipped orders
       const unshippedOrders = data.orders.filter(
         (order: IOrder) =>
           order.orderStatus === 'pending' || order.orderStatus === 'delivered'
       )
       setNewOrdersCount(unshippedOrders.length)
     } catch (error) {
-      console.error('Error fetching recent orders:', error)
-      setError('Failed to load recent orders.')
-      setRecentOrders([])
+      if (error instanceof Error) {
+        setError('Failed to load recent orders.')
+        setRecentOrders([])
+      }
     } finally {
       setIsLoadingRecentOrders(false)
     }
@@ -170,9 +200,10 @@ export default function AddShipmentDialog({
         })
       }
     } catch (error) {
-      console.error('Error searching orders:', error)
-      setError('Failed to search orders.')
-      setOrderResults([])
+      if (error) {
+        setError('Failed to search orders.')
+        setOrderResults([])
+      }
     } finally {
       setIsSearchingOrder(false)
     }
@@ -185,7 +216,6 @@ export default function AddShipmentDialog({
     }
   }, [open])
 
- 
   const fetchOrderDetails = async (orderId: string) => {
     setIsLoading(true)
     setError(null)
@@ -199,20 +229,16 @@ export default function AddShipmentDialog({
 
       const orderData1 = await response.json()
       const orderData = orderData1.order
-     
+
       let addressData: Partial<IAddress> | null = null
 
       if (orderData.shippingAddressId) {
-        
         if (
           typeof orderData.shippingAddressId === 'object' &&
           orderData.shippingAddressId.addressLine1
         ) {
-          
           addressData = orderData.shippingAddressId as Partial<IAddress>
         } else {
-          
-       
           try {
             const addressResponse = await fetch(
               `/api/addresses/${orderData.shippingAddressId}`
@@ -220,25 +246,24 @@ export default function AddShipmentDialog({
             if (addressResponse.ok) {
               const addressResult = await addressResponse.json()
               addressData = addressResult.address
-              console.log('Fetched address data:', addressData)
             }
           } catch (error) {
-            console.error('Error fetching address:', error)
+            if (error instanceof Error) {
+              console.error('Error fetching address:', error.message)
+            }
           }
         }
       }
 
-      // If we still don't have address data, try to get it from the order itself
       if (!addressData && orderData.shippingAddress) {
         addressData = orderData.shippingAddress
       }
 
-      // Set shipping address with fallbacks for missing data
       setShippingAddress({
         name:
           addressData?.fullName ||
           orderData.userId?.name ||
-          orderData.customerName ,
+          orderData.customerName,
         email:
           addressData?.email ||
           orderData.userId?.email ||
@@ -265,7 +290,9 @@ export default function AddShipmentDialog({
 
       return orderData
     } catch (error) {
-      console.error('Error fetching order details:', error)
+      if( error instanceof Error) {   
+        console.error('Error fetching order details:', error.message)
+      }
       setError('Failed to fetch order details.')
       return null
     } finally {
@@ -275,40 +302,31 @@ export default function AddShipmentDialog({
 
   const selectOrder = async (order: IOrder) => {
     setSelectedOrder(order)
+    setError(null) // Clear any previous errors
 
     await fetchOrderDetails(order._id?.toString() || '')
-
     generateTrackingNumber()
 
-    if (autoAssignCarrier) {
-      // Only try to assign carrier if we have carriers loaded
-      if (carriers.length || localCarriers.length) {
-        assignBestLocalCarrier()
-      } else {
-       
-        const checkCarriersInterval = setInterval(() => {
-          if (carriers.length || localCarriers.length) {
-            assignBestLocalCarrier()
-            clearInterval(checkCarriersInterval)
-          }
-        }, 500)
-        // Clear interval after 5 seconds to prevent infinite checking
-        setTimeout(() => clearInterval(checkCarriersInterval), 5000)
-      }
-    }
+    // Calculate estimated delivery time
+    calculateEstimatedDeliveryTime()
 
-    if (autoUpdateStatus) {
-      const today = new Date().toISOString().split('T')[0]
-      setDateShipped(today)
-      setStatus('processing')
+    // Set date shipped to today's date
+    const today = new Date().toISOString().split('T')[0]
+    setDateShipped(today)
 
-      // Set estimated delivery time for local delivery (usually same day or next day)
-      calculateEstimatedDeliveryTime()
+    // Set initial status
+    setStatus('processing')
+
+    // Handle carrier assignment
+    if (autoAssignCarrier && activeCarriers.length > 0) {
+      assignBestLocalCarrier()
+    } else if (autoAssignCarrier && activeCarriers.length === 0) {
+      setError('No active carriers available for assignment.')
     }
   }
 
   const generateTrackingNumber = () => {
-    const prefix = 'LC' // Local Carrier prefix
+    const prefix = 'LC'
     const randomPart = Math.floor(Math.random() * 10000000)
       .toString()
       .padStart(7, '0')
@@ -316,12 +334,10 @@ export default function AddShipmentDialog({
     setTrackingNumber(`${prefix}${randomPart}${timestamp}`)
   }
 
-  // Calculate estimated delivery time based on current time
   const calculateEstimatedDeliveryTime = () => {
     const now = new Date()
     const hour = now.getHours()
 
-    // If it's before 2 PM, delivery today; otherwise, tomorrow
     if (hour < 14) {
       setEstimatedDeliveryTime('Today, by 6 PM')
     } else {
@@ -334,18 +350,39 @@ export default function AddShipmentDialog({
   }
 
   const assignBestLocalCarrier = () => {
-    // Use localCarriers if available, otherwise fall back to all carriers
-    const availableCarriers = localCarriers.length ? localCarriers : carriers
-
-    if (!availableCarriers.length) return
-
-    // For local delivery, we can assign based on simple criteria like availability or zone
-    // Here we're just picking the first available carrier
-    const bestCarrier = availableCarriers[0]
-    if (bestCarrier) {
-      setCarrierId(bestCarrier._id)
-      console.log('Assigned carrier:', bestCarrier.name, bestCarrier._id)
+    if (!activeCarriers.length) {
+      setError('No active carriers available.')
+      return
     }
+
+    // Prioritize by activation time (first activated first assigned)
+    const bestCarrier = activeCarriers.reduce((prev, current) => {
+      // If both have activation times, compare them
+      if (prev.activatedAt && current.activatedAt) {
+        return new Date(prev.activatedAt).getTime() <
+          new Date(current.activatedAt).getTime()
+          ? prev
+          : current
+      }
+      // If only one has activation time, prioritize that one
+      else if (prev.activatedAt) {
+        return prev
+      } else if (current.activatedAt) {
+        return current
+      }
+
+      // If neither has activation time, compare by assignments
+      const prevAssignments = carrierAssignments[prev._id] || 0
+      const currentAssignments = carrierAssignments[current._id] || 0
+      return prevAssignments <= currentAssignments ? prev : current
+    })
+
+    setCarrierId(bestCarrier._id)
+
+    setCarrierAssignments((prev) => ({
+      ...prev,
+      [bestCarrier._id]: (prev[bestCarrier._id] || 0) + 1,
+    }))
   }
 
   const resetForm = () => {
@@ -372,41 +409,53 @@ export default function AddShipmentDialog({
     setIsProcessing(false)
     setError(null)
     setEstimatedDeliveryTime('')
+    const resetAssignments = carriers.reduce(
+      (acc: { [key: string]: number }, carrier: Carrier) => {
+        acc[carrier._id] = 0
+        return acc
+      },
+      {}
+    )
+    setCarrierAssignments(resetAssignments)
   }
 
   const handleSubmit = async () => {
+    setError(null)
+
     if (!selectedOrder || !trackingNumber) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing Information',
-        description:
-          'Please select an order and ensure tracking number is generated.',
-      })
+      setError(
+        'Please select an order and ensure tracking number is generated.'
+      )
+      return
+    }
+
+    // Validate carrier selection
+    if (!carrierId && !autoAssignCarrier) {
+      setError('Please select a carrier for this shipment.')
+      return
+    }
+
+    if (!carrierId && autoAssignCarrier && activeCarriers.length === 0) {
+      setError('No active carriers available for assignment.')
       return
     }
 
     setIsProcessing(true)
-    setError(null)
 
-    console.log('Submitting with carrier ID:', carrierId)
-    console.log('Available carriers:', carriers)
-    console.log('Available local carriers:', localCarriers)
-    console.log('Shipping address:', shippingAddress)
+    // Ensure we have a carrier ID
+    let finalCarrierId = carrierId
 
-    // If no carrier is selected but we have carriers available, try to assign one
-    if (!carrierId && (carriers.length || localCarriers.length)) {
+    if (!finalCarrierId && autoAssignCarrier && activeCarriers.length > 0) {
       assignBestLocalCarrier()
+      finalCarrierId = carrierId
     }
 
-    // If we still don't have a carrier ID, create an error
-    if (!carrierId && carriers.length > 0) {
-      setError('Failed to assign a carrier. Please try again.')
+    // Double check we have a carrier ID before proceeding
+    if (!finalCarrierId) {
+      setError('No carrier available for assignment.')
       setIsProcessing(false)
       return
     }
-
-    // Final fallback - if no carriers are available at all, create a virtual carrier ID
-    const finalCarrierId = carrierId || 'local_default_carrier'
 
     try {
       const shipmentData = {
@@ -450,6 +499,17 @@ export default function AddShipmentDialog({
         throw new Error(errorData.message || 'Failed to create shipment')
       }
 
+      // Update carrier status to inactive since they are now shipping
+      if (finalCarrierId) {
+        await fetch(`/api/carrier/${finalCarrierId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isActive: false }),
+        })
+      }
+
       if (autoUpdateStatus) {
         await fetch(`/api/orders/${selectedOrder._id}`, {
           method: 'PATCH',
@@ -478,22 +538,19 @@ export default function AddShipmentDialog({
       setIsComplete(true)
       setIsProcessing(false)
 
-      // Update the count of new orders
       setNewOrdersCount((prev) => Math.max(0, prev - 1))
-
-      setTimeout(() => {
-        resetForm()
-        onShipmentAdded()
-        onOpenChange(false)
-      }, 1500)
     } catch (error) {
-      console.error('Error creating shipment:', error)
       setError(
         error instanceof Error ? error.message : 'Failed to create shipment.'
       )
       setIsProcessing(false)
     }
   }
+
+  // Find the selected carrier - fixed to prevent undefined
+  const selectedCarrier = carrierId
+    ? carriers.find((c) => c._id === carrierId)
+    : undefined
 
   return (
     <Dialog
@@ -503,23 +560,30 @@ export default function AddShipmentDialog({
         onOpenChange(isOpen)
       }}
     >
-      <DialogContent className="max-w-md bg-[#f8f9fa] border-[#e0e4e8] p-0 overflow-hidden rounded-xl">
-        <DialogHeader className="bg-[#4a6bff] text-white p-4">
+      <DialogContent className="max-w-md bg-white border-gray-200 p-0 overflow-hidden rounded-xl">
+        <DialogHeader className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white p-4">
           <DialogTitle className="text-xl font-bold flex items-center">
-            <ShoppingBag className="mr-2 h-5 w-5" />
-            Local Express Shipment
+            <Package className="mr-2 h-5 w-5" />
+            Create Local Shipment
           </DialogTitle>
         </DialogHeader>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           {!selectedOrder && !isComplete && (
-            <div className="text-sm text-[#5a6474] mb-4 flex items-center">
-              <MapPin className="h-4 w-4 mr-1 text-[#4a6bff]" />
+            <div className="text-sm text-gray-600 mb-4 flex items-center">
+              <MapPin className="h-4 w-4 mr-1 text-emerald-600" />
               Select an order to create a local city delivery.
             </div>
           )}
 
-          {!isComplete && !error ? (
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          {!isComplete ? (
             <>
               {!selectedOrder ? (
                 <div className="space-y-4">
@@ -528,7 +592,7 @@ export default function AddShipmentDialog({
                       placeholder="Search by order number"
                       value={orderSearchTerm}
                       onChange={(e) => setOrderSearchTerm(e.target.value)}
-                      className="flex-1 border-[#e0e4e8] focus-visible:ring-[#4a6bff]"
+                      className="flex-1 border-gray-200 focus-visible:ring-emerald-600"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
@@ -539,7 +603,7 @@ export default function AddShipmentDialog({
                     <Button
                       onClick={searchOrders}
                       disabled={isSearchingOrder}
-                      className="bg-[#4a6bff] hover:bg-[#3a5bef] text-white"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                       {isSearchingOrder ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -551,47 +615,47 @@ export default function AddShipmentDialog({
 
                   {isLoadingRecentOrders ? (
                     <div className="flex justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#4a6bff]" />
+                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
                     </div>
                   ) : (
                     <>
                       {recentOrders.length > 0 && !orderResults.length && (
-                        <Card className="border-[#e0e4e8] shadow-sm">
+                        <Card className="border-gray-200 shadow-sm">
                           <CardContent className="p-0">
-                            <div className="bg-[#f0f2f5] px-4 py-2 font-medium text-sm border-b border-[#e0e4e8] flex items-center justify-between">
+                            <div className="bg-gray-50 px-4 py-2 font-medium text-sm border-b border-gray-200 flex items-center justify-between">
                               <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1 text-[#4a6bff]" />
+                                <Clock className="h-4 w-4 mr-1 text-emerald-600" />
                                 Recent Orders
                               </div>
                               {newOrdersCount > 0 && (
-                                <Badge className="bg-[#ff4d4f] text-white">
+                                <Badge className="bg-emerald-600 text-white">
                                   {newOrdersCount} new
                                 </Badge>
                               )}
                             </div>
-                            <div className="divide-y divide-[#e0e4e8]">
+                            <div className="divide-y divide-gray-200">
                               {recentOrders.map((order) => (
                                 <div
                                   key={order._id?.toString()}
                                   className={cn(
-                                    'p-4 flex justify-between items-center cursor-pointer hover:bg-[#f0f2f5] transition-colors',
+                                    'p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors',
                                     (order.orderStatus === 'pending' ||
                                       order.orderStatus === 'delivered') &&
-                                      'border-l-4 border-[#ff4d4f]'
+                                      'border-l-4 border-emerald-500'
                                   )}
                                   onClick={() => selectOrder(order)}
                                 >
                                   <div>
-                                    <div className="font-medium text-[#2d3748] flex items-center">
+                                    <div className="font-medium text-gray-800 flex items-center">
                                       Order #{order.orderNumber}
                                       {(order.orderStatus === 'pending' ||
                                         order.orderStatus === 'delivered') && (
-                                        <Badge className="ml-2 bg-[#ff4d4f] text-white text-xs">
+                                        <Badge className="ml-2 bg-emerald-500 text-white text-xs">
                                           New
                                         </Badge>
                                       )}
                                     </div>
-                                    <div className="text-sm text-[#5a6474]">
+                                    <div className="text-sm text-gray-600">
                                       {shippingAddress.name || 'Unknown'} -{' '}
                                       {order.items.length} items
                                     </div>
@@ -599,7 +663,7 @@ export default function AddShipmentDialog({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="border-[#4a6bff] text-[#4a6bff] hover:bg-[#eef1ff] hover:text-[#3a5bef]"
+                                    className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                                   >
                                     Select
                                   </Button>
@@ -611,34 +675,34 @@ export default function AddShipmentDialog({
                       )}
 
                       {orderResults.length > 0 && (
-                        <Card className="border-[#e0e4e8] shadow-sm">
+                        <Card className="border-gray-200 shadow-sm">
                           <CardContent className="p-0">
-                            <div className="bg-[#f0f2f5] px-4 py-2 font-medium text-sm border-b border-[#e0e4e8]">
+                            <div className="bg-gray-50 px-4 py-2 font-medium text-sm border-b border-gray-200">
                               Search Results
                             </div>
-                            <div className="divide-y divide-[#e0e4e8]">
+                            <div className="divide-y divide-gray-200">
                               {orderResults.map((order) => (
                                 <div
                                   key={order._id?.toString()}
                                   className={cn(
-                                    'p-4 flex justify-between items-center cursor-pointer hover:bg-[#f0f2f5] transition-colors',
+                                    'p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors',
                                     (order.orderStatus === 'pending' ||
                                       order.orderStatus === 'delivered') &&
-                                      'border-l-4 border-[#ff4d4f]'
+                                      'border-l-4 border-emerald-500'
                                   )}
                                   onClick={() => selectOrder(order)}
                                 >
                                   <div>
-                                    <div className="font-medium text-[#2d3748] flex items-center">
+                                    <div className="font-medium text-gray-800 flex items-center">
                                       Order #{order.orderNumber}
                                       {(order.orderStatus === 'pending' ||
                                         order.orderStatus === 'delivered') && (
-                                        <Badge className="ml-2 bg-[#ff4d4f] text-white text-xs">
+                                        <Badge className="ml-2 bg-emerald-500 text-white text-xs">
                                           New
                                         </Badge>
                                       )}
                                     </div>
-                                    <div className="text-sm text-[#5a6474]">
+                                    <div className="text-sm text-gray-600">
                                       {shippingAddress.name || 'Unknown'} -{' '}
                                       {order.items.length} items
                                     </div>
@@ -646,7 +710,7 @@ export default function AddShipmentDialog({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="border-[#4a6bff] text-[#4a6bff] hover:bg-[#eef1ff] hover:text-[#3a5bef]"
+                                    className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                                   >
                                     Select
                                   </Button>
@@ -663,40 +727,40 @@ export default function AddShipmentDialog({
                 <div className="space-y-4">
                   {isLoading ? (
                     <div className="flex justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#4a6bff]" />
+                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
                     </div>
                   ) : (
                     <>
-                      <Card className="border-[#e0e4e8] shadow-sm">
+                      <Card className="border-gray-200 shadow-sm">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center">
-                              <Package className="h-5 w-5 text-[#4a6bff] mr-2" />
-                              <h3 className="font-medium text-[#2d3748]">
+                              <Package className="h-5 w-5 text-emerald-600 mr-2" />
+                              <h3 className="font-medium text-gray-800">
                                 Order Details
                               </h3>
                             </div>
-                            <Badge className="bg-[#4a6bff]">
+                            <Badge className="bg-emerald-600">
                               #{selectedOrder.orderNumber}
                             </Badge>
                           </div>
 
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-[#5a6474]">Customer:</span>
-                              <span className="font-medium text-[#2d3748]">
+                              <span className="text-gray-600">Customer:</span>
+                              <span className="font-medium text-gray-800">
                                 {shippingAddress.name}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-[#5a6474]">Items:</span>
-                              <span className="font-medium text-[#2d3748]">
+                              <span className="text-gray-600">Items:</span>
+                              <span className="font-medium text-gray-800">
                                 {selectedOrder.items.length}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-[#5a6474]">Total:</span>
-                              <span className="font-medium text-[#2d3748]">
+                              <span className="text-gray-600">Total:</span>
+                              <span className="font-medium text-gray-800">
                                 $
                                 {(
                                   selectedOrder.subtotal +
@@ -707,12 +771,12 @@ export default function AddShipmentDialog({
                             </div>
                           </div>
 
-                          <div className="mt-3 pt-3 border-t border-[#e0e4e8]">
-                            <div className="text-xs text-[#5a6474] mb-1 flex items-center">
-                              <MapPin className="h-3 w-3 mr-1 text-[#4a6bff]" />
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-xs text-gray-600 mb-1 flex items-center">
+                              <MapPin className="h-3 w-3 mr-1 text-emerald-600" />
                               Delivery address:
                             </div>
-                            <div className="text-sm text-[#2d3748]">
+                            <div className="text-sm text-gray-800">
                               {shippingAddress.address.addressLine1 ||
                                 'No address available'}{' '}
                               {shippingAddress.address.addressLine1 &&
@@ -727,98 +791,44 @@ export default function AddShipmentDialog({
                         </CardContent>
                       </Card>
 
-                      <Card className="border-[#e0e4e8] shadow-sm">
+                      <Card className="border-gray-200 shadow-sm">
                         <CardContent className="p-4">
                           <div className="flex items-center mb-3">
-                            <Truck className="h-5 w-5 text-[#4a6bff] mr-2" />
-                            <h3 className="font-medium text-[#2d3748]">
+                            <Truck className="h-5 w-5 text-emerald-600 mr-2" />
+                            <h3 className="font-medium text-gray-800">
                               Local Delivery Settings
                             </h3>
                           </div>
 
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <Label className="text-[#2d3748]">
-                                  Auto-assign local carrier
-                                </Label>
-                                <p className="text-xs text-[#5a6474]">
-                                  Best local carrier will be selected for city
-                                  delivery
-                                </p>
-                              </div>
-                              <Switch
-                                checked={autoAssignCarrier}
-                                onCheckedChange={(checked) => {
-                                  setAutoAssignCarrier(checked)
-                                  if (checked) {
-                                    assignBestLocalCarrier()
-                                  }
-                                }}
-                                className="data-[state=checked]:bg-[#4a6bff]"
-                              />
+                          <CarrierSelection
+                            carriers={carriers}
+                            activeCarriers={activeCarriers}
+                            isLoadingCarriers={isLoadingCarriers}
+                            carrierId={carrierId}
+                            setCarrierId={setCarrierId}
+                            autoAssignCarrier={autoAssignCarrier}
+                            setAutoAssignCarrier={setAutoAssignCarrier}
+                            assignBestLocalCarrier={assignBestLocalCarrier}
+                            selectedCarrier={selectedCarrier}
+                            trackingNumber={trackingNumber}
+                            status={status}
+                            estimatedDeliveryTime={estimatedDeliveryTime}
+                          />
+
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                            <div>
+                              <Label className="text-gray-800">
+                                Auto-update status
+                              </Label>
+                              <p className="text-xs text-gray-500">
+                                Status will update automatically based on time
+                              </p>
                             </div>
-
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <Label className="text-[#2d3748]">
-                                  Auto-update status
-                                </Label>
-                                <p className="text-xs text-[#5a6474]">
-                                  Status will update automatically based on time
-                                </p>
-                              </div>
-                              <Switch
-                                checked={autoUpdateStatus}
-                                onCheckedChange={setAutoUpdateStatus}
-                                className="data-[state=checked]:bg-[#4a6bff]"
-                              />
-                            </div>
-
-                            <div className="pt-2 border-t border-[#e0e4e8]">
-                              <div className="flex justify-between items-center mb-1">
-                                <Label className="text-[#5a6474]">
-                                  Tracking Number:
-                                </Label>
-                                <span className="text-sm font-mono text-[#2d3748]">
-                                  {trackingNumber}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between items-center mb-1">
-                                <Label className="text-[#5a6474]">
-                                  Carrier:
-                                </Label>
-                                <span className="text-sm text-[#2d3748]">
-                                  {isLoadingCarriers ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : carrierId ? (
-                                    carriers.find((c) => c._id === carrierId)
-                                      ?.name || 'Local Carrier'
-                                  ) : (
-                                    'Auto-assigned Local Carrier'
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between items-center mb-1">
-                                <Label className="text-[#5a6474]">
-                                  Status:
-                                </Label>
-                                <Badge className="bg-orange-500">
-                                  {status.replace('_', ' ')}
-                                </Badge>
-                              </div>
-
-                              <div className="flex justify-between items-center">
-                                <Label className="text-[#5a6474]">
-                                  Estimated Delivery:
-                                </Label>
-                                <Badge className="bg-green-500">
-                                  {estimatedDeliveryTime}
-                                </Badge>
-                              </div>
-                            </div>
+                            <Switch
+                              checked={autoUpdateStatus}
+                              onCheckedChange={setAutoUpdateStatus}
+                              className="data-[state=checked]:bg-emerald-600"
+                            />
                           </div>
                         </CardContent>
                       </Card>
@@ -829,7 +839,7 @@ export default function AddShipmentDialog({
                           onChange={(e) => setNotes(e.target.value)}
                           placeholder="Add delivery instructions or notes..."
                           rows={2}
-                          className="border-[#e0e4e8] focus-visible:ring-[#4a6bff] text-sm"
+                          className="border-gray-200 focus-visible:ring-emerald-600 text-sm"
                         />
                       </div>
                     </>
@@ -838,85 +848,61 @@ export default function AddShipmentDialog({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8">
-              <div className="bg-green-50 rounded-full p-3 mb-4">
-                <CheckCircle2 className="h-12 w-12 text-green-500" />
-              </div>
-              <h3 className="text-xl font-bold text-green-700 mb-2">
-                Local Shipment Created!
-              </h3>
-              <p className="text-center text-[#5a6474] mb-4">
-                Your local shipment has been successfully created and will be
-                delivered {estimatedDeliveryTime.toLowerCase()}.
-              </p>
-              <div className="bg-[#f0f2f5] rounded-md p-3 w-full text-center">
-                <p className="text-sm font-medium text-[#2d3748]">
-                  Tracking Number
-                </p>
-                <p className="text-lg font-mono text-[#2d3748]">
-                  {trackingNumber}
-                </p>
-              </div>
-            </div>
+            <ShipmentConfirmation
+              trackingNumber={trackingNumber}
+              estimatedDeliveryTime={estimatedDeliveryTime}
+              selectedCarrier={selectedCarrier}
+              resetForm={resetForm}
+              onShipmentAdded={onShipmentAdded}
+              onOpenChange={onOpenChange}
+            />
           )}
         </div>
 
-        <DialogFooter className="bg-[#f0f2f5] border-t border-[#e0e4e8] p-4">
-          <div className="w-full flex justify-between">
-            {!isComplete && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (selectedOrder) {
-                      setSelectedOrder(null)
-                    } else {
-                      onOpenChange(false)
-                    }
-                  }}
-                  className="border-[#e0e4e8] text-[#5a6474] hover:bg-[#f0f2f5]"
-                >
-                  {selectedOrder ? 'Back' : 'Cancel'}
-                </Button>
-
-                {selectedOrder && (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isProcessing || isLoading || isLoadingCarriers}
-                    className="bg-[#4a6bff] hover:bg-[#3a5bef] text-white flex items-center"
-                  >
-                    {isProcessing ? (
-                      <div className="flex items-center">
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Processing...
-                      </div>
-                    ) : (
-                      <>
-                        {newOrdersCount > 0 && (
-                          <Bell className="h-4 w-4 mr-1 animate-pulse" />
-                        )}
-                        Create Local Shipment
-                      </>
-                    )}
-                  </Button>
-                )}
-              </>
-            )}
-
-            {isComplete && (
+        {!isComplete && (
+          <DialogFooter className="bg-gray-50 border-t border-gray-200 p-4">
+            <div className="w-full flex justify-between">
               <Button
+                variant="outline"
                 onClick={() => {
-                  resetForm()
-                  onShipmentAdded()
-                  onOpenChange(false)
+                  if (selectedOrder) {
+                    setSelectedOrder(null)
+                  } else {
+                    onOpenChange(false)
+                  }
                 }}
-                className="w-full bg-[#4a6bff] hover:bg-[#3a5bef] text-white"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100"
               >
-                Close
+                {selectedOrder ? 'Back' : 'Cancel'}
               </Button>
-            )}
-          </div>
-        </DialogFooter>
+
+              {selectedOrder && (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    isProcessing ||
+                    isLoading ||
+                    isLoadingCarriers ||
+                    (!autoAssignCarrier && !carrierId)
+                  }
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center"
+                >
+                  {isProcessing ? (
+                    <div className="flex items-center">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </div>
+                  ) : (
+                    <>
+                      <Truck className="h-4 w-4 mr-2" />
+                      Create Local Shipment
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )
