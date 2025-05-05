@@ -1,17 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Download,
-  Plus,
-  Edit,
-  Trash2,
-  Loader2,
-  AlertTriangle,
-  Check,
-} from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button2'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import {
+  Loader2,
+  Search,
+  Plus,
+  Truck,
+  CheckCircle,
+  Package,
+  Filter,
+  RefreshCw,
+  UserCog,
+  MapPin,
+} from 'lucide-react'
+import type { Carrier } from '@/type/Carrier'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/components/ui/use-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,78 +36,49 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { toast } from '@/components/ui/use-toast'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import AddCarrierDialog from '@/components/manager/add-new-cerrier'
 
-interface CarriersTabProps {
-  searchCarrier: string
-  setSearchCarrier: (value: string) => void
-}
 
-interface Carrier {
-  _id: string
-  name: string
-  trackingUrlTemplate: string
-  logo?: string
-  contactPhone?: string
-  contactEmail?: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export default function CarriersTab({
-  searchCarrier,
-  setSearchCarrier,
-}: CarriersTabProps) {
+export default function CarrierManagementPage() {
   const [carriers, setCarriers] = useState<Carrier[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [selectedCarrier, setSelectedCarrier] = useState<Carrier | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterZone, setFilterZone] = useState('all')
+  const [sortBy, setSortBy] = useState('name')
+  const [showAddCarrierDialog, setShowAddCarrierDialog] = useState(false)
+  const { toast } = useToast()
+  
 
-  // Form state
-  const [carrierName, setCarrierName] = useState('')
-  const [trackingUrlTemplate, setTrackingUrlTemplate] = useState('')
-  const [logo, setLogo] = useState('')
-  const [contactPhone, setContactPhone] = useState('')
-  const [contactEmail, setContactEmail] = useState('')
-  const [isActive, setIsActive] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const loadCarriers = async () => {
+  const fetchCarriers = async () => {
     setIsLoading(true)
     try {
       const response = await fetch('/api/carrier')
-
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+        throw new Error('Failed to fetch carriers')
       }
-
       const data = await response.json()
-      setCarriers(data.carriers)
+      setCarriers(data.carriers || [])
     } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        })
+      }
       console.error('Error fetching carriers:', error)
-      setError(
-        error instanceof Error ? error.message : 'Unknown error occurred'
-      )
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to load carriers. Please try again.',
+        description: 'Failed to load carriers',
       })
     } finally {
       setIsLoading(false)
@@ -99,680 +86,461 @@ export default function CarriersTab({
   }
 
   useEffect(() => {
-    loadCarriers()
+    fetchCarriers()
   }, [])
 
-  const filteredCarriers = carriers.filter((carrier) => {
-    return (
-      carrier.name.toLowerCase().includes(searchCarrier.toLowerCase()) ||
-      carrier._id.toString().includes(searchCarrier) ||
-      (carrier.contactEmail &&
-        carrier.contactEmail
-          .toLowerCase()
-          .includes(searchCarrier.toLowerCase())) ||
-      (carrier.contactPhone && carrier.contactPhone.includes(searchCarrier))
-    )
-  })
-
-  const handleExportCarriers = () => {
-    if (filteredCarriers.length === 0) {
-      toast({
-        title: 'No carriers to export',
-        description: 'There are no carriers matching your current filters.',
+  const handleStatusToggle = async (
+    carrierId: string,
+    currentStatus: boolean
+  ) => {
+    try {
+      const response = await fetch(`/api/carrier/${carrierId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isActive: !currentStatus,
+          // If becoming active, set the activation time
+          ...(currentStatus === false
+            ? { activatedAt: new Date().toISOString() }
+            : {}),
+        }),
       })
-      return
+
+      if (!response.ok) {
+        throw new Error('Failed to update carrier status')
+      }
+
+      // Update the local state
+      setCarriers((prevCarriers) =>
+        prevCarriers.map((carrier) =>
+          carrier._id === carrierId
+            ? {
+                ...carrier,
+                isActive: !currentStatus,
+                ...(currentStatus === false
+                  ? { activatedAt: new Date().toISOString() }
+                  : {}),
+              }
+            : carrier
+        )
+      )
+
+      toast({
+        title: 'Status Updated',
+        description: `Carrier is now ${!currentStatus ? 'active' : 'inactive'}`,
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        })
+      }
+      console.error('Error updating carrier status:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update carrier status',
+      })
     }
+  }
 
-    // Create CSV content
-    const headers = [
-      'ID',
-      'Name',
-      'Tracking URL Template',
-      'Contact Phone',
-      'Contact Email',
-      'Status',
-      'Created At',
-    ]
-    const csvContent = [
-      headers.join(','),
-      ...filteredCarriers.map((carrier) => {
-        return [
-          carrier._id,
-          carrier.name.replace(/,/g, ' '),
-          carrier.trackingUrlTemplate.replace(/,/g, ' '),
-          carrier.contactPhone || '',
-          carrier.contactEmail || '',
-          carrier.isActive ? 'Active' : 'Inactive',
-          new Date(carrier.createdAt).toLocaleDateString(),
-        ].join(',')
-      }),
-    ].join('\n')
-
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `carriers-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
+  const handleCarrierAdded = () => {
+    fetchCarriers()
     toast({
-      title: 'Export successful',
-      description: `${filteredCarriers.length} carriers exported to CSV.`,
+      title: 'Success',
+      description: 'New carrier has been added to the system',
     })
   }
 
-  const resetForm = () => {
-    setCarrierName('')
-    setTrackingUrlTemplate('')
-    setLogo('')
-    setContactPhone('')
-    setContactEmail('')
-    setIsActive(true)
-    setSelectedCarrier(null)
-  }
-
-  const handleAddCarrier = () => {
-    resetForm()
-    setShowAddDialog(true)
-  }
-
-  const handleEditCarrier = (carrier: Carrier) => {
-    setSelectedCarrier(carrier)
-    setCarrierName(carrier.name)
-    setTrackingUrlTemplate(carrier.trackingUrlTemplate)
-    setLogo(carrier.logo || '')
-    setContactPhone(carrier.contactPhone || '')
-    setContactEmail(carrier.contactEmail || '')
-    setIsActive(carrier.isActive)
-    setShowEditDialog(true)
-  }
-
-  const handleDeleteCarrier = (carrier: Carrier) => {
-    setSelectedCarrier(carrier)
-    setShowDeleteDialog(true)
-  }
-
-  const submitAddCarrier = async () => {
-    if (!carrierName || !trackingUrlTemplate) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please fill in all required fields.',
-      })
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('/api/carrier', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: carrierName,
-          trackingUrlTemplate,
-          logo: logo || undefined,
-          contactPhone: contactPhone || undefined,
-          contactEmail: contactEmail || undefined,
-          isActive,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Error: ${response.status}`)
-      }
-
-      toast({
-        title: 'Carrier added',
-        description: `${carrierName} has been successfully added.`,
-      })
-
-      resetForm()
-      setShowAddDialog(false)
-      loadCarriers()
-    } catch (error) {
-      console.error('Error adding carrier:', error)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to add carrier. Please try again.',
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const submitEditCarrier = async () => {
-    if (!selectedCarrier || !carrierName || !trackingUrlTemplate) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please fill in all required fields.',
-      })
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('/api/carrier', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          carrierId: selectedCarrier._id,
-          name: carrierName,
-          trackingUrlTemplate,
-          logo: logo || undefined,
-          contactPhone: contactPhone || undefined,
-          contactEmail: contactEmail || undefined,
-          isActive,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Error: ${response.status}`)
-      }
-
-      toast({
-        title: 'Carrier updated',
-        description: `${carrierName} has been successfully updated.`,
-      })
-
-      resetForm()
-      setShowEditDialog(false)
-      loadCarriers()
-    } catch (error) {
-      console.error('Error updating carrier:', error)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update carrier. Please try again.',
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const submitDeleteCarrier = async () => {
-    if (!selectedCarrier) return
-
-    setIsSubmitting(true)
-    try {
-      const response = await fetch(`/api/carrier?id=${selectedCarrier._id}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Error: ${response.status}`)
-      }
-
-      toast({
-        title: 'Carrier deleted',
-        description: `${selectedCarrier.name} has been successfully deleted.`,
-      })
-
-      setShowDeleteDialog(false)
-      loadCarriers()
-    } catch (error) {
-      console.error('Error deleting carrier:', error)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to delete carrier. Please try again.',
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
+  // Filter carriers based on search query and zone filter
+  const filteredCarriers = carriers
+    .filter(
+      (carrier) =>
+        carrier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (carrier.contactPhone && carrier.contactPhone.includes(searchQuery)) ||
+        (carrier.contactEmail &&
+          carrier.contactEmail
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()))
     )
-  }
+    .filter((carrier) => filterZone === 'all' || carrier.zone === filterZone)
+    .sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name)
+      } else if (sortBy === 'status') {
+        return Number(b.isActive) - Number(a.isActive)
+      } else if (sortBy === 'activation') {
+        if (!a.activatedAt && !b.activatedAt) return 0
+        if (!a.activatedAt) return 1
+        if (!b.activatedAt) return -1
+        return (
+          new Date(a.activatedAt).getTime() - new Date(b.activatedAt).getTime()
+        )
+      }
+      return 0
+    })
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <AlertTriangle className="h-5 w-5 text-red-400" />
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">
-              Error loading carriers: {error}
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }   
+  const activeCarriers = filteredCarriers.filter((carrier) => carrier.isActive)
+  const inactiveCarriers = filteredCarriers.filter(
+    (carrier) => !carrier.isActive
+  )
+
+  // Get unique zones for filter dropdown
+  const zones = Array.from(
+    new Set(carriers.map((carrier) => carrier.zone).filter(Boolean))
+  )
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-          <Input
-            placeholder="Search carriers..."
-            value={searchCarrier}
-            onChange={(e) => setSearchCarrier(e.target.value)}
-            className="w-full sm:w-[280px]"
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={handleExportCarriers}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold flex items-center">
+          <UserCog className="mr-2 h-6 w-6 text-[#4a6bff]" />
+          Carrier Management
+        </h1>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={fetchCarriers}
+            className="flex items-center"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
           </Button>
-          <Button onClick={handleAddCarrier}>
+          <Button
+            onClick={() => setShowAddCarrierDialog(true)}
+            className="bg-[#4a6bff] hover:bg-[#3a5bef]"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Add Carrier
+            Add New Carrier
           </Button>
         </div>
       </div>
 
-      <Card className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-sm">
-        <CardHeader className="border-b border-indigo-100 bg-indigo-50/50">
-          <CardTitle className="text-indigo-800 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2 text-indigo-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-              />
-            </svg>
-            Carrier Management
-          </CardTitle>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Carriers Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-indigo-100">
-                  <TableHead className="w-[80px] text-indigo-900">ID</TableHead>
-                  <TableHead className="text-indigo-900">Name</TableHead>
-                  <TableHead className="text-indigo-900">
-                    Tracking URL
-                  </TableHead>
-                  <TableHead className="text-indigo-900">Contact</TableHead>
-                  <TableHead className="text-indigo-900">Status</TableHead>
-                  <TableHead className="text-right text-indigo-900">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCarriers.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      {carriers.length === 0 ? (
-                        <div className="flex flex-col items-center">
-                          <p className="mb-2">No carriers found.</p>
-                          <Button size="sm" onClick={handleAddCarrier}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add your first carrier
-                          </Button>
-                        </div>
-                      ) : (
-                        'No carriers match your search.'
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCarriers.map((carrier) => (
-                    <TableRow
-                      key={carrier._id.toString()}
-                      className="hover:bg-indigo-50"
-                    >
-                      <TableCell className="font-mono text-xs">
-                        {carrier._id.toString().substring(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {carrier.name}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {carrier.trackingUrlTemplate}
-                      </TableCell>
-                      <TableCell>
-                        {carrier.contactEmail && (
-                          <div className="text-sm">{carrier.contactEmail}</div>
-                        )}
-                        {carrier.contactPhone && (
-                          <div className="text-sm text-muted-foreground">
-                            {carrier.contactPhone}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {carrier.isActive ? (
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                            <Check className="h-3 w-3 mr-1" />
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="text-gray-500 border-gray-300"
-                          >
-                            Inactive
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditCarrier(carrier)}
-                            className="text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteCarrier(carrier)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-100"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-slate-50">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Total Carriers
+                  </p>
+                  <p className="text-2xl font-bold">{carriers.length}</p>
+                </div>
+                <Truck className="h-8 w-8 text-[#4a6bff] opacity-70" />
+              </CardContent>
+            </Card>
+            <Card className="bg-green-50">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Active Carriers
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {activeCarriers.length}
+                  </p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-500 opacity-70" />
+              </CardContent>
+            </Card>
+            <Card className="bg-orange-50">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Shipping</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {inactiveCarriers.length}
+                  </p>
+                </div>
+                <Package className="h-8 w-8 text-orange-500 opacity-70" />
+              </CardContent>
+            </Card>
+            <Card className="bg-blue-50">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Delivery Zones
+                  </p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {zones.length || 1}
+                  </p>
+                </div>
+                <MapPin className="h-8 w-8 text-blue-500 opacity-70" />
+              </CardContent>
+            </Card>
           </div>
+
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search carriers by name, phone or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 border-[#e0e4e8] focus-visible:ring-[#4a6bff]"
+              />
+            </div>
+            <div className="flex gap-2">
+              <div className="w-[180px]">
+                <Select value={filterZone} onValueChange={setFilterZone}>
+                  <SelectTrigger className="w-full">
+                    <div className="flex items-center">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <span>Zone</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Zones</SelectItem>
+                    {zones.map((zone) => (
+                      <SelectItem key={zone} value={zone || 'all'}>
+                        {zone}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-[180px]">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full">
+                    <div className="flex items-center">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <span>Sort By</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                    <SelectItem value="activation">Activation Time</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">
+                All Carriers ({filteredCarriers.length})
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Active ({activeCarriers.length})
+              </TabsTrigger>
+              <TabsTrigger value="inactive">
+                Shipping ({inactiveCarriers.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all">
+              <CarrierTable
+                carriers={filteredCarriers}
+                onStatusToggle={handleStatusToggle}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="active">
+              <CarrierTable
+                carriers={activeCarriers}
+                onStatusToggle={handleStatusToggle}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="inactive">
+              <CarrierTable
+                carriers={inactiveCarriers}
+                onStatusToggle={handleStatusToggle}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Add Carrier Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Add New Carrier</DialogTitle>
-            <DialogDescription>
-              Add a new shipping carrier to your system.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name *
-              </Label>
-              <Input
-                id="name"
-                value={carrierName}
-                onChange={(e) => setCarrierName(e.target.value)}
-                className="col-span-3"
-                placeholder="e.g. FedEx, UPS, DHL"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="tracking-url" className="text-right">
-                Tracking URL *
-              </Label>
-              <Input
-                id="tracking-url"
-                value={trackingUrlTemplate}
-                onChange={(e) => setTrackingUrlTemplate(e.target.value)}
-                className="col-span-3"
-                placeholder="e.g. https://example.com/track/{trackingNumber}"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="logo" className="text-right">
-                Logo URL
-              </Label>
-              <Input
-                id="logo"
-                value={logo}
-                onChange={(e) => setLogo(e.target.value)}
-                className="col-span-3"
-                placeholder="https://example.com/logo.png"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contact-phone" className="text-right">
-                Contact Phone
-              </Label>
-              <Input
-                id="contact-phone"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                className="col-span-3"
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contact-email" className="text-right">
-                Contact Email
-              </Label>
-              <Input
-                id="contact-email"
-                type="email"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                className="col-span-3"
-                placeholder="support@carrier.com"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="is-active" className="text-right">
-                Active
-              </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Switch
-                  id="is-active"
-                  checked={isActive}
-                  onCheckedChange={setIsActive}
-                />
-                <Label htmlFor="is-active" className="cursor-pointer">
-                  {isActive ? 'Active' : 'Inactive'}
-                </Label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={submitAddCarrier} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                'Add Carrier'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddCarrierDialog
+        open={showAddCarrierDialog}
+        onOpenChange={setShowAddCarrierDialog}
+        onCarrierAdded={handleCarrierAdded}
+      />
+    </div>
+  )
+}
 
-      {/* Edit Carrier Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Edit Carrier</DialogTitle>
-            <DialogDescription>
-              Update the carrier information.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">
-                Name *
-              </Label>
-              <Input
-                id="edit-name"
-                value={carrierName}
-                onChange={(e) => setCarrierName(e.target.value)}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-tracking-url" className="text-right">
-                Tracking URL *
-              </Label>
-              <Input
-                id="edit-tracking-url"
-                value={trackingUrlTemplate}
-                onChange={(e) => setTrackingUrlTemplate(e.target.value)}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-logo" className="text-right">
-                Logo URL
-              </Label>
-              <Input
-                id="edit-logo"
-                value={logo}
-                onChange={(e) => setLogo(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-contact-phone" className="text-right">
-                Contact Phone
-              </Label>
-              <Input
-                id="edit-contact-phone"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-contact-email" className="text-right">
-                Contact Email
-              </Label>
-              <Input
-                id="edit-contact-email"
-                type="email"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-is-active" className="text-right">
-                Active
-              </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Switch
-                  id="edit-is-active"
-                  checked={isActive}
-                  onCheckedChange={setIsActive}
-                />
-                <Label htmlFor="edit-is-active" className="cursor-pointer">
-                  {isActive ? 'Active' : 'Inactive'}
-                </Label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={submitEditCarrier} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+interface CarrierTableProps {
+  carriers: Carrier[]
+  onStatusToggle: (carrierId: string, currentStatus: boolean) => void
+  isLoading: boolean
+}
 
-      {/* Delete Carrier Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Carrier</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this carrier? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            {selectedCarrier && (
-              <div className="p-4 border rounded-md bg-red-50">
-                <p className="font-medium">{selectedCarrier.name}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  ID: {selectedCarrier._id.toString().substring(0, 8)}...
-                </p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={submitDeleteCarrier}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Carrier'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+function CarrierTable({
+  carriers,
+  onStatusToggle,
+  isLoading,
+}: CarrierTableProps) {
+  const router = useRouter()
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[#4a6bff]" />
+      </div>
+    )
+  }
+
+  if (carriers.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <Truck className="h-12 w-12 mx-auto mb-3 opacity-30" />
+        <p>No carriers found matching your filters</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Contact</TableHead>
+            <TableHead>Zone</TableHead>
+            <TableHead>Current Delivery</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {carriers.map((carrier) => (
+            <TableRow key={carrier._id}>
+              <TableCell className="font-medium">{carrier.name}</TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant={carrier.isActive ? 'secondary' : 'outline'}
+                    className={
+                      carrier.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'border-orange-500 text-orange-800'
+                    }
+                  >
+                    {carrier.isActive ? 'Active' : 'Shipping'}
+                  </Badge>
+                  {carrier.activatedAt && carrier.isActive && (
+                    <span className="text-xs text-muted-foreground">
+                      since {new Date(carrier.activatedAt).toLocaleTimeString()}
+                    </span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm">
+                  {carrier.contactPhone && (
+                    <div className="text-muted-foreground">
+                      {carrier.contactPhone}
+                    </div>
+                  )}
+                  {carrier.contactEmail && (
+                    <div className="text-xs text-muted-foreground">
+                      {carrier.contactEmail}
+                    </div>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>{carrier.zone || 'All zones'}</TableCell>
+              <TableCell>
+                {carrier.currentShipment ? (
+                  <div className="text-sm">
+                    <div className="font-medium">
+                      #{carrier.currentShipment.orderNumber}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {carrier.currentShipment.estimatedDelivery}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">None</span>
+                )}
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end space-x-2">
+                  <Switch
+                    checked={carrier.isActive}
+                    onCheckedChange={() =>
+                      onStatusToggle(carrier._id, carrier.isActive)
+                    }
+                    className="data-[state=checked]:bg-green-500"
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/admin/carriers/${carrier._id}`)
+                        }
+                      >
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/admin/carriers/${carrier._id}/edit`)
+                        }
+                      >
+                        Edit Carrier
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(
+                            `/admin/carriers/${carrier._id}/shipments`
+                          )
+                        }
+                      >
+                        View Shipments
+                      </DropdownMenuItem>
+                      {carrier.currentShipment && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(
+                              `/admin/shipments/${carrier.currentShipment?.shipmentId}`
+                            )
+                          }
+                        >
+                          Track Current Shipment
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }
