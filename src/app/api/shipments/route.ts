@@ -1,8 +1,9 @@
 import { getCurrentUser } from '@/action/CurrentUser'
 import dbConnect from '@/lib/dbConnect'
-import Carrier from '@/server/models/Carrier'
+
 import Order from '@/server/models/Order'
 import { Shipment } from '@/server/models/Shipment'
+import User from '@/server/models/User'
 import { OrderItem } from '@/type/OrderItem'
 import { type NextRequest, NextResponse } from 'next/server'
 
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     // Format the response
     const formattedShipments = shipments.map((shipment) => {
-      const carrier = shipment.carrierId as any
+      const carrier = shipment.carrierId as any 
       return {
         _id: shipment._id,
         orderId: shipment.orderId,
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if carrier exists
-    const carrier = await Carrier.findById(shipmentData.carrierId)
+    const carrier = await User.findById(shipmentData.carrierId)
     if (!carrier) {
       return NextResponse.json(
         { message: 'Carrier not found' },
