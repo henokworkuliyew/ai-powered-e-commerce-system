@@ -2,11 +2,18 @@ import mongoose, { Schema, type Document } from 'mongoose'
 
 export interface ICarrier extends Document {
   name: string
-  trackingUrlTemplate: string
-  logo?: string
+  isActive: boolean
   contactPhone?: string
   contactEmail?: string
-  isActive: boolean
+  vehicle?: string
+  zone?: string
+  activatedAt?: string
+  currentShipment?: {
+    shipmentId: mongoose.Types.ObjectId
+    trackingNumber: string
+    orderNumber: string
+    estimatedDelivery: string
+  }
   createdAt: Date
   updatedAt: Date
 }
@@ -14,11 +21,22 @@ export interface ICarrier extends Document {
 const CarrierSchema = new Schema<ICarrier>(
   {
     name: { type: String, required: true, unique: true },
-    trackingUrlTemplate: { type: String, required: true },
-    logo: { type: String },
+    isActive: { type: Boolean, default: true },
     contactPhone: { type: String },
     contactEmail: { type: String },
-    isActive: { type: Boolean, default: true },
+    vehicle: { type: String },
+    zone: { type: String },
+    activatedAt: { type: String },
+    currentShipment: {
+      shipmentId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Shipment',
+        
+      },
+      trackingNumber: { type: String },
+      orderNumber: { type: String},
+      estimatedDelivery: { type: String},
+    },
   },
   { timestamps: true }
 )
