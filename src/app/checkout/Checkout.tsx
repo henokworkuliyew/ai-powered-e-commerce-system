@@ -1,7 +1,6 @@
 'use client'
 
 import type React from 'react'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -21,6 +20,7 @@ import {
 import { OrderSummary } from '@/components/checkout/order-summary'
 import { useCart } from '@/hooks/useCart'
 import { MapPin, CreditCard } from 'lucide-react'
+import {  type UseFormReturn } from 'react-hook-form'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -28,6 +28,10 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [sameAsBilling, setSameAsBilling] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
+  const [shippingForm, setShippingForm] =
+    useState<UseFormReturn<AddressData> | null>(null)
+  const [billingForm, setBillingForm] =
+    useState<UseFormReturn<AddressData> | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -35,6 +39,7 @@ export default function CheckoutPage() {
 
   const [shippingAddress, setShippingAddress] = useState<AddressData>({
     fullName: '',
+    email: '',
     phoneNumber: '',
     addressLine1: '',
     addressLine2: '',
@@ -46,6 +51,7 @@ export default function CheckoutPage() {
 
   const [billingAddress, setBillingAddress] = useState<AddressData>({
     fullName: '',
+    email: '',
     phoneNumber: '',
     addressLine1: '',
     addressLine2: '',
@@ -63,26 +69,15 @@ export default function CheckoutPage() {
   const tax = Math.round(subtotal * 0.15)
   const total = subtotal + shipping + tax
 
-  const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setShippingAddress((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+  const handleShippingChange = (data: AddressData) => {
+    setShippingAddress(data)
     if (sameAsBilling) {
-      setBillingAddress((prev) => ({
-        ...prev,
-        [name]: value,
-      }))
+      setBillingAddress(data)
     }
   }
 
-  const handleBillingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setBillingAddress((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+  const handleBillingChange = (data: AddressData) => {
+    setBillingAddress(data)
   }
 
   const handleSameAsBillingChange = (checked: boolean) => {
@@ -92,9 +87,37 @@ export default function CheckoutPage() {
     }
   }
 
+  // // Determine if the submit button should be disabled
+  // const isSubmitDisabled = !(
+  //   shippingForm?.formState.isValid &&
+  //   (sameAsBilling || billingForm?.formState.isValid)
+  // )
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    // Validate forms
+    if (!shippingForm) {
+      toast({
+        title: 'Error',
+        description: 'Shipping form is not initialized.',
+        variant: 'destructive',
+      })
+      setLoading(false)
+      return
+    }
+
+    const shippingValid = await shippingForm.trigger()
+    let billingValid = true
+    if (!sameAsBilling && billingForm) {
+      billingValid = await billingForm.trigger()
+    }
+
+    if (!shippingValid || !billingValid) {
+      setLoading(false)
+      return
+    }
 
     try {
       const addressResponse = await fetch('/api/addresses', {
@@ -182,6 +205,7 @@ export default function CheckoutPage() {
                     type="shipping"
                     address={shippingAddress}
                     onChange={handleShippingChange}
+                    onFormInstance={setShippingForm}
                   />
                 </CardContent>
               </Card>
@@ -215,6 +239,7 @@ export default function CheckoutPage() {
                       type="billing"
                       address={billingAddress}
                       onChange={handleBillingChange}
+                      onFormInstance={setBillingForm}
                     />
                   </CardContent>
                 )}
