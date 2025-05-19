@@ -1,9 +1,8 @@
 'use client'
+
 import Input from '@/components/input/Input'
-
-import  Button  from '@/components/ui/Button'
+import Button from '@/components/ui/Button'
 import Heading from '@/components/ui/Heading'
-
 import { SafeUser } from '@/type/SafeUser'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
@@ -13,14 +12,13 @@ import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { AiOutlineGoogle } from 'react-icons/ai'
 
-
 interface LoginProps {
   currentUser: SafeUser | null
 }
-const Login: React.FC<LoginProps> = ({ currentUser }) => {
 
+const Login: React.FC<LoginProps> = ({ currentUser }) => {
   const router = useRouter()
-  const [isLoading, setIsLoadig] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const {
     register,
     handleSubmit,
@@ -29,37 +27,39 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
     defaultValues: {
       email: '',
       password: '',
-
     },
   })
+
   useEffect(() => {
     if (currentUser) {
       router.push('/cart')
       router.refresh()
       console.log('User is already logged in')
     }
-  }, [currentUser])
+  }, [currentUser, router])
+
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
-    setIsLoadig(true)
+    setIsLoading(true)
     signIn('credentials', {
       ...data,
       redirect: false,
     }).then((callback) => {
-      setIsLoadig(false)
+      setIsLoading(false)
       if (callback?.ok) {
         router.push('/checkout')
         router.refresh()
         toast.success('Login successful')
       }
-
       if (callback?.error) {
         console.error(callback.error)
+        toast.error('Login failed. Please check your credentials.')
       }
     })
   }
+
   return (
-    <div>
-      <Heading text={'SignIn'} level={3} gradient />
+    <div className="max-w-md mx-auto space-y-6 mt-10">
+      <Heading text="Sign In" level={3} gradient />
 
       <Input
         id="email"
@@ -68,6 +68,17 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
         register={register}
         errors={errors}
         required
+        validation={{
+          required: 'Email is required',
+          pattern: {
+            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+            message: 'Please enter a valid email address',
+          },
+          maxLength: {
+            value: 100,
+            message: 'Email must be less than 100 characters',
+          },
+        }}
       />
 
       <Input
@@ -78,23 +89,43 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
         errors={errors}
         required
         type="password"
+        validation={{
+          required: 'Password is required',
+          minLength: {
+            value: 8,
+            message: 'Password must be at least 8 characters',
+          },
+          maxLength: {
+            value: 50,
+            message: 'Password must be less than 50 characters',
+          },
+          pattern: {
+            value:
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+            message:
+              'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+          },
+        }}
+        showPasswordToggle
       />
 
       <div className="mt-5 mb-5">
         <Button
-          label={isLoading ? 'Loading' : 'Login'}
+          label={isLoading ? 'Loading...' : 'Login'}
           onClick={handleSubmit(onSubmit)}
           outline
+          disabled={isLoading || Object.keys(errors).length > 0}
         />
         <span className="text-sm mt-3 flex flex-row gap-2">
           Do not have an account?{' '}
           <Link className="underline" href="/register">
-            <Heading text="SignUp" level={6} gradient />
+            <Heading text="Sign Up" level={6} gradient />
           </Link>
         </span>
       </div>
+
       <Button
-        label={isLoading ? 'Loading' : 'SignIn with Google'}
+        label={isLoading ? 'Loading...' : 'Sign In with Google'}
         icon={AiOutlineGoogle}
         iconColor="green"
         onClick={() => {
@@ -103,12 +134,14 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
             if (callback?.ok) {
               router.push('/cart')
               router.refresh()
+              toast.success('Signed in with Google!')
             }
             if (callback?.error) {
               toast.error('Google authentication failed!')
             }
           })
         }}
+        disabled={isLoading}
       />
     </div>
   )
