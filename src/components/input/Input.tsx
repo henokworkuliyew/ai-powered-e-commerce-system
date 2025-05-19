@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { UseFormRegister, FieldValues, FieldErrors } from 'react-hook-form'
+import { Eye, EyeOff } from 'lucide-react'
 
 interface InputProps {
   id: string
@@ -11,6 +12,8 @@ interface InputProps {
   required?: boolean
   register: UseFormRegister<FieldValues>
   errors: FieldErrors
+  validation?: object
+  showPasswordToggle?: boolean
 }
 
 const Input: React.FC<InputProps> = ({
@@ -21,16 +24,30 @@ const Input: React.FC<InputProps> = ({
   required = false,
   register,
   errors,
+  validation,
+  showPasswordToggle = false,
 }) => {
+  const [showPassword, setShowPassword] = useState(false)
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev)
+  }
+
+  const inputType =
+    showPasswordToggle && type === 'password' && showPassword ? 'text' : type
+
   return (
     <div className="w-full relative mt-6">
       <input
         autoComplete="off"
         id={id}
         disabled={disabled}
-        {...register(id, { required })}
+        {...register(id, {
+          required: required ? 'This field is required' : false,
+          ...validation,
+        })}
         placeholder=""
-        type={type}
+        type={inputType}
         className={`
           peer
           w-full
@@ -50,26 +67,46 @@ const Input: React.FC<InputProps> = ({
       <label
         htmlFor={id}
         className={`
-      absolute
-      cursor-text
-      duration-150
-      transform
-      -translate-y-3
-      text-md
-      text-blue-500
-      top-4
-      z-10
-      origin-[0]
-      left-4
-      peer-placeholder-shown:scale-100
-      peer-placeholder-shown:translate-y-0
-      peer-focus:scale-75
-      peer-focus:-translate-y-5
-      ${errors[id] ? 'focus:text-rose-400' : 'focus:text-slate-300'}
-      `}
+          absolute
+          cursor-text
+          duration-150
+          transform
+          -translate-y-3
+          text-md
+          text-blue-500
+          top-4
+          z-10
+          origin-[0]
+          left-4
+          peer-placeholder-shown:scale-100
+          peer-placeholder-shown:translate-y-0
+          peer-focus:scale-75
+          peer-focus:-translate-y-5
+          ${errors[id] ? 'text-rose-400' : 'text-blue-500'}
+          ${errors[id] ? 'focus:text-rose-400' : 'focus:text-slate-300'}
+        `}
       >
         {label}
       </label>
+      {showPasswordToggle && type === 'password' && (
+        <button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+        >
+          {showPassword ? (
+            <EyeOff className="h-5 w-5" />
+          ) : (
+            <Eye className="h-5 w-5" />
+          )}
+        </button>
+      )}
+      {errors[id] && (
+        <p className="text-rose-400 text-sm mt-1 font-medium">
+          {errors[id]?.message?.toString()}
+        </p>
+      )}
     </div>
   )
 }
