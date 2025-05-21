@@ -15,6 +15,7 @@ interface ButtonProps {
 const Button: React.FC<ButtonProps> = ({
   label,
   disabled,
+  
   outline,
   small,
   custom,
