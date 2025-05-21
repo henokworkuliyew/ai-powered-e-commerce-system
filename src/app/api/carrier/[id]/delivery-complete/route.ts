@@ -15,16 +15,14 @@ export async function PATCH(
 ) {
   try {
     await dbConnect()
-    const { id } = params // Access id directly from params
+    const { id } = params
 
-    // Validate the ObjectId
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ error: 'Invalid carrier ID' }, { status: 400 })
     }
 
     const body = await request.json()
 
-    // Validate activatedAt if provided
     if (body.activatedAt && typeof body.activatedAt !== 'string') {
       return NextResponse.json(
         { error: 'Invalid activatedAt format, must be a string' },
