@@ -1,18 +1,23 @@
 import { getCurrentUser } from '@/action/CurrentUser'
 import dbConnect from '@/lib/dbConnect'
-
 import Order from '@/server/models/Order'
 import { Shipment } from '@/server/models/Shipment'
 import User from '@/server/models/User'
+import { Carrier } from '@/type/Carrier'
 import { OrderItem } from '@/type/OrderItem'
 import { type NextRequest, NextResponse } from 'next/server'
+
+// Define the query interface
+interface ShipmentQuery {
+  status?: string
+  carrierId?: string
+  trackingNumber?: { $regex: string; $options: string }
+}
 
 
 export async function GET(req: NextRequest) {
   try {
-    // Get current user
     const currentUser = await getCurrentUser()
-
     if (!currentUser || currentUser.role !== 'MANAGER') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
@@ -31,38 +36,30 @@ export async function GET(req: NextRequest) {
       : 1
 
     // Build query
-    const query: any = {}
-
-    if (status) {
-      query.status = status
-    }
-
-    if (carrierId) {
-      query.carrierId = carrierId
-    }
-
-    if (trackingNumber) {
+    const query: ShipmentQuery = {}
+    if (status) query.status = status
+    if (carrierId) query.carrierId = carrierId
+    if (trackingNumber)
       query.trackingNumber = { $regex: trackingNumber, $options: 'i' }
-    }
 
     const shipments = await Shipment.find(query)
-      .populate('carrierId')
+      .populate<{ carrierId: Carrier | null }>('carrierId')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
 
     // Format the response
     const formattedShipments = shipments.map((shipment) => {
-      const carrier = shipment.carrierId as any 
+      const carrier = shipment.carrierId as Carrier | null
       return {
         _id: shipment._id,
         orderId: shipment.orderId,
         trackingNumber: shipment.trackingNumber,
         carrierId: carrier?._id,
         carrier: {
-          name: carrier?.name,
+          name: carrier?.name ?? 'Unknown',
           trackingUrlTemplate: carrier?.trackingUrlTemplate,
-          logo: carrier?.logo,
+          
         },
         status: shipment.status,
         dateShipped: shipment.dateShipped,
@@ -75,7 +72,6 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    // Get total count
     const totalShipments = await Shipment.countDocuments(query)
 
     return NextResponse.json({
@@ -96,20 +92,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// POST handler remains unchanged as it has no errors related to `any`
 export async function POST(req: NextRequest) {
   try {
-    // Get current user
     const currentUser = await getCurrentUser()
-
     if (!currentUser || currentUser.role !== 'MANAGER') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
     await dbConnect()
-
     const shipmentData = await req.json()
 
-    // Validate required fields
     if (!shipmentData.trackingNumber || !shipmentData.carrierId) {
       return NextResponse.json(
         { message: 'Tracking number and carrier are required' },
@@ -117,7 +110,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check if carrier exists
     const carrier = await User.findById(shipmentData.carrierId)
     if (!carrier) {
       return NextResponse.json(
@@ -126,10 +118,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // If order ID is provided, update the order status
     if (shipmentData.orderId) {
       const order = await Order.findById(shipmentData.orderId)
-
       if (!order) {
         return NextResponse.json(
           { message: 'Order not found' },
@@ -137,13 +127,11 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // Update order status to "shipped" if it was "processing" or "pending"
       if (['pending', 'processing'].includes(order.orderStatus)) {
         order.orderStatus = 'shipped'
         await order.save()
       }
 
-      // If no items provided, use items from the order
       if (!shipmentData.items || !shipmentData.items.length) {
         shipmentData.items = order.items.map((item: OrderItem) => ({
           productId: item.productId,
@@ -152,7 +140,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create shipment
     const shipment = new Shipment(shipmentData)
     await shipment.save()
 

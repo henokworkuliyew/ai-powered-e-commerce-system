@@ -1,6 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/dbConnect'
 import User from '@/server/models/User'
+import {Shipment} from '@/server/models/Shipment'
+
+interface CarrierUpdateData {
+  name?: string
+  contactPhone?: string
+  contactEmail?: string
+  vehicle?: string
+  notes?: string
+  zone?: string
+}
 
 export async function GET(
   request: NextRequest,
@@ -46,10 +56,10 @@ export async function PATCH(
     ]
 
     // Filter out any fields that aren't in the allowed list
-    const updateData = Object.keys(body)
+    const updateData: CarrierUpdateData = Object.keys(body)
       .filter((key) => allowedFields.includes(key))
-      .reduce((obj: Record<string, any>, key) => {
-        obj[key] = body[key]
+      .reduce((obj: CarrierUpdateData, key) => {
+        obj[key as keyof CarrierUpdateData] = body[key]
         return obj
       }, {})
 
@@ -96,7 +106,6 @@ export async function DELETE(
     }
 
     // Check if carrier has any shipment history
-    const Shipment = (await import('@/server/models/Shipment')).default
     const shipmentCount = await Shipment.countDocuments({ carrierId: id })
 
     if (shipmentCount > 0) {

@@ -2,23 +2,29 @@ import { type NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/dbConnect'
 import User from '@/server/models/User'
 
+interface CarrierQuery {
+  role: string
+  $or?: Array<{ [key: string]: { $regex: string; $options: string } }>
+  zone?: string
+  isActive?: boolean
+}
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect()
 
-    // Get query parameters
+   
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get('search') || ''
     const zone = searchParams.get('zone') || ''
-    const status = searchParams.get('status') // "active", "inactive", or undefined for all
-    const sort = searchParams.get('sort') || 'name:asc' // Default sort by name ascending
-    const limit = Number.parseInt(searchParams.get('limit') || '100') // Default limit to 100 carriers
-    const page = Number.parseInt(searchParams.get('page') || '1') // Default to first page
+    const status = searchParams.get('status')
+    const sort = searchParams.get('sort') || 'name:asc'
+    const limit = Number.parseInt(searchParams.get('limit') || '100')
+    const page = Number.parseInt(searchParams.get('page') || '1')
 
-    // Build query
-    const query: Record<string, any> = { role: 'CARRIER' }
+    const query: CarrierQuery = { role: 'CARRIER' }
 
-    // Add search filter if provided
+    
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -27,12 +33,12 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Add zone filter if provided
+    
     if (zone) {
       query.zone = zone
     }
 
-    // Add status filter if provided
+   
     if (status === 'active') {
       query.isActive = true
     } else if (status === 'inactive') {
@@ -69,7 +75,6 @@ export async function GET(request: NextRequest) {
       isActive: carrier.isActive || false,
       activatedAt: carrier.activatedAt,
       currentShipment: carrier.currentShipment,
-      // Add any other fields needed by the frontend
     }))
 
     return NextResponse.json({
@@ -83,57 +88,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching carriers:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    await dbConnect()
-    const body = await request.json()
-
-    // Validate required fields
-    if (!body.name) {
-      return NextResponse.json(
-        { error: 'Carrier name is required' },
-        { status: 400 }
-      )
-    }
-
-    // Create a new carrier (without authentication - for direct admin creation)
-    const carrier = new User({
-      name: body.name,
-      contactPhone: body.contactPhone,
-      contactEmail: body.contactEmail,
-      email: body.contactEmail, // Use contactEmail as the email if no separate email is provided
-      vehicle: body.vehicle,
-      zone: body.zone,
-      isActive: body.isActive || false,
-      role: 'CARRIER',
-      // Set activatedAt if carrier is active
-      ...(body.isActive ? { activatedAt: new Date().toISOString() } : {}),
-    })
-
-    await carrier.save()
-
-    // Remove sensitive data before returning
-    const carrierToReturn = {
-      _id: carrier._id,
-      name: carrier.name,
-      contactPhone: carrier.contactPhone,
-      contactEmail: carrier.contactEmail,
-      vehicle: carrier.vehicle,
-      zone: carrier.zone,
-      isActive: carrier.isActive,
-      activatedAt: carrier.activatedAt,
-    }
-
-    return NextResponse.json({ carrier: carrierToReturn }, { status: 201 })
-  } catch (error) {
-    console.error('Error creating carrier:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -2,6 +2,42 @@ import { type NextRequest, NextResponse } from 'next/server'
 import Address from '@/server/models/Address'
 import connectDB from '@/lib/dbConnect'
 
+
+type AddressResponse = {
+  _id: string
+  userId: string
+  fullName: string
+  email?: string
+  phoneNumber: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+type AddressDocument = {
+  _id: string 
+  userId: string
+  fullName: string
+  email?: string
+  phoneNumber: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  isDefault: boolean
+  createdAt: Date
+  updatedAt: Date
+  __v: number 
+}
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB()
@@ -16,12 +52,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const addresses = await Address.find({ userId }).lean()
+    const addresses = await Address.find({ userId }).lean<AddressDocument[]>()
 
-    // Format the addresses for response
-    const formattedAddresses = addresses.map((address:  any) => ({
+    const formattedAddresses: AddressResponse[] = addresses.map((address) => ({
       ...address,
-      _id: address._id.toString(),
+      _id: address._id.toString(), // Convert ObjectId to string
       userId: address.userId.toString(),
       createdAt: address.createdAt.toISOString(),
       updatedAt: address.updatedAt.toISOString(),
@@ -32,49 +67,6 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching addresses:', error)
     return NextResponse.json(
       { error: 'Failed to fetch addresses' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-    console.log('POST request to /api/adresses')
-  try {
-    await connectDB()
-
-    const body = await request.json()
-    const { shipping, billing } = body
-
-    // Create shipping address
-    const shippingAddress = await Address.create({
-      ...shipping,
-      userId: shipping.userId || '65f5e1f8b74c8b9d1c8b4567', // Mock user ID if not provided
-      isDefault: true,
-    })
-
-    // Create billing address if different from shipping
-    let billingAddress
-    if (billing) {
-      billingAddress = await Address.create({
-        ...billing,
-        userId: billing.userId || '65f5e1f8b74c8b9d1c8b4567', // Mock user ID if not provided
-        isDefault: false,
-      })
-    } else {
-      billingAddress = shippingAddress
-    }
-
-    return NextResponse.json(
-      {
-        shippingAddressId: shippingAddress._id,
-        billingAddressId: billingAddress._id,
-      },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error('Error creating addresses:', error)
-    return NextResponse.json(
-      { error: 'Failed to create addresses' },
       { status: 500 }
     )
   }

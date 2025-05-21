@@ -28,6 +28,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 // Notification types
 type NotificationType = 'order' | 'price' | 'wishlist' | 'promotion' | 'account'
@@ -523,7 +524,7 @@ export default function NotificationsClient() {
                         {notification.image && (
                           <div className="shrink-0">
                             <Avatar className="h-20 w-20 rounded-lg border shadow-sm">
-                              <img
+                              <Image
                                 src={notification.image || '/placeholder.svg'}
                                 alt={notification.title}
                                 className="object-cover"

@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/action/CurrentUser'
 
 export async function GET(req: NextRequest) {
   try {
-    // Check authentication and authorization
+    
     const currentUser = await getCurrentUser()
 
     if (!currentUser || currentUser.role !== 'ADMIN') {
@@ -15,10 +15,9 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Connect to database
     await dbConnect()
-
-    // Fetch all managers
+    const searchParams = req.nextUrl.searchParams
+    console.log('searchParams', searchParams)
     const managers = await User.find(
       { role: 'MANAGER' },
       '_id name email createdAt contactPhone'
@@ -41,7 +40,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Check authentication and authorization
+
+
     const currentUser = await getCurrentUser()
 
     if (!currentUser || currentUser.role !== 'ADMIN') {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json()
-    const { name, email, password, contactPhone } = body
+    const { name, email, password } = body
 
     // Validate required fields
     if (!name || !email || !password) {

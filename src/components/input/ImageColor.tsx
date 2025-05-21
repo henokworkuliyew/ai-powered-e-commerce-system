@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { FC } from 'react'
 
 interface ImageColorProps {
@@ -25,7 +26,7 @@ const ImageColorInput: FC<ImageColorProps> = ({
       style={{ backgroundColor: colorCode }}
     >
       {image ? (
-        <img
+        <Image
           src={image}
           alt={color}
           className="w-16 h-16 object-cover rounded-full"

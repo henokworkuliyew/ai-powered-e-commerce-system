@@ -1,87 +1,101 @@
 'use client'
-import { CartProduct, SelectedImg } from "@/type/CartProduct"
-import { Product } from "@/type/Product"
-import Image from "next/image"
-interface ProductImageProps {
-  cartProduct: CartProduct
-  product: Product
-  handleColorSelect: (value: SelectedImg) => void
+
+import { useState } from 'react'
+import Image from 'next/image'
+
+
+ type SelectedImg = {
+  color: string
+  colorCode: string
+  views: {
+    front: string
+    side: string
+    back: string
+  }
 }
 
-const ProductImage: React.FC<ProductImageProps> = ({
-  cartProduct,
-  product,
-  handleColorSelect,
-}) => {
+interface Props {
+  cartProduct: {
+    _id: string
+    name: string
+    description: string
+    brand: string
+    category: string
+    selectedImg: SelectedImg
+    qty: number
+    price: number
+    selectedSize?: string
+  }
+}
+const ProductImage = ( {cartProduct}:Props ) => {
+  const [selectedView, setSelectedView] = useState<'front' | 'side' | 'back'>(
+    'front'
+  )
 
- const images: SelectedImg[] = product.images ? product.images : []
-
-
-
-// const productRating =
-//   product.reviews.reduce((acc: number, item: any) => item.rating + acc, 0) /
-//   product.reviews.length
- return (
-   <div
-     className="
-        grid grid-cols-6
-        gap-2
+  return (
+    <div className="col-span-5 flex flex-col gap-2">
+      <div className="relative aspect-square">
+        <Image
+          src={
+            cartProduct.selectedImg.views[selectedView] || '/placeholder.svg'
+          }
+          alt={cartProduct.name}
+          fill
+          className="object-contain
         h-full
         max-h-[500px]
         min-h-[300px]
-        sm:min-h-[400px]"
-   >
-     <div
-       className="
-          flex flex-col
-          items-center
-          justify-center
-          gap-4
-          cursor-pointer
-          border 
-          h-full
-          max-h-[500px]
-          min-h-[300px]
-          sm:min-h-[400px]"
-     >
-       {images.map((image) => (
-         <div
-           key={image.color}
-           onClick={() => handleColorSelect(image)}
-           className={`relative w-[80%] aspect-square rounded border-teal-300 ${
-             cartProduct.selectedImg.color === image.color
-               ? 'border-[1.5px]'
-               : 'border-none'
-           }`}
-         >
-           <Image
+        sm:min-h-[400px]
+      "
+        />
+      </div>
 
-             src={image.views.front}
+      {/* View thumbnails */}
+      <div className="flex gap-2 justify-center">
+        <div
+          className={`relative w-16 h-16 cursor-pointer border-2 ${
+            selectedView === 'front' ? 'border-teal-300' : 'border-transparent'
+          }`}
+          onClick={() => setSelectedView('front')}
+        >
+          <Image
+            src={cartProduct.selectedImg.views.front || '/placeholder.svg'}
+            alt={`${cartProduct.name} front view`}
+            fill
+            className="object-contain"
+          />
+        </div>
 
-             alt={image.color}
-             fill
-             className="object-contain"
-           />
-         </div>
-       ))}
-     </div>
-     <div className="col-span-5 relative aspect-square">
-       <Image
+        <div
+          className={`relative w-16 h-16 cursor-pointer border-2 ${
+            selectedView === 'side' ? 'border-teal-300' : 'border-transparent'
+          }`}
+          onClick={() => setSelectedView('side')}
+        >
+          <Image
+            src={cartProduct.selectedImg.views.side || '/placeholder.svg'}
+            alt={`${cartProduct.name} side view`}
+            fill
+            className="object-contain"
+          />
+        </div>
 
-         src={cartProduct.selectedImg.views.front}
-
-         alt={cartProduct.name}
-         fill
-         className="object-contain
-            h-full
-            max-h-[500px]
-          min-h-[300px]
-          sm:min-h-[400px]
-            "
-       />
-     </div>
-   </div>
- )
+        <div
+          className={`relative w-16 h-16 cursor-pointer border-2 ${
+            selectedView === 'back' ? 'border-teal-300' : 'border-transparent'
+          }`}
+          onClick={() => setSelectedView('back')}
+        >
+          <Image
+            src={cartProduct.selectedImg.views.back || '/placeholder.svg'}
+            alt={`${cartProduct.name} back view`}
+            fill
+            className="object-contain"
+          />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default ProductImage
