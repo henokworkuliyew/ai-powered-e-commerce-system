@@ -10,13 +10,17 @@ interface CarrierUpdate {
   activatedAt?: string
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Define the params type explicitly
+interface RouteParams {
+  params: {
+    id: string
+  }
+}
+
+export async function PATCH(request: NextRequest, context: RouteParams) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = context.params // Access id from context.params
 
     // Validate the ObjectId
     if (!mongoose.isValidObjectId(id)) {
@@ -39,7 +43,10 @@ export async function PATCH(
     }
 
     // Use $unset to remove currentShipment field
-    const updateQuery = {
+    const updateQuery: {
+      $set: CarrierUpdate
+      $unset: { currentShipment: string }
+    } = {
       $set: updateData,
       $unset: { currentShipment: '' },
     }
