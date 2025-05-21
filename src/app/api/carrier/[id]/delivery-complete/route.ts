@@ -3,24 +3,19 @@ import mongoose from 'mongoose'
 import dbConnect from '@/lib/dbConnect'
 import Carrier from '@/server/models/Carrier'
 
-// Define the type for update data to match the fields we're updating
 interface CarrierUpdate {
   isActive: boolean
   currentShipment?: null
   activatedAt?: string
 }
 
-// Define the params type explicitly
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
-export async function PATCH(request: NextRequest, context: RouteParams) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     await dbConnect()
-    const { id } = context.params // Access id from context.params
+    const { id } = params // Access id directly from params
 
     // Validate the ObjectId
     if (!mongoose.isValidObjectId(id)) {
@@ -37,12 +32,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
       )
     }
 
-    // Build update data with proper typing
     const updateData: CarrierUpdate = {
       isActive: true,
     }
 
-    // Use $unset to remove currentShipment field
     const updateQuery: {
       $set: CarrierUpdate
       $unset: { currentShipment: string }
@@ -51,7 +44,6 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
       $unset: { currentShipment: '' },
     }
 
-    // Add activatedAt to $set if provided
     if (body.activatedAt) {
       updateData.activatedAt = body.activatedAt
       updateQuery.$set = updateData
