@@ -8,6 +8,7 @@ interface HeadingProps {
   underline?: boolean
 }
 
+
 const Heading: React.FC<HeadingProps> = ({
   text,
   level = 1,

@@ -2,6 +2,7 @@
 
 import Input from '@/components/input/Input'
 import Button from '@/components/ui/Button'
+
 import Heading from '@/components/ui/Heading'
 import { SafeUser } from '@/type/SafeUser'
 import { signIn } from 'next-auth/react'
