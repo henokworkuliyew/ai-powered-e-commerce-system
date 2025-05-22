@@ -99,10 +99,10 @@ export async function GET(request: Request) {
         sortOption = { [field]: direction === 'desc' ? -1 : 1 }
       }
 
-      // Fetch orders with applied filters
+   
       let ordersQuery = Order.find(query).sort(sortOption)
 
-      // Apply limit if provided
+      
       if (limit) {
         const limitNumber = parseInt(limit, 10)
         if (isNaN(limitNumber) || limitNumber <= 0) {
