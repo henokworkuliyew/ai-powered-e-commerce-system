@@ -150,7 +150,7 @@ export default function AddShipmentDialog({
 
     try {
       const response = await fetch(
-        '/api/orders?limit=5&sort=createdAt:desc&status=pending'
+        '/api/orders?limit=5&sort=createdAt:desc&status=processing'
       )
 
       if (!response.ok) {
@@ -302,7 +302,7 @@ export default function AddShipmentDialog({
 
   const selectOrder = async (order: IOrder) => {
     setSelectedOrder(order)
-    setError(null) // Clear any previous errors
+    setError(null) 
 
     await fetchOrderDetails(order._id?.toString() || '')
     generateTrackingNumber()
@@ -639,8 +639,7 @@ export default function AddShipmentDialog({
                                   key={order._id?.toString()}
                                   className={cn(
                                     'p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors',
-                                    (order.orderStatus === 'pending' ||
-                                      order.orderStatus === 'delivered') &&
+                                    order.orderStatus === 'processing' &&
                                       'border-l-4 border-emerald-500'
                                   )}
                                   onClick={() => selectOrder(order)}
@@ -648,8 +647,7 @@ export default function AddShipmentDialog({
                                   <div>
                                     <div className="font-medium text-gray-800 flex items-center">
                                       Order #{order.orderNumber}
-                                      {(order.orderStatus === 'pending' ||
-                                        order.orderStatus === 'delivered') && (
+                                      {(order.orderStatus === 'processing' ) && (
                                         <Badge className="ml-2 bg-emerald-500 text-white text-xs">
                                           New
                                         </Badge>
