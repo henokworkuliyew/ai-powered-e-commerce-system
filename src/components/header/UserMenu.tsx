@@ -84,7 +84,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex cursor-pointer items-center gap-2 p-2 text-sm hover:bg-slate-300 rounded-lg"
-              onClick={() => handleMenuClick('/checkout/orders')}
+              onClick={() => handleMenuClick('/checkout/orders/myorder')}
             >
               <ShoppingBag className="h-4 w-4" />
               <span>My Orders</span>
