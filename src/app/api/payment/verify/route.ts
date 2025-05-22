@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     const order = await Order.findOneAndUpdate(
       { paymentIntentId: tx_ref },
-      { status: 'paid' },
+      { status: 'processing' },
       { new: true }
     )
 
