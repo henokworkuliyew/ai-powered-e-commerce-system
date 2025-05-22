@@ -65,7 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="flex flex-col items-center w-full gap-1">
         <div className="aspect-square overflow-hidden relative w-full h-36">
           <Image
-            src={product?.images?.[0]?.views?.front || '/placeholder.png'}
+            src={product?.images?.[0]?.views?.front }
             alt={product?.name || 'Product Image'}
             fill
             className={`w-full h-36 object-cover rounded-md transition-transform duration-300 ${
