@@ -94,7 +94,7 @@ export async function GET(request: Request) {
 
       return NextResponse.json({ order })
     } else {
-      // Get all orders for the user
+    
       const orders = await Order.find({ userId: currentUser._id }).sort({
         createdAt: -1,
       })
