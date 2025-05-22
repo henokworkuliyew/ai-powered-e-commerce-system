@@ -525,8 +525,10 @@ export default function NotificationsClient() {
                           <div className="shrink-0">
                             <Avatar className="h-20 w-20 rounded-lg border shadow-sm">
                               <Image
-                                src={notification.image || '/placeholder.svg'}
+                                src={notification.image }
                                 alt={notification.title}
+                                width={80}
+                                height={80}
                                 className="object-cover"
                               />
                             </Avatar>
