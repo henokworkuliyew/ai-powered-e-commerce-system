@@ -1,17 +1,18 @@
 'use client'
-import React, { ReactNode } from 'react'
+import { type ReactNode, forwardRef } from 'react'
 
 interface ScrollableContainerProps {
   children: ReactNode
   className?: string
 }
 
-export default function ScrollableContainer({
-  children,
-  className = '',
-}: ScrollableContainerProps) {
+const ScrollableContainer = forwardRef<
+  HTMLDivElement,
+  ScrollableContainerProps
+>(({ children, className = '' }, ref) => {
   return (
     <div
+      ref={ref}
       className={`overflow-x-auto ${className}`}
       style={{
         scrollbarWidth: 'none' /* Firefox */,
@@ -26,4 +27,8 @@ export default function ScrollableContainer({
       {children}
     </div>
   )
-}
+})
+
+ScrollableContainer.displayName = 'ScrollableContainer'
+
+export default ScrollableContainer
