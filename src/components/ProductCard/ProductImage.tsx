@@ -37,7 +37,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
       <div className="relative aspect-square">
         <Image
           src={
-            cartProduct.selectedImg.views[selectedView] || '/placeholder.svg'
+            cartProduct.selectedImg.views[selectedView] 
           }
           alt={cartProduct.name}
           fill
@@ -59,7 +59,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
           onClick={() => setSelectedView('front')}
         >
           <Image
-            src={cartProduct.selectedImg.views.front || '/placeholder.svg'}
+            src={cartProduct.selectedImg.views.front}
             alt={`${cartProduct.name} front view`}
             fill
             className="object-contain"
@@ -73,7 +73,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
           onClick={() => setSelectedView('side')}
         >
           <Image
-            src={cartProduct.selectedImg.views.side || '/placeholder.svg'}
+            src={cartProduct.selectedImg.views.side}
             alt={`${cartProduct.name} side view`}
             fill
             className="object-contain"
@@ -87,7 +87,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
           onClick={() => setSelectedView('back')}
         >
           <Image
-            src={cartProduct.selectedImg.views.back || '/placeholder.svg'}
+            src={cartProduct.selectedImg.views.back }
             alt={`${cartProduct.name} back view`}
             fill
             className="object-contain"
