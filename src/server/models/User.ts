@@ -43,53 +43,37 @@ const userSchema = new Schema<IUser>(
     isActive: {
       type: Boolean,
       default: false,
-      required: function () {
-        return this.role === 'CARRIER'
-      },
+      
     },
     vehicle: {
       type: String,
-      required: function () {
-        return this.role === 'CARRIER'
-      },
+      
     },
     zone: {
       type: String,
-      required: function () {
-        return this.role === 'CARRIER'
-      },
+      
     },
     activatedAt: {
       type: Date, 
-      required: function () {
-        return this.role === 'CARRIER'
-      },
+      
     },
     currentShipment: {
       shipmentId: {
         type: Schema.Types.ObjectId,
         ref: 'Shipment', 
-        required: function () {
-          return this.role === 'CARRIER'
-        },
+       
       },
       trackingNumber: {
         type: String,
-        required: function () {
-          return this.role === 'CARRIER'
-        },
+       
       },
       orderNumber: {
         type: String,
-        required: function () {
-          return this.role === 'CARRIER'
-        },
+       
       },
       estimatedDelivery: {
         type: String,
-        required: function () {
-          return this.role === 'CARRIER'
-        },
+        
       },
     },
     warehouse: {
