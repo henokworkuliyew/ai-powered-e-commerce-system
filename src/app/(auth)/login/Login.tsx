@@ -4,12 +4,13 @@ import Input from '@/components/input/Input'
 import Button from '@/components/ui/Button'
 
 import Heading from '@/components/ui/Heading'
-import { SafeUser } from '@/type/SafeUser'
+import type { SafeUser } from '@/type/SafeUser'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
-import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import { type FieldValues, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { AiOutlineGoogle } from 'react-icons/ai'
 
@@ -31,9 +32,21 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
     },
   })
 
+  const redirectBasedOnRole = (user: SafeUser) => {
+    if (user.role === 'MANAGER') {
+      router.push('/manager')
+    } else if (user.role === 'CARRIER') {
+      router.push('/carriers')
+    } else if (user.role === 'ADMIN') {
+      router.push('/admin')
+    } else {
+      router.push('/cart')
+    }
+  }
+
   useEffect(() => {
     if (currentUser) {
-      router.push('/cart')
+      redirectBasedOnRole(currentUser)
       router.refresh()
       console.log('User is already logged in')
     }
@@ -47,7 +60,6 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
     }).then((callback) => {
       setIsLoading(false)
       if (callback?.ok) {
-        router.push('/checkout')
         router.refresh()
         toast.success('Login successful')
       }
@@ -69,7 +81,6 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
         register={register}
         errors={errors}
         required
-        
       />
 
       <Input
@@ -80,7 +91,6 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
         errors={errors}
         required
         type="password"
-       
         showPasswordToggle
       />
 
@@ -107,8 +117,8 @@ const Login: React.FC<LoginProps> = ({ currentUser }) => {
           signIn('google', { redirect: false }).then((callback) => {
             console.log('Google SignIn Callback:', callback)
             if (callback?.ok) {
-              router.push('/cart')
               router.refresh()
+
               toast.success('Signed in with Google!')
             }
             if (callback?.error) {
