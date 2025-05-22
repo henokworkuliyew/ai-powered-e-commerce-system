@@ -73,7 +73,6 @@ export default function CategoryFilter({
     }
   }, [categories])
 
-
   const clearFilters = () => {
     setSelectedCategory('all')
     setSelectedSubcategory(null)
@@ -93,7 +92,7 @@ export default function CategoryFilter({
         )}
       </div>
 
-      <div className="relative">
+      <div className="relative w-full">
         {showLeftArrow && (
           <button
             onClick={() => scroll('left')}
@@ -104,79 +103,79 @@ export default function CategoryFilter({
           </button>
         )}
 
-        <ScrollableContainer className="py-2 px-2 -mx-2 scroll-smooth">
-          <div ref={scrollContainerRef} className="flex">
-            <nav className="flex">
-              {allCategories.map((category) => {
-                const hasSubcategories =
-                  category.subCategories && category.subCategories.length > 0
-                const isActive =
-                  selectedCategory === category.name ||
-                  (selectedCategory === 'all' && category._id === 'all')
-                const count =
-                  productCounts[
-                    category._id === 'all' ? 'all' : category.name
-                  ] || 0
+        <ScrollableContainer
+          ref={scrollContainerRef}
+          className="w-full py-2 px-2 -mx-2"
+        >
+          <nav className="flex w-max">
+            {allCategories.map((category) => {
+              const hasSubcategories =
+                category.subCategories && category.subCategories.length > 0
+              const isActive =
+                selectedCategory === category.name ||
+                (selectedCategory === 'all' && category._id === 'all')
+              const count =
+                productCounts[category._id === 'all' ? 'all' : category.name] ||
+                0
 
-                return (
-                  <div key={category._id} className="dropdown relative mr-2">
-                    <button
-                      onClick={() => {
-                        setSelectedCategory(
-                          category._id === 'all' ? 'all' : category.name
-                        )
-                        setSelectedSubcategory(null)
-                      }}
-                      className={`whitespace-nowrap px-5 py-2 ${
-                        isActive
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-                      }`}
-                    >
-                      <span className="flex items-center">
-                        {category.name}
-                        {count > 0 && (
-                          <span
-                            className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
-                              isActive
-                                ? 'bg-white text-black'
-                                : 'bg-gray-200 text-gray-700'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                        )}
-                      </span>
-                    </button>
+              return (
+                <div key={category._id} className="dropdown relative mr-2">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(
+                        category._id === 'all' ? 'all' : category.name
+                      )
+                      setSelectedSubcategory(null)
+                    }}
+                    className={`whitespace-nowrap px-5 py-2 ${
+                      isActive
+                        ? 'bg-black text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                    }`}
+                  >
+                    <span className="flex items-center">
+                      {category.name}
+                      {count > 0 && (
+                        <span
+                          className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
+                            isActive
+                              ? 'bg-white text-black'
+                              : 'bg-gray-200 text-gray-700'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </span>
+                  </button>
 
-                    {/* W3Schools-style dropdown content */}
-                    {hasSubcategories && (
-                      <div className="dropdown-content hidden absolute left-0 top-full bg-white shadow-lg min-w-[180px] z-20">
-                        {category.subCategories?.map((subCategory, index) => (
-                          <button
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedCategory(category.name)
-                              setSelectedSubcategory(subCategory)
-                            }}
-                            className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                              selectedSubcategory === subCategory &&
-                              selectedCategory === category.name
-                                ? 'bg-gray-100 font-medium'
-                                : 'text-gray-800'
-                            }`}
-                          >
-                            {subCategory}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </nav>
-          </div>
+                  {/* W3Schools-style dropdown content */}
+                  {hasSubcategories && (
+                    <div className="dropdown-content hidden absolute left-0 top-full bg-white shadow-lg min-w-[180px] z-20">
+                      {category.subCategories?.map((subCategory, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedCategory(category.name)
+                            setSelectedSubcategory(subCategory)
+                          }}
+                          className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
+                            selectedSubcategory === subCategory &&
+                            selectedCategory === category.name
+                              ? 'bg-gray-100 font-medium'
+                              : 'text-gray-800'
+                          }`}
+                        >
+                          {subCategory}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </nav>
         </ScrollableContainer>
 
         {showRightArrow && (
