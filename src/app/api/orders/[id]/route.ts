@@ -17,7 +17,6 @@ export async function GET(
     
     const { id } = await context.params
 
-    // Proceed with fetching the order
     const order = await Order.findById(id).populate('userId', 'name email')
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 })
