@@ -1,5 +1,4 @@
 'use client'
-
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -20,7 +19,7 @@ import {
 import { OrderSummary } from '@/components/checkout/order-summary'
 import { useCart } from '@/hooks/useCart'
 import { MapPin, CreditCard } from 'lucide-react'
-import {  type UseFormReturn } from 'react-hook-form'
+import { type UseFormReturn } from 'react-hook-form'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -86,12 +85,6 @@ export default function CheckoutPage() {
       setBillingAddress(shippingAddress)
     }
   }
-
-  // // Determine if the submit button should be disabled
-  // const isSubmitDisabled = !(
-  //   shippingForm?.formState.isValid &&
-  //   (sameAsBilling || billingForm?.formState.isValid)
-  // )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
