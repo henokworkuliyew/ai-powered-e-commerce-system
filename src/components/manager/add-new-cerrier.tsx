@@ -92,7 +92,7 @@ export default function AddCarrierDialog({
         vehicle: vehicle.trim() || undefined,
         zone: zone || undefined,
         isActive,
-        role: 'CARRIER', // Explicitly set role to CARRIER
+        role: 'CARRIER', 
       }
 
       const response = await fetch('/api/register/carrier', {
