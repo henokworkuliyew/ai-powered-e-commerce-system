@@ -35,10 +35,9 @@ export async function getCurrentUser() {
   }
 }
 
-
 export async function requireAuth(
   req: Request,
-  roles?: ('USER' | 'ADMIN' | 'MANAGER')[]
+  roles?: ('USER' | 'ADMIN' | 'MANAGER' | 'CARRIER')[]
 ) {
   const session = await getSession()
 
@@ -65,10 +64,9 @@ export async function requireAuth(
   return { success: true, user: session.user }
 }
 
-
 interface Session {
   expires: string
-  [key: string]: unknown 
+  [key: string]: unknown
 }
 
 export function isSessionExpired(session: Session | null | undefined): boolean {
