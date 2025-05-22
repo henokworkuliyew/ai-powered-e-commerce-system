@@ -1,6 +1,5 @@
-'use client'
-
 import { useForm } from 'react-hook-form'
+import { useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import {
   Form,
@@ -51,10 +50,12 @@ export function AddressForm({
     mode: 'onBlur',
   })
 
-  // Pass form instance to parent
-  if (onFormInstance) {
-    onFormInstance(form)
-  }
+  // Pass form instance to parent after render
+  useEffect(() => {
+    if (onFormInstance) {
+      onFormInstance(form)
+    }
+  }, [form, onFormInstance])
 
   // Handle form changes and propagate to parent component
   const handleFormChange = (name: keyof AddressData, value: string) => {
