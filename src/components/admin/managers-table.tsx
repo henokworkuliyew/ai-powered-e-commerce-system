@@ -9,33 +9,38 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatDate } from '@/hooks/utils/formatDate'
+
 
 interface Manager {
   _id: string
   name: string
   email: string
   createdAt: string
-  warehouse: string
   contactPhone?: string
 }
 
-export function ManagersTable() {
+export default function ManagersList() {
   const [managers, setManagers] = useState<Manager[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchManagers() {
+    const fetchManagers = async () => {
       try {
-        const response = await fetch('/api/register/manager',)
+        const response = await fetch('/api/register/manager')
         const data = await response.json()
 
         if (data.success) {
           setManagers(data.managers)
+        } else {
+          setError(data.error || 'Failed to fetch managers')
         }
-      } catch (error) {
-        console.error('Failed to fetch managers:', error)
+      } catch (err) {
+        setError('An error occurred while fetching managers')
+        console.error(err)
       } finally {
         setLoading(false)
       }
@@ -46,54 +51,64 @@ export function ManagersTable() {
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-      </div>
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <div className="text-red-500">{error}</div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (managers.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <div className="text-center py-4 text-muted-foreground">
+            No managers found. Add your first manager.
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="border rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Warehouse</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {managers.length === 0 ? (
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell
-                colSpan={4}
-                className="text-center py-6 text-muted-foreground"
-              >
-                No managers found. Add your first manager.
-              </TableCell>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Added</TableHead>
             </TableRow>
-          ) : (
-            managers.map((manager) => (
+          </TableHeader>
+          <TableBody>
+            {managers.map((manager) => (
               <TableRow key={manager._id}>
                 <TableCell className="font-medium">{manager.name}</TableCell>
                 <TableCell>{manager.email}</TableCell>
-                <TableCell>{manager.warehouse}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className="bg-green-50 text-green-700 border-green-200"
-                  >
-                    Active
-                  </Badge>
-                </TableCell>
+                <TableCell>{manager.contactPhone || '—'}</TableCell>
+                <TableCell>{formatDate(manager.createdAt)}</TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   )
 }
