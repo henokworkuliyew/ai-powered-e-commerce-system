@@ -17,7 +17,7 @@ const baseUserSchema = z.object({
 const carrierSchema = baseUserSchema.extend({
   isActive: z.boolean().default(false),
   vehicle: z.string({ message: 'Vehicle is required for CARRIER' }),
-  zone: z.string({ message: 'Zone is required for CARRIER' }),
+  zone: z.string().optional(),
   activatedAt: z
     .string()
     .datetime({ message: 'Invalid activatedAt date' })
