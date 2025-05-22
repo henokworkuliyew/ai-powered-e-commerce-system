@@ -1,23 +1,32 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { FaSearch, FaShoppingCart, FaBell } from 'react-icons/fa'
+import type React from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
+import { FaShoppingCart, FaBell } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
 
 import Heading from '../ui/Heading'
-
-import { useCart } from '@/hooks/useCart'
-import { useState, useEffect } from 'react'
 import UserMenu from './UserMenu'
-import { SafeUser } from '@/type/SafeUser'
+import { useCart } from '@/hooks/useCart'
+
+import type { SafeUser } from '@/type/SafeUser'
+import type { Product } from '@/type/Product'
+import { AdvancedSearchBar } from '../search/SearchBar'
 
 interface HeaderProps {
   currentUser: SafeUser | null
+  products?: Product[] | null
 }
-const Header: React.FC<HeaderProps> = ({ currentUser }) => {
+
+const Header: React.FC<HeaderProps> = ({ currentUser, products = [] }) => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { cartProducts } = useCart()
   const [cartCount, setCartCount] = useState(0)
 
+  // Get search query from URL
+  const searchQuery = searchParams?.get('q') || ''
 
   useEffect(() => {
     const totalQty = cartProducts?.reduce((acc, item) => acc + item.qty, 0) || 0
@@ -34,15 +43,11 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
         <Heading text="Gulit" gradient level={4} />
       </button>
 
-      <div className="flex items-center bg-white px-2 py-1 rounded-md shadow-md w-40 sm:w-80">
-        <input
-          type="text"
-          placeholder="Search"
-          className="outline-none px-2 py-1 w-full"
+      <div className="w-40 sm:w-80">
+        <AdvancedSearchBar
+          initialQuery={searchQuery}
+          products={products || []}
         />
-        <button className="text-gray-600">
-          <FaSearch />
-        </button>
       </div>
 
       <div className="flex space-x-4 flex-shrink-0 justify-between">
