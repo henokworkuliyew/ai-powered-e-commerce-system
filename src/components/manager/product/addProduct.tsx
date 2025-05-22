@@ -4,8 +4,7 @@ import type React from 'react'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-toastify'
-import { MdCheckCircle } from 'react-icons/md'
+
 
 import { Button } from '@/components/ui/button2'
 import type { Product } from '@/type/Product'
@@ -13,6 +12,7 @@ import CategorySection from './section/category'
 import BasicInformationSection from './section/basicInfo'
 import ImagesSection from './section/image'
 import PricingSection from './section/price'
+import { toast } from '@/components/ui/use-toast'
 
 
 
@@ -120,14 +120,10 @@ export default function AddProductPage() {
       )
 
       if (missingImages) {
-        toast.success('All Image should be filled!', {
-          position: 'top-right',
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: <MdCheckCircle className="text-green-500" />,
+        toast({
+          title: 'All Images should be filled',
+          description: 'Please fill all the images',
+          variant: 'destructive',
         })
       }
 
@@ -142,27 +138,20 @@ export default function AddProductPage() {
         const errorText = await response.text()
         console.error('Product creation failed:', errorText)
       }
+      else {
 
-      toast.success('Product added Successfully!', {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: <MdCheckCircle className="text-green-500" />,
+      toast({
+        title: 'Product added successfully!',
+        description: 'Your product has been added to the store.',
+       
       })
-      console.log('Product added successfully:', product)
+    }
     } catch (error) {
       console.error('Error adding product:', error)
-      toast.error('Error Adding Product!', {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: <MdCheckCircle className="text-red-600" />,
+      toast({
+        title: 'Error Adding Product!',
+        description: 'There was an error adding your product.',
+        variant: 'destructive',
       })
     } finally {
       setIsSubmitting(false)
