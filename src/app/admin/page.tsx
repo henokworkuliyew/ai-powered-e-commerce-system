@@ -1,34 +1,19 @@
 import type { Metadata } from 'next'
-
-import { ManagersTable } from '@/components/admin/managers-table'
-import AddManagerForm from '@/components/admin/add-manager-form'
+// import { redirect } from 'next/navigation'
+// import { getCurrentUser } from '@/action/CurrentUser'
+import AdminDashboard from '@/components/admin/admin-dashboard'
 
 export const metadata: Metadata = {
-  title: 'Admin | Managers',
-  description: 'Manage store managers',
+  title: 'Admin Dashboard',
+  description: 'Admin dashboard for managing shipping operations',
 }
 
-export default async function ManagersPage() {
-  return (
-    <div className="flex flex-col gap-8 p-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Managers</h1>
-        <p className="text-muted-foreground">
-          Add and manage store managers for your e-commerce platform.
-        </p>
-      </div>
+export default async function AdminPage() {
+  // const currentUser = await getCurrentUser()
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Add New Manager</h2>
-          <AddManagerForm />
-        </div>
+  // if (!currentUser || currentUser.role !== 'ADMIN') {
+  //   redirect('/')
+  // }
 
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Current Managers</h2>
-          <ManagersTable />
-        </div>
-      </div>
-    </div>
-  )
+  return <AdminDashboard />
 }
