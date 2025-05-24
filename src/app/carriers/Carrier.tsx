@@ -26,13 +26,10 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
-  Edit,
   RefreshCw,
   ChevronRight,
   BarChart3,
 } from 'lucide-react'
-import type { Carrier } from '@/type/Carrier'
-import type { Shipment } from '@/type/Shipment'
 import {
   Dialog,
   DialogContent,
@@ -51,23 +48,72 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export default function CarrierDashboardPage() {
+interface SafeUser {
+  _id: string
+  name: string
+  email: string
+}
+
+interface CurrentShipment {
+  shipmentId: string
+  orderNumber: string
+  trackingNumber: string
+  estimatedDelivery: string
+  status: 'processing' | 'delivered' | 'failed' | 'in_transit' | 'returned'
+}
+
+interface Carrier {
+  _id: string
+  name: string
+  contactPhone?: string
+  contactEmail?: string
+  vehicle?: string
+  zone?: string
+  isActive: boolean
+  activatedAt?: string
+  currentShipment?: CurrentShipment
+}
+
+interface Shipment {
+  _id: string
+  orderId: string
+  status: 'processing' | 'delivered' | 'failed' | 'in_transit' | 'returned'
+  createdAt: string
+  dateDelivered?: string
+}
+
+type ShipmentStatus =
+  | 'processing'
+  | 'delivered'
+  | 'failed'
+  | 'in_transit'
+  | 'returned'
+
+interface CurrentUser {
+  currentUser: SafeUser | null
+}
+
+export default function CarrierDashboardPage({ currentUser }: CurrentUser) {
   const [carrier, setCarrier] = useState<Carrier | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isMarkingDelivered, setIsMarkingDelivered] = useState(false)
-  const [showDeliveredDialog, setShowDeliveredDialog] = useState(false)
+  const [showStatusDialog, setShowStatusDialog] = useState(false)
+  const [showShipmentDialog, setShowShipmentDialog] = useState(false)
+  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(
+    null
+  )
+  const [selectedShipmentStatus, setSelectedShipmentStatus] =
+    useState<ShipmentStatus>('in_transit')
   const [deliveryNotes, setDeliveryNotes] = useState('')
   const [shipmentStatus, setShipmentStatus] =
-    useState<Shipment['status']>('in_transit')
+    useState<ShipmentStatus>('in_transit')
   const [recentShipments, setRecentShipments] = useState<Shipment[]>([])
   const [isLoadingShipments, setIsLoadingShipments] = useState(false)
   const { toast } = useToast()
 
-  // Mock function to get the current carrier ID (in a real app, this would come from auth)
   const getCurrentCarrierId = () => {
-    // This would normally come from authentication
-    return localStorage.getItem('carrierId') || '6817db7c8693a6b377e43817'
+    return currentUser?._id
   }
 
   const fetchCarrierProfile = async () => {
@@ -133,7 +179,6 @@ export default function CarrierDashboardPage() {
         },
         body: JSON.stringify({
           isActive: !carrier.isActive,
-          
           ...(carrier.isActive === false
             ? { activatedAt: new Date().toISOString() }
             : {}),
@@ -182,6 +227,10 @@ export default function CarrierDashboardPage() {
           body: JSON.stringify({
             status: shipmentStatus,
             notes: deliveryNotes,
+            carrierId: currentUser?._id,
+            ...(shipmentStatus === 'delivered'
+              ? { dateDelivered: new Date().toISOString() }
+              : {}),
           }),
         }
       )
@@ -198,18 +247,67 @@ export default function CarrierDashboardPage() {
         )}`,
       })
 
-      // If the status is "delivered", also mark the delivery as complete
       if (shipmentStatus === 'delivered') {
         await handleMarkDelivered()
       } else {
         fetchCarrierProfile()
-        setShowDeliveredDialog(false)
+        setShowStatusDialog(false)
         setDeliveryNotes('')
       }
     } catch (error) {
-      if(error instanceof Error) {  
+      if (error instanceof Error) {
         console.error('Error updating shipment status:', error)
       }
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update shipment status',
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleIndividualShipmentUpdate = async (
+    shipmentId: string,
+    newStatus: ShipmentStatus,
+    notes: string
+  ) => {
+    setIsUpdating(true)
+    try {
+      const response = await fetch(`/api/shipments/${shipmentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          notes: notes,
+          carrierId: currentUser?._id,
+          ...(newStatus === 'delivered'
+            ? { dateDelivered: new Date().toISOString() }
+            : {}),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update shipment status')
+      }
+
+      toast({
+        title: 'Status Updated',
+        description: `Shipment status has been updated to ${newStatus.replace(
+          '_',
+          ' '
+        )}`,
+      })
+
+      setShowShipmentDialog(false)
+      setDeliveryNotes('')
+      fetchRecentShipments()
+      fetchCarrierProfile()
+    } catch (error) {
+      console.log(error)
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -225,27 +323,6 @@ export default function CarrierDashboardPage() {
 
     setIsMarkingDelivered(true)
     try {
-      // 1. Update the shipment status to delivered
-      const shipmentResponse = await fetch(
-        `/api/shipments/${carrier.currentShipment.shipmentId}/status`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            status: 'delivered',
-            notes: deliveryNotes,
-            dateDelivered: new Date().toISOString(),
-          }),
-        }
-      )
-
-      if (!shipmentResponse.ok) {
-        throw new Error('Failed to update shipment status')
-      }
-
-      // 2. Update carrier status to active and clear current shipment
       const carrierResponse = await fetch(
         `/api/carrier/${carrier._id}/delivery-complete`,
         {
@@ -273,11 +350,11 @@ export default function CarrierDashboardPage() {
           'The shipment has been marked as delivered and you are now available for new deliveries.',
       })
 
-      setShowDeliveredDialog(false)
+      setShowStatusDialog(false)
       setDeliveryNotes('')
       fetchRecentShipments()
     } catch (error) {
-      if(error instanceof Error) {  
+      if (error instanceof Error) {
         console.error('Error marking shipment as delivered:', error)
       }
       toast({
@@ -300,6 +377,17 @@ export default function CarrierDashboardPage() {
     })
   }
 
+  const openStatusDialog = () => {
+    setShipmentStatus(carrier?.currentShipment?.status || 'in_transit')
+    setShowStatusDialog(true)
+  }
+
+  const openShipmentDialog = (shipment: Shipment) => {
+    setSelectedShipment(shipment)
+    setSelectedShipmentStatus(shipment.status)
+    setShowShipmentDialog(true)
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-12 flex justify-center">
@@ -316,7 +404,7 @@ export default function CarrierDashboardPage() {
             <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
             <h2 className="text-xl font-bold mb-2">Profile Not Found</h2>
             <p className="text-muted-foreground text-center">
-              We couldnt find your carrier profile. Please contact support.
+              We could not find your carrier profile. Please contact support.
             </p>
           </CardContent>
         </Card>
@@ -331,23 +419,14 @@ export default function CarrierDashboardPage() {
           <Truck className="mr-2 h-6 w-6 text-[#4a6bff]" />
           Carrier Dashboard
         </h1>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={refreshData}
-            className="flex items-center"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button
-            onClick={() => (window.location.href = '/carrier/edit-profile')}
-            className="bg-[#4a6bff] hover:bg-[#3a5bef]"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Profile
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={refreshData}
+          className="flex items-center hover:bg-gray-50 transition-colors duration-200"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -404,7 +483,7 @@ export default function CarrierDashboardPage() {
                     checked={carrier.isActive}
                     onCheckedChange={handleStatusToggle}
                     disabled={isUpdating || Boolean(carrier.currentShipment)}
-                    className="data-[state=checked]:bg-green-500"
+                    className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300 data-[state=unchecked]:border-gray-400 hover:data-[state=unchecked]:bg-gray-400 transition-colors duration-200"
                   />
                 </div>
               </div>
@@ -437,36 +516,50 @@ export default function CarrierDashboardPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-sm font-medium">Status:</span>
+                    <Badge
+                      className={
+                        carrier.currentShipment.status === 'processing'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : carrier.currentShipment.status === 'in_transit'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-green-100 text-green-800'
+                      }
+                    >
+                      {carrier.currentShipment.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-sm font-medium">Delivery:</span>
                     <span className="text-sm">
                       {carrier.currentShipment.estimatedDelivery}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2">
-                    <span className="text-sm font-medium">Update Status:</span>
+                    <span className="text-sm font-medium">Current Status:</span>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setShowDeliveredDialog(true)}
-                      className="border-orange-500 text-orange-800 hover:bg-orange-50"
+                      onClick={openStatusDialog}
+                      className="border-blue-500 text-blue-800 hover:bg-blue-50 transition-colors duration-200"
                     >
-                      Update Status
+                      Change Status
                     </Button>
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="bg-orange-50 flex justify-between">
                 <span className="text-xs text-orange-800">
-                  Mark as delivered when you complete this shipment
+                  Update the delivery status as needed
                 </span>
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => setShowDeliveredDialog(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={openStatusDialog}
+                  className="bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200"
                 >
                   <CheckCircle2 className="mr-1 h-4 w-4" />
-                  Mark Delivered
+                  Update Status
                 </Button>
               </CardFooter>
             </Card>
@@ -504,9 +597,9 @@ export default function CarrierDashboardPage() {
                       {recentShipments.map((shipment) => (
                         <div
                           key={shipment._id}
-                          className="border rounded-md p-3"
+                          className="border rounded-md p-3 hover:shadow-md transition-shadow duration-200"
                         >
-                          <div className="flex justify-between items-start">
+                          <div className="flex justify-between items-start mb-3">
                             <div>
                               <div className="font-medium">
                                 Order #{shipment.orderId}
@@ -523,11 +616,37 @@ export default function CarrierDashboardPage() {
                                   ? 'bg-green-100 text-green-800'
                                   : shipment.status === 'in_transit'
                                   ? 'bg-blue-100 text-blue-800'
+                                  : shipment.status === 'processing'
+                                  ? 'bg-yellow-100 text-yellow-800'
                                   : 'bg-orange-100 text-orange-800'
                               }
                             >
                               {shipment.status.replace('_', ' ')}
                             </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                window.open(
+                                  `/carrier/shipment/${shipment._id}`,
+                                  '_blank'
+                                )
+                              }
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-colors duration-200"
+                            >
+                              View Detail Status
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openShipmentDialog(shipment)}
+                              disabled={shipment.status === 'delivered'}
+                              className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              Update Status
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -547,9 +666,9 @@ export default function CarrierDashboardPage() {
                         .map((shipment) => (
                           <div
                             key={shipment._id}
-                            className="border rounded-md p-3"
+                            className="border rounded-md p-3 hover:shadow-md transition-shadow duration-200"
                           >
-                            <div className="flex justify-between items-start">
+                            <div className="flex justify-between items-start mb-3">
                               <div>
                                 <div className="font-medium">
                                   Order #{shipment.orderId}
@@ -566,6 +685,21 @@ export default function CarrierDashboardPage() {
                               <Badge className="bg-green-100 text-green-800">
                                 Delivered
                               </Badge>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  window.open(
+                                    `/carrier/shipment/${shipment._id}`,
+                                    '_blank'
+                                  )
+                                }
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-colors duration-200"
+                              >
+                                View Detail Status
+                              </Button>
                             </div>
                           </div>
                         ))}
@@ -591,9 +725,9 @@ export default function CarrierDashboardPage() {
                       {recentShipments.map((shipment) => (
                         <div
                           key={shipment._id}
-                          className="border rounded-md p-3"
+                          className="border rounded-md p-3 hover:shadow-md transition-shadow duration-200"
                         >
-                          <div className="flex justify-between items-start">
+                          <div className="flex justify-between items-start mb-3">
                             <div>
                               <div className="font-medium">
                                 Order #{shipment.orderId}
@@ -610,11 +744,37 @@ export default function CarrierDashboardPage() {
                                   ? 'bg-green-100 text-green-800'
                                   : shipment.status === 'in_transit'
                                   ? 'bg-blue-100 text-blue-800'
+                                  : shipment.status === 'processing'
+                                  ? 'bg-yellow-100 text-yellow-800'
                                   : 'bg-orange-100 text-orange-800'
                               }
                             >
                               {shipment.status.replace('_', ' ')}
                             </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                window.open(
+                                  `/carrier/shipment/${shipment._id}`,
+                                  '_blank'
+                                )
+                              }
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-colors duration-200"
+                            >
+                              View Detail Status
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openShipmentDialog(shipment)}
+                              disabled={shipment.status === 'delivered'}
+                              className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              Update Status
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -750,7 +910,7 @@ export default function CarrierDashboardPage() {
             <CardFooter className="pt-0">
               <Button
                 variant="link"
-                className="text-[#4a6bff] p-0 h-auto text-sm"
+                className="text-[#4a6bff] p-0 h-auto text-sm hover:text-[#3a5bef] transition-colors duration-200"
               >
                 View detailed stats <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
@@ -759,19 +919,25 @@ export default function CarrierDashboardPage() {
         </div>
       </div>
 
-      <Dialog open={showDeliveredDialog} onOpenChange={setShowDeliveredDialog}>
+     
+      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Update Shipment Status</DialogTitle>
             <DialogDescription>
               Update the status of order #{carrier.currentShipment?.orderNumber}
-              .
+              . Select the new status and add any relevant notes.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
-              <Select value={shipmentStatus} onValueChange={setShipmentStatus}>
+              <Select
+                value={shipmentStatus}
+                onValueChange={(value: ShipmentStatus) =>
+                  setShipmentStatus(value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -780,6 +946,7 @@ export default function CarrierDashboardPage() {
                   <SelectItem value="in_transit">In Transit</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
                   <SelectItem value="failed">Failed Delivery</SelectItem>
+                  <SelectItem value="returned">Returned</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -796,7 +963,7 @@ export default function CarrierDashboardPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeliveredDialog(false)}
+              onClick={() => setShowStatusDialog(false)}
             >
               Cancel
             </Button>
@@ -805,8 +972,8 @@ export default function CarrierDashboardPage() {
               disabled={isUpdating || isMarkingDelivered}
               className={
                 shipmentStatus === 'delivered'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-[#4a6bff] hover:bg-[#3a5bef]'
+                  ? 'bg-green-600 hover:bg-green-700 text-white transition-colors duration-200'
+                  : 'bg-[#4a6bff] hover:bg-[#3a5bef] transition-colors duration-200'
               }
             >
               {isUpdating || isMarkingDelivered ? (
@@ -815,6 +982,116 @@ export default function CarrierDashboardPage() {
                   Processing...
                 </>
               ) : shipmentStatus === 'delivered' ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Mark as Delivered
+                </>
+              ) : (
+                <>Update Status</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Individual Shipment Status Dialog */}
+      <Dialog open={showShipmentDialog} onOpenChange={setShowShipmentDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Shipment Status</DialogTitle>
+            <DialogDescription>
+              Update the status of order #{selectedShipment?.orderId}. Select
+              the new status and add any relevant notes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Current Status</label>
+              <Badge
+                className={
+                  selectedShipment?.status === 'delivered'
+                    ? 'bg-green-100 text-green-800'
+                    : selectedShipment?.status === 'in_transit'
+                    ? 'bg-blue-100 text-blue-800'
+                    : selectedShipment?.status === 'processing'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-orange-100 text-orange-800'
+                }
+              >
+                {selectedShipment?.status.replace('_', ' ').toUpperCase()}
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">New Status</label>
+              <Select
+                value={selectedShipmentStatus}
+                onValueChange={(value: ShipmentStatus) =>
+                  setSelectedShipmentStatus(value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedShipment?.status === 'processing' ? (
+                    <>
+                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="in_transit">In Transit</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="failed">Failed Delivery</SelectItem>
+                      <SelectItem value="returned">Returned</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="in_transit">In Transit</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="failed">Failed Delivery</SelectItem>
+                      <SelectItem value="returned">Returned</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Notes (Optional)</label>
+              <Textarea
+                placeholder="Add any notes about the status update..."
+                value={deliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowShipmentDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                selectedShipment &&
+                handleIndividualShipmentUpdate(
+                  selectedShipment._id,
+                  selectedShipmentStatus,
+                  deliveryNotes
+                )
+              }
+              disabled={isUpdating}
+              className={
+                selectedShipmentStatus === 'delivered'
+                  ? 'bg-green-600 hover:bg-green-700 text-white transition-colors duration-200'
+                  : 'bg-[#4a6bff] hover:bg-[#3a5bef] transition-colors duration-200'
+              }
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : selectedShipmentStatus === 'delivered' ? (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   Mark as Delivered
