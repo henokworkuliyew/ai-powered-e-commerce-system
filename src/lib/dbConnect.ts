@@ -4,7 +4,8 @@ async function dbConnect() {
   try {
 
     await mongoose.connect(process.env.MONGODB_URI!, {
-      bufferCommands: false,
+      bufferCommands: true,
+      serverSelectionTimeoutMS: 5000,
     })
 
   } catch (error) {
