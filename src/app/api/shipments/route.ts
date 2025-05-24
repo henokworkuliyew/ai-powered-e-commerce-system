@@ -14,11 +14,13 @@ interface ShipmentQuery {
   trackingNumber?: { $regex: string; $options: string }
 }
 
-
 export async function GET(req: NextRequest) {
   try {
     const currentUser = await getCurrentUser()
-    if (!currentUser || currentUser.role !== 'MANAGER') {
+    if (
+      !currentUser ||
+      (currentUser.role !== 'MANAGER' && currentUser.role !== 'ADMIN' && currentUser.role !== 'CARRIER')
+    ) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
@@ -48,7 +50,6 @@ export async function GET(req: NextRequest) {
       .skip((page - 1) * limit)
       .limit(limit)
 
-    // Format the response
     const formattedShipments = shipments.map((shipment) => {
       const carrier = shipment.carrierId as Carrier | null
       return {
@@ -59,7 +60,6 @@ export async function GET(req: NextRequest) {
         carrier: {
           name: carrier?.name ?? 'Unknown',
           trackingUrlTemplate: carrier?.trackingUrlTemplate,
-          
         },
         status: shipment.status,
         dateShipped: shipment.dateShipped,
@@ -92,7 +92,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST handler remains unchanged as it has no errors related to `any`
 export async function POST(req: NextRequest) {
   try {
     const currentUser = await getCurrentUser()
