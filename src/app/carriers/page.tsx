@@ -1,19 +1,19 @@
-// import { getCurrentUser } from "@/action/CurrentUser"
-// import UnauthorizedPage from "@/components/unauthorized"
+import { getCurrentUser } from "@/action/CurrentUser"
+import UnauthorizedPage from "@/components/unauthorized"
 import CarrierProfilePage from "./Carrier"
 
 
 
 const page = async () => {
   
-  // const currentUser = await getCurrentUser()
+  const currentUser = await getCurrentUser()
 
-  // if (!currentUser || !currentUser.role.includes('MANAGER')) {
-  //   return <UnauthorizedPage/>
-  // }
+  if (!currentUser || !currentUser.role.includes('CARRIER')) {
+    return <UnauthorizedPage/>
+  }
   return (
     <div>
-      <CarrierProfilePage  />
+      <CarrierProfilePage currentUser={currentUser} />
     </div>
   )
 }
