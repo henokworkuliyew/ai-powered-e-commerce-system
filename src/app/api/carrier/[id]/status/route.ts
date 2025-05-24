@@ -23,6 +23,15 @@ export async function PATCH(
 
     const body = await request.json()
 
+   
+    if (typeof body.isActive !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Invalid isActive format, must be a boolean' },
+        { status: 400 }
+      )
+    }
+
+    
     if (body.activatedAt && typeof body.activatedAt !== 'string') {
       return NextResponse.json(
         { error: 'Invalid activatedAt format, must be a string' },
@@ -31,7 +40,7 @@ export async function PATCH(
     }
 
     const updateData: CarrierUpdate = {
-      isActive: true,
+      isActive: body.isActive,
     }
 
     const updateQuery = {
@@ -63,10 +72,10 @@ export async function PATCH(
       )
     }
     if (error instanceof Error) {
-      console.error('Error completing delivery:', error.message)
+      console.error('Error updating carrier status:', error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-    console.error('Error completing delivery:', error)
+    console.error('Error updating carrier status:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
