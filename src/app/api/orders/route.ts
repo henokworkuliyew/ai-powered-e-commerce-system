@@ -85,24 +85,20 @@ export async function GET(request: Request) {
 
       return NextResponse.json({ order })
     } else {
-      
       const query: OrderQuery = { userId: currentUser._id }
 
       if (status) {
         query.orderStatus = status
       }
 
-     
-      let sortOption: Record<string, 1 | -1> = { createdAt: -1 } 
+      let sortOption: Record<string, 1 | -1> = { createdAt: -1 }
       if (sort) {
         const [field, direction] = sort.split(':')
         sortOption = { [field]: direction === 'desc' ? -1 : 1 }
       }
 
-   
       let ordersQuery = Order.find(query).sort(sortOption)
 
-      
       if (limit) {
         const limitNumber = parseInt(limit, 10)
         if (isNaN(limitNumber) || limitNumber <= 0) {
