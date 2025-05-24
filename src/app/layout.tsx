@@ -5,6 +5,7 @@ import Header from '@/components/header/Header'
 import { CartContextProvider } from '@/hooks/useCart'
 import { Metadata } from 'next'
 import { Toaster } from 'react-hot-toast'
+import { NotificationProvider } from '@/provider/NotificationProvider'
 
 export const metadata: Metadata = {
   title: 'Gulit Gebeya',
@@ -30,21 +31,23 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
-        <Toaster
-          toastOptions={{
-            style: {
-              background: 'rgb(51 65 85)',
-              color: '#fff',
-            },
-          }}
-        />
-        <SessionProvider>
-          <CartContextProvider>
-            <Header />
-            <main className="flex-grow pt-24">{children}</main>
-            <Footer />
-          </CartContextProvider>
-        </SessionProvider>
+        <NotificationProvider>
+          <Toaster
+            toastOptions={{
+              style: {
+                background: 'rgb(51 65 85)',
+                color: '#fff',
+              },
+            }}
+          />
+          <SessionProvider>
+            <CartContextProvider>
+              <Header />
+              <main className="flex-grow pt-24">{children}</main>
+              <Footer />
+            </CartContextProvider>
+          </SessionProvider>
+        </NotificationProvider>
       </body>
     </html>
   )
