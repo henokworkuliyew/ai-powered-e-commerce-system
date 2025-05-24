@@ -551,6 +551,11 @@ export default function AddShipmentDialog({
   const selectedCarrier = carrierId
     ? carriers.find((c) => c._id === carrierId)
     : undefined
+    
+    if(recentOrders.length === 0){
+
+    }
+
 
   return (
     <Dialog
@@ -647,7 +652,7 @@ export default function AddShipmentDialog({
                                   <div>
                                     <div className="font-medium text-gray-800 flex items-center">
                                       Order #{order.orderNumber}
-                                      {(order.orderStatus === 'processing' ) && (
+                                      {order.orderStatus === 'processing' && (
                                         <Badge className="ml-2 bg-emerald-500 text-white text-xs">
                                           New
                                         </Badge>
@@ -668,6 +673,23 @@ export default function AddShipmentDialog({
                                 </div>
                               ))}
                             </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {recentOrders.length === 0 && !orderResults.length && (
+                        <Card className="border-gray-200 shadow-sm">
+                          <CardContent className="p-6 text-center">
+                            <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                              No Recent Orders
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                              There are no recent orders available for shipment.
+                              Try searching for an order by number or contact
+                              support for assistance.
+                            </p>
+                            
                           </CardContent>
                         </Card>
                       )}
