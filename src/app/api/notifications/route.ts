@@ -1,178 +1,122 @@
-import { type NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
-import dbConnect from '@/lib/dbConnect'
-import Notification, {
-  type NotificationMetadata,
-} from '@/server/models/Notification'
+// src/app/api/notifications/route.ts
+import { NextResponse } from 'next/server'
+import { WebSocketServer, WebSocket } from 'ws'
+import { getCurrentUser } from '@/action/CurrentUser'
+import Order from '@/server/models/Order'
+import  dbConnect  from '@/lib/dbConnect'
+import { IncomingMessage } from 'http'
 
+export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
+const wss = new WebSocketServer({ noServer: true })
+const clients = new Map<string, WebSocket>()
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+  console.log('WebSocket connection attempt:', req.url)
+  const url = new URL(req.url || '', 'http://localhost:3000')
+  const userId = url.searchParams.get('userId')
 
-    await dbConnect()
-
-  
-    const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type')
-    const read = searchParams.get('read')
-    const limit = Number.parseInt(searchParams.get('limit') || '50')
-    const page = Number.parseInt(searchParams.get('page') || '1')
-    const skip = (page - 1) * limit
-
-   
-    const query: Record<string, unknown> = { userId: session.user.id }
-
-    if (type) {
-      query.type = type
-    }
-
-    if (read !== null) {
-      query.read = read === 'true'
-    }
-
-   
-    const total = await Notification.countDocuments(query)
-
-   
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-
-   
-    const unreadCount = await Notification.countDocuments({
-      userId: session.user.id,
-      read: false,
-    })
-
-    return NextResponse.json({
-      notifications,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-      unreadCount,
-    })
-  } catch (error) {
-    console.error('Error fetching notifications:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
-      { status: 500 }
-    )
+  if (!userId) {
+    console.log('Closing connection: No userId provided')
+    ws.close(1008, 'User ID required')
+    return
   }
-}
 
+  console.log(`Client connected: userId=${userId}`)
+  clients.set(userId, ws)
 
-interface CreateNotificationRequest {
-  userId?: string
-  type: string
-  title: string
-  description: string
-  read?: boolean
-  actionUrl?: string
-  actionText?: string
-  image?: string
-  relatedId?: string
-  metadata?: NotificationMetadata
-  expiresAt?: string
-}
+  ws.send(
+    JSON.stringify({
+      type: 'system',
+      message: 'Connected to notification system',
+      createdAt: new Date().toISOString(),
+    })
+  )
 
-
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-   
-    const isAdmin = session.user.role === 'ADMIN'
-
-    await dbConnect()
-
-    const body: CreateNotificationRequest = await request.json()
-
-    if (!body.title || !body.description || !body.type) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    if (body.userId && !isAdmin) {
-      return NextResponse.json(
-        { error: 'Unauthorized to create notifications for other users' },
-        { status: 403 }
-      )
-    }
-
-    const notification = await Notification.create({
-      userId: body.userId || session.user.id,
-      type: body.type,
-      title: body.title,
-      description: body.description,
-      read: body.read || false,
-      actionUrl: body.actionUrl,
-      actionText: body.actionText,
-      image: body.image,
-      relatedId: body.relatedId,
-      metadata: body.metadata,
-      expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
+  dbConnect()
+    .then(() => {
+      Order.watch()
+        .on('change', (change) => {
+          if (change.operationType === 'insert') {
+            const newOrder = change.fullDocument
+            console.log(
+              `Sending notification for order #${newOrder.orderNumber} to userId=${userId}`
+            )
+            ws.send(
+              JSON.stringify({
+                type: 'new_order',
+                orderId: newOrder.orderNumber,
+                message: `Order #${newOrder.orderNumber} has been placed`,
+                createdAt: new Date().toISOString(),
+              })
+            )
+          }
+        })
+        .on('error', (error) => {
+          console.error(`MongoDB watch error for userId=${userId}:`, error)
+        })
+    })
+    .catch((error) => {
+      
+      console.error(`Failed to set up Order watch for userId=${userId}:`, error)
+      ws.close(1011, 'Server error')
     })
 
-    return NextResponse.json(notification, { status: 201 })
-  } catch (error) {
-    console.error('Error creating notification:', error)
-    return NextResponse.json(
-      { error: 'Failed to create notification' },
-      { status: 500 }
-    )
-  }
-}
+  ws.on('message', (message: Buffer) => {
+    console.log(`Received from userId=${userId}:`, message.toString())
+  })
 
-// DELETE /api/notifications - Delete all notifications for the current user
-export async function DELETE(request: NextRequest) {
+  ws.on('close', (event) => {
+    console.log(
+      `Client disconnected: userId=${userId}, code=${event.code}, reason=${event.reason}`
+    )
+    clients.delete(userId)
+  })
+
+  ws.on('error', (error) => {
+    console.error(`WebSocket server error for userId=${userId}:`, error)
+  })
+})
+
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    console.log('WebSocket GET request:', req.url)
     await dbConnect()
-
-    // Parse query parameters
-    const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type')
-
-    // Build query
-    const query: Record<string, unknown> = { userId: session.user.id }
-
-    if (type) {
-      query.type = type
+    const user = await getCurrentUser()
+    console.log('Authenticated user:', user ? user.email : 'None')
+    if (!user) {
+      console.log('Unauthorized: No user found')
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // Delete notifications
-    const result = await Notification.deleteMany(query)
+    if (req.headers.get('upgrade')?.toLowerCase() === 'websocket') {
+      console.log('WebSocket upgrade requested')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { socket }: { socket?: import('net').Socket } = (req as any).raw
+      if (!socket) {
+        console.log('No socket available')
+        return new NextResponse('No socket available', { status: 400 })
+      }
 
-    return NextResponse.json({
-      message: `Deleted ${result.deletedCount} notifications`,
-      deletedCount: result.deletedCount,
-    })
+      const incomingMessage = {
+        headers: Object.fromEntries(req.headers.entries()),
+        url: req.url,
+        method: req.method,
+      } as IncomingMessage
+
+      console.log('Upgrading to WebSocket')
+      wss.handleUpgrade(incomingMessage, socket, Buffer.alloc(0), (ws) => {
+        console.log('WebSocket connection established')
+        wss.emit('connection', ws, incomingMessage)
+      })
+
+      return new NextResponse(null, { status: 101 })
+    }
+
+    console.log('WebSocket upgrade required')
+    return new NextResponse('WebSocket upgrade required', { status: 426 })
   } catch (error) {
-    console.error('Error deleting notifications:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete notifications' },
-      { status: 500 }
-    )
+    console.error('[WEBSOCKET_GET]', error)
+    return new NextResponse('Internal error', { status: 500 })
   }
 }
