@@ -69,13 +69,13 @@ export default function ShipmentsTab({
   const loadData = async () => {
     setIsLoading(true)
     try {
-      // Build query parameters
+      
       const params = new URLSearchParams()
       if (statusFilter !== 'all') {
         params.append('status', statusFilter)
       }
       if (carrierFilter !== 'all') {
-        // Find carrier ID by name
+        
         const carrier = carriers.find(
           (c) => c.name.toLowerCase() === carrierFilter.toLowerCase()
         )
