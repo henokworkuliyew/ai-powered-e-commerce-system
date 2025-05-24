@@ -65,7 +65,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
           <>
             <div className="flex flex-col space-y-1 p-2">
               <p className="text-sm font-medium leading-none">
-                {name || email}
+                {name || email}  {currentUser.role}
               </p>
               {name && email && (
                 <p className="text-xs leading-none text-muted-foreground">
