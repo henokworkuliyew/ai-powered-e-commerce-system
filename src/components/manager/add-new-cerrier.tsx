@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export default function AddCarrierDialog({
   onCarrierAdded,
 }: AddCarrierDialogProps) {
   const { toast } = useToast()
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,8 +72,9 @@ export default function AddCarrierDialog({
     setIsComplete(false)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (!name.trim() || !email.trim() || !password.trim()) {
+      setError('Name, email, and password are required.')
       toast({
         variant: 'destructive',
         title: 'Missing Information',
@@ -92,7 +95,7 @@ export default function AddCarrierDialog({
         vehicle: vehicle.trim() || undefined,
         zone: zone || undefined,
         isActive,
-        role: 'CARRIER', 
+        role: 'CARRIER' as const,
       }
 
       const response = await fetch('/api/register/carrier', {
@@ -103,9 +106,12 @@ export default function AddCarrierDialog({
         body: JSON.stringify(carrierData),
       })
 
+      const responseData = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create carrier')
+        throw new Error(
+          responseData.error || `HTTP error! status: ${response.status}`
+        )
       }
 
       await new Promise((resolve) => setTimeout(resolve, 800))
@@ -118,16 +124,27 @@ export default function AddCarrierDialog({
       setIsComplete(true)
       setIsSubmitting(false)
 
+      // Auto-close after 3 seconds if user doesn't interact
       setTimeout(() => {
-        resetForm()
-        onCarrierAdded()
-        onOpenChange(false)
-      }, 1500)
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : 'Failed to create carrier.'
-      )
+        if (open) {
+          resetForm()
+          onCarrierAdded()
+          onOpenChange(false)
+        }
+      }, 3000)
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create carrier. Please try again.'
+      setError(errorMessage)
       setIsSubmitting(false)
+
+      toast({
+        variant: 'destructive',
+        title: 'Error Creating Carrier',
+        description: errorMessage,
+      })
     }
   }
 
@@ -148,9 +165,127 @@ export default function AddCarrierDialog({
         </DialogHeader>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+          {error && !isComplete && (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                <div className="flex items-center">
+                  <div className="text-red-500 text-sm font-medium">Error:</div>
+                </div>
+                <div className="text-red-700 text-sm mt-1">{error}</div>
+              </div>
 
-          {!isComplete && !error ? (
+              <Card className="border-[#e0e4e8] shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center mb-3">
+                    <Truck className="h-5 w-5 text-[#4a6bff] mr-2" />
+                    <h3 className="font-medium text-[#2d3748]">
+                      Carrier Details
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-[#5a6474] mb-1 block">
+                        Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter carrier name"
+                        className="border-[#e0e4e8] focus-visible:ring-[#4a6bff] text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-[#5a6474] mb-1 block">
+                        Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter email address"
+                        type="email"
+                        className="border-[#e0e4e8] focus-visible:ring-[#4a6bff] text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-[#5a6474] mb-1 block">
+                        Password <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Create a password"
+                          type="password"
+                          className="border-[#e0e4e8] focus-visible:ring-[#4a6bff] text-sm"
+                        />
+                        <Key className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#5a6474]" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-[#5a6474] mb-1 block">
+                        Contact Phone
+                      </Label>
+                      <Input
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        placeholder="Enter contact phone"
+                        className="border-[#e0e4e8] focus-visible:ring-[#4a6bff] text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-[#5a6474] mb-1 block">
+                        Vehicle
+                      </Label>
+                      <Input
+                        value={vehicle}
+                        onChange={(e) => setVehicle(e.target.value)}
+                        placeholder="Enter vehicle type (e.g., Van)"
+                        className="border-[#e0e4e8] focus-visible:ring-[#4a6bff] text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-[#5a6474] mb-1 block">Zone</Label>
+                      <Select value={zone} onValueChange={setZone}>
+                        <SelectTrigger className="border-[#e0e4e8] focus:ring-[#4a6bff] text-sm">
+                          <SelectValue placeholder="Select delivery zone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {zones.map((zone) => (
+                            <SelectItem key={zone} value={zone}>
+                              {zone}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-2">
+                      <Switch
+                        id="isActive"
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                        className="data-[state=checked]:bg-green-500"
+                      />
+                      <Label
+                        htmlFor="isActive"
+                        className="cursor-pointer text-[#5a6474]"
+                      >
+                        Set as active immediately
+                      </Label>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {!error && !isComplete && !isSubmitting && (
             <div className="space-y-4">
               <Card className="border-[#e0e4e8] shadow-sm">
                 <CardContent className="p-4">
@@ -261,7 +396,23 @@ export default function AddCarrierDialog({
                 </CardContent>
               </Card>
             </div>
-          ) : (
+          )}
+
+          {isSubmitting && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="bg-blue-50 rounded-full p-3 mb-4">
+                <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+              </div>
+              <h3 className="text-xl font-bold text-blue-700 mb-2">
+                Creating Carrier...
+              </h3>
+              <p className="text-center text-[#5a6474]">
+                Please wait while we create the carrier account.
+              </p>
+            </div>
+          )}
+
+          {isComplete && !error && (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="bg-green-50 rounded-full p-3 mb-4">
                 <CheckCircle2 className="h-12 w-12 text-green-500" />
@@ -283,7 +434,7 @@ export default function AddCarrierDialog({
 
         <DialogFooter className="bg-[#f0f2f5] border-t border-[#e0e4e8] p-4">
           <div className="w-full flex justify-between">
-            {!isComplete && (
+            {!isComplete && !isSubmitting && (
               <>
                 <Button
                   variant="outline"
@@ -303,29 +454,54 @@ export default function AddCarrierDialog({
                   }
                   className="bg-[#4a6bff] hover:bg-[#3a5bef] text-white flex items-center"
                 >
-                  {isSubmitting ? (
-                    <div className="flex items-center">
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </div>
-                  ) : (
-                    'Create Carrier'
-                  )}
+                  Create Carrier
                 </Button>
               </>
             )}
 
-            {isComplete && (
-              <Button
-                onClick={() => {
-                  resetForm()
-                  onCarrierAdded()
-                  onOpenChange(false)
-                }}
-                className="w-full bg-[#4a6bff] hover:bg-[#3a5bef] text-white"
-              >
-                Close
-              </Button>
+            {isComplete && !error && (
+              <div className="w-full flex gap-3">
+                <Button
+                  onClick={() => {
+                    resetForm()
+                    onCarrierAdded()
+                    onOpenChange(false)
+                    router.push('/')
+                  }}
+                  className="flex-1 bg-[#4a6bff] hover:bg-[#3a5bef] text-white"
+                >
+                  Go to Homepage
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    resetForm()
+                    onCarrierAdded()
+                    onOpenChange(false)
+                  }}
+                  className="flex-1 border-[#e0e4e8] text-[#5a6474] hover:bg-[#f0f2f5]"
+                >
+                  Close
+                </Button>
+              </div>
+            )}
+
+            {error && (
+              <div className="w-full flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="border-[#e0e4e8] text-[#5a6474] hover:bg-[#f0f2f5]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => setError(null)}
+                  className="bg-[#4a6bff] hover:bg-[#3a5bef] text-white"
+                >
+                  Try Again
+                </Button>
+              </div>
             )}
           </div>
         </DialogFooter>
