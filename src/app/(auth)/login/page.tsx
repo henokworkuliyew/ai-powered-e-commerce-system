@@ -3,6 +3,7 @@ import Login from './LoginPage'
 
 import { getCurrentUser } from '@/action/CurrentUser'
 
+
 const page = async () => {
   const currentUser = await getCurrentUser()
   return (
