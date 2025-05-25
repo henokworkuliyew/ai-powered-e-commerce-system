@@ -9,8 +9,8 @@ import Link from 'next/link'
 import { AiOutlineGoogle } from 'react-icons/ai'
 
 import Input from '@/components/input/Input'
-import Button from '@/components/ui/Button'
-import Heading from '@/components/ui/Heading'
+import Button from '@/components/input/Button'
+import Heading from '@/components/input/Heading'
 
 import type { SafeUser } from '@/type/SafeUser'
 import { signIn } from 'next-auth/react'
