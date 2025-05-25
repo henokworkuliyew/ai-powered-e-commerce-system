@@ -2,10 +2,10 @@
 
 import Input from '@/components/input/Input'
 import Button from '@/components/ui/Button'
-
 import Heading from '@/components/ui/Heading'
 import type { SafeUser } from '@/type/SafeUser'
 import { signIn } from 'next-auth/react'
+
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type React from 'react'
