@@ -65,7 +65,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
           <>
             <div className="flex flex-col space-y-1 p-2">
               <p className="text-sm font-medium leading-none">
-                {name || email}  {currentUser.role}
+                {name || email} {currentUser.role}
               </p>
               {name && email && (
                 <p className="text-xs leading-none text-muted-foreground">
@@ -74,7 +74,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               )}
             </div>
             <DropdownMenuSeparator />
-            <hr className='bg-slate-400 mb-2'/>
+            <hr className="bg-slate-400 mb-2" />
             <DropdownMenuItem
               className="flex cursor-pointer items-center gap-2 p-2 text-sm hover:bg-slate-300 rounded-lg"
               onClick={() => handleMenuClick('/profile')}
@@ -105,14 +105,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
           <>
             <DropdownMenuItem
               className="flex cursor-pointer items-center gap-2 p-2 text-sm hover:bg-slate-300 rounded-lg"
-              onClick={() => handleMenuClick('/login')}
+              onClick={() => handleMenuClick('/signin')}
             >
               <LogIn className="h-4 w-4" />
               <span className="text-red-700">Login</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex cursor-pointer items-center gap-2 p-2 text-sm hover:bg-slate-300 rounded-lg"
-              onClick={() => handleMenuClick('/register')}
+              onClick={() => handleMenuClick('/sign_up')}
             >
               <UserPlus className="h-4 w-4" />
               <span className="text-red-700">Register</span>

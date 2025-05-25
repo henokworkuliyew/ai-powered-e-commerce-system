@@ -1,15 +1,10 @@
 import React from 'react'
-import Login from './Login'
-
+import Register from '../register/Register'
 import { getCurrentUser } from '@/action/CurrentUser'
 
 const page = async () => {
   const currentUser = await getCurrentUser()
-  return (
- 
-      <Login currentUser={currentUser} />
-
-  )
+  return <Register currentUser={currentUser} />
 }
 
 export default page

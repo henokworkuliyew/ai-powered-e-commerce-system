@@ -1,15 +1,16 @@
 'use client'
+import { Button } from '@/components/ui/button2'
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, Chrome } from 'lucide-react'
 
-import { Button } from '@/components/ui/button2'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Card,
@@ -19,6 +20,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 
 import type { SafeUser } from '@/type/SafeUser'
 
@@ -227,7 +229,7 @@ export default function LoginPage({ currentUser }: LoginProps) {
                 <div className="text-center text-sm text-slate-600 dark:text-slate-400">
                   {"Don't have an account? "}
                   <Link
-                    href="/register"
+                    href="/sign_up"
                     className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300 underline underline-offset-4"
                   >
                     Sign up
@@ -236,9 +238,6 @@ export default function LoginPage({ currentUser }: LoginProps) {
               </CardContent>
             </Card>
           </div>
-
-         
-         
         </div>
       </div>
     </div>
