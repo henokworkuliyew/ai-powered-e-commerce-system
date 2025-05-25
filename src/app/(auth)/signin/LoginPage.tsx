@@ -229,7 +229,7 @@ export default function LoginPage({ currentUser }: LoginProps) {
                 <div className="text-center text-sm text-slate-600 dark:text-slate-400">
                   {"Don't have an account? "}
                   <Link
-                    href="/register"
+                    href="/signup"
                     className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300 underline underline-offset-4"
                   >
                     Sign up
@@ -238,9 +238,6 @@ export default function LoginPage({ currentUser }: LoginProps) {
               </CardContent>
             </Card>
           </div>
-
-         
-         
         </div>
       </div>
     </div>
