@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { FaShoppingCart, FaBell } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 
-import Heading from '../ui/Heading'
+import Heading from '../input/Heading'
 import UserMenu from './UserMenu'
 import { useCart } from '@/hooks/useCart'
 
