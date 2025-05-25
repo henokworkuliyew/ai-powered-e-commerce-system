@@ -13,7 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Product } from '@/type/Product'
 import type { CartProduct } from '@/type/CartProduct'
-import Button from '@/components/ui/Button'
+import Button from '@/components/input/Button'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
 import WishlistButton from '@/components/ProductCard/WishlistButton'
 import ShareProduct from '@/components/ProductCard/ShareProduct'
