@@ -68,10 +68,17 @@ export default function SettingsPage() {
     })
   }
 
-  const updateSetting = (
-    section: keyof typeof settings,
-    key: string,
-    value: any
+  type Settings = typeof settings
+  type SectionKeys = keyof Settings
+  type FieldValue<
+    T extends SectionKeys,
+    K extends keyof Settings[T]
+  > = Settings[T][K]
+
+  const updateSetting = <T extends SectionKeys, K extends keyof Settings[T]>(
+    section: T,
+    key: K,
+    value: FieldValue<T, K>
   ) => {
     setSettings((prev) => ({
       ...prev,
