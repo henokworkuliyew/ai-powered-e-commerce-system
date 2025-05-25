@@ -241,5 +241,7 @@ export default function LoginPage({ currentUser }: LoginProps) {
         </div>
       </div>
     </div>
+
   )
 }
+
