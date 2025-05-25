@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useForm, SubmitHandler, FieldValues } from 'react-hook-form'
-import { signIn } from 'next-auth/react'
+
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button'
 import Heading from '@/components/ui/Heading'
 
 import type { SafeUser } from '@/type/SafeUser'
+import { signIn } from 'next-auth/react'
 
 interface RegisterProps {
   currentUser: SafeUser | null
