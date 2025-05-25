@@ -4,11 +4,9 @@ import { z } from 'zod'
 import dbConnect from '@/lib/dbConnect'
 import Carrier from '@/server/models/Carrier'
 
-
 const UpdateSchema = z.object({
   activatedAt: z.string().optional(),
 })
-
 
 interface CarrierUpdate {
   isActive: boolean
@@ -16,10 +14,11 @@ interface CarrierUpdate {
   activatedAt?: string
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: { id: string }
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     await dbConnect()
     const { id } = params
@@ -53,7 +52,6 @@ export async function PATCH(
       updateData.activatedAt = parsedBody.data.activatedAt
       updateQuery.$set = updateData
     }
-
 
     const carrier = await Carrier.findByIdAndUpdate(id, updateQuery, {
       new: true,
