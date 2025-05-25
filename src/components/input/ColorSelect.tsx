@@ -1,12 +1,11 @@
 'use client'
 
-
 import React, { useCallback, useEffect, useState } from 'react'
- 
-import { UploadDropzone } from '@/hooks/utils/uploadthing' 
+
+import { UploadDropzone } from '@/hooks/utils/uploadthing'
 import { toast } from '../ui/use-toast'
 
-import Button from '../ui/Button'
+import Button from './Button'
 
 interface ColorSelectProps {
   item: ImageType
@@ -38,20 +37,16 @@ const ColorSelect: React.FC<ColorSelectProps> = ({
     }
   }, [isProductCreated])
 
-
   const handleCheck = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setIsSelected(e.target.checked)
       if (!e.target.checked) {
-
-        setSelectedFile(null) 
-        RemoveImageFromState(item) 
-
+        setSelectedFile(null)
+        RemoveImageFromState(item)
       }
     },
     [item, RemoveImageFromState]
   )
-
 
   const handleUploadComplete = (
     res: { url: string; key: string; ufsUrl?: string }[]
@@ -60,20 +55,18 @@ const ColorSelect: React.FC<ColorSelectProps> = ({
 
     const transformedImage: ImageType = {
       ...item,
-      image: uploadedFile.ufsUrl ?? uploadedFile.url, 
+      image: uploadedFile.ufsUrl ?? uploadedFile.url,
     }
 
     setSelectedFile(transformedImage)
     addImageToState(transformedImage)
-
   }
 
   const handleUploadError = (error: Error) => {
     toast({ title: `ERROR! ${error.message}` })
     setIsUploading(false)
-    setSelectedFile(null) 
+    setSelectedFile(null)
   }
-
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 overflow-y-auto border-b-[1.2px] border-slate-200 mb-2 p-2 gap-2 items-center">
@@ -93,7 +86,6 @@ const ColorSelect: React.FC<ColorSelectProps> = ({
 
       {isSelected && (
         <div className="col-span-2 text-center">
-
           <UploadDropzone
             className="p-2 border border-gray-600"
             endpoint="imageUploader" // Adjust endpoint if needed
@@ -116,11 +108,9 @@ const ColorSelect: React.FC<ColorSelectProps> = ({
             label="Remove"
             onClick={() => {
               setSelectedFile(null)
-              RemoveImageFromState(item) 
+              RemoveImageFromState(item)
             }}
           />
-            
-
         </div>
       )}
     </div>
