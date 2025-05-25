@@ -297,7 +297,7 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
               if (currentUser) {
                 router.push('/checkout')
               } else {
-                router.push('/login')
+                router.push('/signin')
               }
             }}
             outline

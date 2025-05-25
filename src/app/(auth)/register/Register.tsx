@@ -340,7 +340,7 @@ export default function RegisterPage({ currentUser }: RegisterProps) {
                 <div className="text-center text-sm text-slate-600 dark:text-slate-400">
                   Already have an account?{' '}
                   <Link
-                    href="/login"
+                    href="/signin"
                     className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-4"
                   >
                     Sign in
