@@ -21,6 +21,7 @@ const nextConfig = {
     ],
   },
   turbopack: {},
+  swcMinify: false,
   typescript: {
     ignoreBuildErrors: true,
   },
