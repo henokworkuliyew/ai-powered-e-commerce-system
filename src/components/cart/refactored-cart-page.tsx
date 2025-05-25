@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useCart } from '@/hooks/useCart'
 import Link from 'next/link'
 import { ShoppingCart, X, ArrowLeft } from 'lucide-react'
-import Button from '@/components/ui/Button'
+import Button from '@/components/input/Button'
 import type { SafeUser } from '@/type/SafeUser'
 import CartItem from './cart-item'
 import CartSummary from './cartSummery'
@@ -22,7 +22,6 @@ const Cart: React.FC<CartPageProps> = ({ currentUser }) => {
     clearCart,
   } = useCart()
   const [isClient, setIsClient] = useState(false)
-  
 
   useEffect(() => {
     setIsClient(true)
