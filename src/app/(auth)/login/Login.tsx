@@ -1,4 +1,5 @@
 'use client'
+import { Button } from '@/components/ui/button2'
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -8,8 +9,6 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, Chrome } from 'lucide-react'
 
-import { Button } from '@/components/ui/button2'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Card,
@@ -19,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 
 import type { SafeUser } from '@/type/SafeUser'
 
