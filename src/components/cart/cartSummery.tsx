@@ -3,7 +3,7 @@
 import type React from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import Button from '@/components/ui/Button'
+import Button from '@/components/input/Button'
 import { useRouter } from 'next/navigation'
 import type { SafeUser } from '@/type/SafeUser'
 
