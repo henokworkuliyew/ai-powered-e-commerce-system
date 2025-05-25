@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "build": "NODE_OPTIONS=--max-old-space-size=512 next build",
     "start": "next start",
-    "lint": "next lint",
-    "build": "NODE_OPTIONS=--max-old-space-size=768 next build"
+    "lint": "next lint"
+    
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
