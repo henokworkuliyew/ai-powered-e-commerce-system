@@ -1,7 +1,14 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import mongoose from 'mongoose'
+import { z } from 'zod'
 import dbConnect from '@/lib/dbConnect'
 import Carrier from '@/server/models/Carrier'
+
+
+const UpdateSchema = z.object({
+  activatedAt: z.string().optional(),
+})
+
 
 interface CarrierUpdate {
   isActive: boolean
@@ -22,10 +29,10 @@ export async function PATCH(
     }
 
     const body = await request.json()
-
-    if (body.activatedAt && typeof body.activatedAt !== 'string') {
+    const parsedBody = UpdateSchema.safeParse(body)
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'Invalid activatedAt format, must be a string' },
+        { error: parsedBody.error.format() },
         { status: 400 }
       )
     }
@@ -42,10 +49,11 @@ export async function PATCH(
       $unset: { currentShipment: '' },
     }
 
-    if (body.activatedAt) {
-      updateData.activatedAt = body.activatedAt
+    if (parsedBody.data.activatedAt) {
+      updateData.activatedAt = parsedBody.data.activatedAt
       updateQuery.$set = updateData
     }
+
 
     const carrier = await Carrier.findByIdAndUpdate(id, updateQuery, {
       new: true,
@@ -62,10 +70,6 @@ export async function PATCH(
         { error: 'Invalid carrier ID format' },
         { status: 400 }
       )
-    }
-    if (error instanceof Error) {
-      console.error('Error completing delivery:', error.message)
-      return NextResponse.json({ error: error.message }, { status: 500 })
     }
     console.error('Error completing delivery:', error)
     return NextResponse.json(
