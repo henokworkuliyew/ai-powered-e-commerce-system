@@ -1,14 +1,13 @@
 'use client'
 
 import { useForm, Controller } from 'react-hook-form'
-import  Button  from '@/components/ui/Button'
+import Button from '@/components/input/Button'
 
 type FormData = {
   question: string
   name: string
   email: string
 }
-
 
 export function QuestionForm({ product }: { product: { _id: string } }) {
   const {
@@ -128,7 +127,6 @@ export function QuestionForm({ product }: { product: { _id: string } }) {
       <Button
         label={isSubmitting ? 'Submitting...' : 'Submit Question'}
         outline
-        
         disabled={isSubmitting}
       />
     </form>
