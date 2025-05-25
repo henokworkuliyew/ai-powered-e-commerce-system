@@ -9,7 +9,7 @@ import { ShoppingCart, X, ArrowLeft, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import SetQuantity from '@/components/ProductCard/SetQuantity'
-import Button from '@/components/ui/Button'
+import Button from '@/components/input/Button'
 
 import type { SafeUser } from '@/type/SafeUser'
 
@@ -59,7 +59,7 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
     (total, product) => total + product.price * product.qty,
     0
   )
-  
+
   const discountRate = 10
   const discount = (discountRate / 100) * subtotal
   const taxRate = 8
