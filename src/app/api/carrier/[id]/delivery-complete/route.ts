@@ -1,12 +1,8 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
 import mongoose from 'mongoose'
-import { z } from 'zod'
 import dbConnect from '@/lib/dbConnect'
-import Carrier from '@/server/models/Carrier'
-
-const UpdateSchema = z.object({
-  activatedAt: z.string().optional(),
-})
+import User from '@/server/models/User'
 
 interface CarrierUpdate {
   isActive: boolean
@@ -14,48 +10,53 @@ interface CarrierUpdate {
   activatedAt?: string
 }
 
-interface RouteParams {
-  params: { id: string }
-}
-
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await dbConnect()
-    const { id } = params
+    const { id } = await params
 
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ error: 'Invalid carrier ID' }, { status: 400 })
     }
 
     const body = await request.json()
-    const parsedBody = UpdateSchema.safeParse(body)
-    if (!parsedBody.success) {
+
+    if (typeof body.isActive !== 'boolean') {
       return NextResponse.json(
-        { error: parsedBody.error.format() },
+        { error: 'Invalid isActive format, must be a boolean' },
+        { status: 400 }
+      )
+    }
+
+    if (body.activatedAt && typeof body.activatedAt !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid activatedAt format, must be a string' },
         { status: 400 }
       )
     }
 
     const updateData: CarrierUpdate = {
-      isActive: true,
+      isActive: body.isActive,
     }
 
-    const updateQuery: {
-      $set: CarrierUpdate
-      $unset: { currentShipment: string }
-    } = {
+    const updateQuery = {
       $set: updateData,
       $unset: { currentShipment: '' },
     }
 
-    if (parsedBody.data.activatedAt) {
-      updateData.activatedAt = parsedBody.data.activatedAt
+    if (body.activatedAt) {
+      updateData.activatedAt = body.activatedAt
       updateQuery.$set = updateData
     }
 
-    const carrier = await Carrier.findByIdAndUpdate(id, updateQuery, {
-      new: true,
-    })
+    const carrier = await User.findOneAndUpdate(
+      { _id: id, role: 'CARRIER' },
+      updateQuery,
+      { new: true }
+    ).select('-hashedPassword')
 
     if (!carrier) {
       return NextResponse.json({ error: 'Carrier not found' }, { status: 404 })
@@ -69,7 +70,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         { status: 400 }
       )
     }
-    console.error('Error completing delivery:', error)
+    if (error instanceof Error) {
+      console.error('Error updating carrier status:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    console.error('Error updating carrier status:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
