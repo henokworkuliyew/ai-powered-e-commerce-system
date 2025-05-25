@@ -19,7 +19,6 @@ const nextConfig = {
         hostname: 'utfs.io', // Add this line for utfs.io
       },
     ],
-
   },
   experimental: {
     turbo: {},
