@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button2'
 import { Input } from '@/components/ui/input'
@@ -31,10 +31,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Eye, Edit, MapPin, Package } from 'lucide-react'
-
 import PaginationControls from '@/components/admin/pagination-controls'
 import { Shipment } from '@/type/Shipment'
 import { toast } from '@/components/ui/use-toast'
+
+export const dynamic = 'force-dynamic'
 
 export default function ShippingPage() {
   const [shipments, setShipments] = useState<Shipment[]>([])
@@ -73,11 +74,10 @@ export default function ShippingPage() {
       }
 
       const data = await response.json()
-      console.log('API Response:', data)
       if (!Array.isArray(data.shipments)) {
         throw new Error('Expected an array of shipments')
       }
-      setShipments(data.shipments) // Adjust state to handle shipments
+      setShipments(data.shipments)
     } catch (error) {
       console.error('Error fetching shipments:', error)
 
@@ -351,13 +351,15 @@ export default function ShippingPage() {
           </div>
 
           <div className="mt-6">
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              totalItems={filteredShipments.length}
-              itemsPerPage={itemsPerPage}
-            />
+            <Suspense fallback={<div>Loading pagination...</div>}>
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={filteredShipments.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </Suspense>
           </div>
         </CardContent>
       </Card>
