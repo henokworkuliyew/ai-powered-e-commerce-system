@@ -10,7 +10,7 @@ import type { Category } from '@/type/category'
 import RecommendationsSection from '@/components/recomendation/RecommendationsSection'
 
 interface HomeProps {
-  currentUser: string | null 
+  currentUser: string | null
 }
 
 export default function Home({ currentUser }: HomeProps) {
@@ -29,7 +29,6 @@ export default function Home({ currentUser }: HomeProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-
       try {
         const [productsRes, categoriesRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/product`, {
@@ -57,13 +56,19 @@ export default function Home({ currentUser }: HomeProps) {
 
     fetchData()
   }, [])
-  
+
   useEffect(() => {
     const fetchRecommendations = async () => {
+      if (!currentUser) {
+        setRecommendations([])
+        return
+      }
 
-  
       try {
         setRecommendationsLoading(true)
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
 
         const response = await fetch(
           `https://rec-system-8mee.onrender.com/user/recommendations/${currentUser}`,
@@ -73,16 +78,19 @@ export default function Home({ currentUser }: HomeProps) {
               'Content-Type': 'application/json',
             },
             cache: 'no-store',
+            signal: controller.signal,
           }
         )
 
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
-          if (data.recommendations && Array.isArray(data.recommendations)) {
-            setRecommendations(data.recommendations)
-          } else if (Array.isArray(data)) {
-            setRecommendations(data)
+          console.log('Recommendations Response:', data)
+          if (data.recommended_items && Array.isArray(data.recommended_items)) {
+            setRecommendations(data.recommended_items)
           } else {
+            console.log('No recommended items found in response')
             setRecommendations([])
           }
         } else {
@@ -117,8 +125,10 @@ export default function Home({ currentUser }: HomeProps) {
             product.name || '',
             product.description || '',
             product.brand || '',
-            product.category?.name || '',
-            ...(product.category?.subCategories || []),
+            product.category?.name ||  '',
+            ...(product.category?.subCategories ||
+              
+              []),
             ...(product.images?.map((img) => img.color || '') || []),
           ]
             .join(' ')
@@ -136,15 +146,16 @@ export default function Home({ currentUser }: HomeProps) {
         return true
       }
 
-      if (!product.category || product.category.name !== selectedCategory) {
+      const productCategoryName =
+        product.category?.name 
+      if (!productCategoryName || productCategoryName !== selectedCategory) {
         return false
       }
 
       if (selectedSubcategory) {
-        if (
-          product.category.subCategories &&
-          product.category.subCategories.includes(selectedSubcategory)
-        ) {
+        const subCategories =
+          product.category?.subCategories || []
+        if (subCategories.includes(selectedSubcategory)) {
           return true
         }
 
@@ -192,7 +203,7 @@ export default function Home({ currentUser }: HomeProps) {
       <RecommendationsSection
         recommendations={recommendations}
         loading={recommendationsLoading}
-        userId={currentUser }
+        userId={currentUser}
       />
 
       <h2 className="text-2xl font-bold mt-8 mb-6">{displayTitle}</h2>
@@ -227,8 +238,10 @@ function getCategoryCounts(products: Product[]) {
   const counts: Record<string, number> = { all: products.length }
 
   products.forEach((product) => {
-    const category = product.category.name
-    counts[category] = (counts[category] || 0) + 1
+    const category = product.category?.name || ''
+    if (category) {
+      counts[category] = (counts[category] || 0) + 1
+    }
   })
 
   return counts

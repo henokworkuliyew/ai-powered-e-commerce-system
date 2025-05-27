@@ -110,7 +110,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
       console.error('Error voting on review:', error)
     }
   }
-
+  
   const handleReportReview = async (reviewId: string) => {
     const reason = prompt('Please provide a reason for reporting this review:')
     if (!reason) return
