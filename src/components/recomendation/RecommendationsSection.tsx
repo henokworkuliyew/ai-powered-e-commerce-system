@@ -14,7 +14,7 @@ interface RecommendationsSectionProps {
 export default function RecommendationsSection({
   recommendations,
   loading,
-  userId,
+  
 }: RecommendationsSectionProps) {
   const [scrollPosition, setScrollPosition] = useState(0)
 
