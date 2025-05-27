@@ -1,36 +1,53 @@
+import type { NextRequest } from 'next/server'
 
-import { Server } from 'socket.io'
-import { NextApiResponse } from 'next'
-import http from 'http'
+export async function GET(request: NextRequest) {
+  console.log('request received at /api/socket',request.url)
+  return new Response(
+    JSON.stringify({
+      message: 'Socket.IO endpoint ready',
+      timestamp: new Date().toISOString(),
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+}
 
-export async function GET(req: Request, res: NextApiResponse) {
-  console.log(req,res)
-  const httpServer = http.createServer()
-  const io = new Server(httpServer, {
-    path: '/api/socket',
-    cors: {
-      origin: '*', 
-      methods: ['GET', 'POST'],
-    },
-  })
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
 
-  io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id)
+    
+    console.log('Received notification request:', body)
 
-    // Example: Emit a test notification
-    socket.emit('notification', {
-      type: 'system',
-      message: 'Welcome to the notification system!',
-    })
-
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id)
-    })
-  })
-
-  httpServer.listen(3000, () => {
-    console.log('Socket.IO server running on port 3001')
-  })
-
-  return new Response('Socket.IO server initialized', { status: 200 })
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Notification processed',
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Error processing notification:', error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Failed to process notification',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  }
 }
