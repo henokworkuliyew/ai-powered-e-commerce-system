@@ -102,6 +102,9 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
       if (!response.ok) {
         console.error('Failed to record interaction:', response.statusText)
       }
+      else {
+        console.log('Interaction recorded successfully')
+      }
     } catch (error) {
       console.error('Error recording interaction:', error)
     }
