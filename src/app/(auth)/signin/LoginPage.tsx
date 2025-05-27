@@ -101,10 +101,12 @@ export default function LoginPage({ currentUser }: LoginProps) {
         toast.success('Signed in with Google!')
         router.refresh()
       } else {
-        toast.error('Google authentication failed!')
+        router.refresh()
+        
       }
     } catch (error) {
       console.log(error)
+      toast.error('Google authentication failed!')
       toast.error('An unexpected error occurred')
     } finally {
       setIsLoading(false)

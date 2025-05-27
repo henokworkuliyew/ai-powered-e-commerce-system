@@ -36,11 +36,8 @@ interface RegisterFormData {
   password: string
 }
 
-interface RegisterProps {
-  currentUser: SafeUser | null
-}
 
-export default function RegisterPage({ currentUser }: RegisterProps) {
+export default function RegisterPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -61,12 +58,12 @@ export default function RegisterPage({ currentUser }: RegisterProps) {
   const password = watch('password')
 
   useEffect(() => {
-    if (currentUser) {
+    
       toast('You are already logged in.')
       router.push('/cart')
       router.refresh()
-    }
-  }, [currentUser, router])
+    
+  }, [router])
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
