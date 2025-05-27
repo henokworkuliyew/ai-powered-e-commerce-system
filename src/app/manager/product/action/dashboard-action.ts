@@ -7,14 +7,11 @@ import { Product } from '@/server/models/Product'
 import { Shipment } from '@/server/models/Shipment'
 import { revalidatePath } from 'next/cache'
 
-
 export async function fetchDashboardStats() {
   try {
     await dbConnect()
 
-    // Get total inventory count and calculate percent change
-    // For percent change, we'd typically compare with a previous period
-    // Here we're just getting the current count
+    // Get total inventory count
     const totalInventory = await Product.aggregate([
       { $group: { _id: null, count: { $sum: '$quantity' } } },
     ])
@@ -22,15 +19,15 @@ export async function fetchDashboardStats() {
     // Get pending orders count
     const pendingOrders = await Order.countDocuments({ orderStatus: 'pending' })
 
-    // Get active shipments (processing or in_transit)
+    // Get active shipments count
     const activeShipments = await Shipment.countDocuments({
       status: { $in: ['processing', 'in_transit'] },
     })
 
-    // Get active carriers
+    // Get active carriers count
     const activeCarriers = await Carrier.countDocuments({ isActive: true })
 
-    // Calculate monthly revenue
+    // Get monthly revenue
     const startOfMonth = new Date()
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)
@@ -50,28 +47,27 @@ export async function fetchDashboardStats() {
       },
     ])
 
-    // For percent changes, we would compare with previous periods
-    // Here we're using placeholder values
+    // Calculate percentage changes (you can implement historical comparison logic here)
     return {
       totalInventory: {
         count: totalInventory.length > 0 ? totalInventory[0].count : 0,
-        percentChange: 5.2, // Placeholder - would calculate from previous period
+        percentChange: 5.2, // Replace with actual calculation
       },
       pendingOrders: {
         count: pendingOrders,
-        percentChange: -12.5, // Placeholder
+        percentChange: -12.5, // Replace with actual calculation
       },
       activeShipments: {
         count: activeShipments,
-        percentChange: 8.7, // Placeholder
+        percentChange: 8.7, // Replace with actual calculation
       },
       monthlyRevenue: {
         amount: monthlyRevenue.length > 0 ? monthlyRevenue[0].total : 0,
-        percentChange: 15.3, // Placeholder
+        percentChange: 15.3, // Replace with actual calculation
       },
       activeCarriers: {
         count: activeCarriers,
-        percentChange: 0, // Placeholder
+        percentChange: 0, // Replace with actual calculation
       },
     }
   } catch (error) {
@@ -80,7 +76,6 @@ export async function fetchDashboardStats() {
   }
 }
 
-// Revalidate the dashboard path to refresh the data
 export async function refreshDashboard() {
   revalidatePath('/manager')
   return { success: true }
