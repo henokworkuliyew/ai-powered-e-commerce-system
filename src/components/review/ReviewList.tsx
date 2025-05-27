@@ -63,7 +63,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
       result = result.filter((review) => review.verified)
     }
 
-    // Apply sorting
+  
     result.sort((a, b) => {
       if (sortBy === 'recent') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -90,18 +90,15 @@ const ReviewList: React.FC<ReviewListProps> = ({
     type: 'helpful' | 'notHelpful'
   ) => {
     setHelpfulClicked((prev) => {
-      // If already clicked the same button, unclick it
       if (prev[reviewId] === type) {
         const newState = { ...prev }
         delete newState[reviewId]
         return newState
       }
-      // Otherwise set to the new type
       return { ...prev, [reviewId]: type }
     })
 
     try {
-      // Send the vote to the API
       await fetch(`/api/reviews/${reviewId}/vote`, {
         method: 'POST',
         headers: {
@@ -157,7 +154,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
       {label}
     </Button>
   )
-
+   
   const averageRating = stats?.averageRating || 0
   const totalReviews = stats?.totalReviews || 0
   const ratingCounts = stats?.ratingDistribution || {}

@@ -96,7 +96,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         icon: <MdCheckCircle className="text-green-500" />,
       })
 
-      // Reset form
+      
       reset()
       setImages([])
       setShowForm(false)
@@ -120,8 +120,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    // In a real app, you would upload these to your server/cloud storage
-    // For now, we'll just create object URLs
+   
     const newImages = Array.from(files).map((file) => ({
       url: URL.createObjectURL(file),
       alt: file.name,
@@ -129,7 +128,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
     setImages((prev) => [...prev, ...newImages])
 
-    // Reset the input
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
