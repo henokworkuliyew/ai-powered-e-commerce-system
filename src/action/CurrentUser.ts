@@ -35,6 +35,12 @@ export async function getCurrentUser() {
   }
 }
 
+export const getCurrentUserId = async () => {
+  const user = await getCurrentUser()
+  return user?._id
+}
+
+
 export async function requireAuth(
   req: Request,
   roles?: ('USER' | 'ADMIN' | 'MANAGER' | 'CARRIER')[]
