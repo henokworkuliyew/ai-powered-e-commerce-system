@@ -1,122 +1,102 @@
-// // src/app/api/notifications/route.ts
-// import { NextResponse } from 'next/server'
-// import { WebSocketServer, WebSocket } from 'ws'
-// import { getCurrentUser } from '@/action/CurrentUser'
-// import Order from '@/server/models/Order'
-// import  dbConnect  from '@/lib/dbConnect'
-// import { IncomingMessage } from 'http'
+import { type NextRequest, NextResponse } from 'next/server'
 
-// export const dynamic = 'force-dynamic'
+const notifications: any[] = []
+let notificationId = 1
 
-// const wss = new WebSocketServer({ noServer: true })
-// const clients = new Map<string, WebSocket>()
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const userId = searchParams.get('userId')
+  const type = searchParams.get('type')
+  const limit = Number.parseInt(searchParams.get('limit') || '50')
+  const offset = Number.parseInt(searchParams.get('offset') || '0')
 
-// wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-//   console.log('WebSocket connection attempt:', req.url)
-//   const url = new URL(req.url || '', 'http://localhost:3000')
-//   const userId = url.searchParams.get('userId')
+  try {
+    let filteredNotifications = notifications
 
-//   if (!userId) {
-//     console.log('Closing connection: No userId provided')
-//     ws.close(1008, 'User ID required')
-//     return
-//   }
+    if (userId) {
+      filteredNotifications = filteredNotifications.filter(
+        (n) => n.userId === userId
+      )
+    }
 
-//   console.log(`Client connected: userId=${userId}`)
-//   clients.set(userId, ws)
+    if (type) {
+      filteredNotifications = filteredNotifications.filter(
+        (n) => n.type === type
+      )
+    }
 
-//   ws.send(
-//     JSON.stringify({
-//       type: 'system',
-//       message: 'Connected to notification system',
-//       createdAt: new Date().toISOString(),
-//     })
-//   )
+    const paginatedNotifications = filteredNotifications
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(offset, offset + limit)
 
-//   dbConnect()
-//     .then(() => {
-//       Order.watch()
-//         .on('change', (change) => {
-//           if (change.operationType === 'insert') {
-//             const newOrder = change.fullDocument
-//             console.log(
-//               `Sending notification for order #${newOrder.orderNumber} to userId=${userId}`
-//             )
-//             ws.send(
-//               JSON.stringify({
-//                 type: 'new_order',
-//                 orderId: newOrder.orderNumber,
-//                 message: `Order #${newOrder.orderNumber} has been placed`,
-//                 createdAt: new Date().toISOString(),
-//               })
-//             )
-//           }
-//         })
-//         .on('error', (error) => {
-//           console.error(`MongoDB watch error for userId=${userId}:`, error)
-//         })
-//     })
-//     .catch((error) => {
-      
-//       console.error(`Failed to set up Order watch for userId=${userId}:`, error)
-//       ws.close(1011, 'Server error')
-//     })
+    return NextResponse.json({
+      notifications: paginatedNotifications,
+      total: filteredNotifications.length,
+      hasMore: offset + limit < filteredNotifications.length,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch notifications' },
+      { status: 500 }
+    )
+  }
+}
 
-//   ws.on('message', (message: Buffer) => {
-//     console.log(`Received from userId=${userId}:`, message.toString())
-//   })
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const {
+      type,
+      title,
+      message,
+      userId,
+      metadata,
+      actionUrl,
+      actionText,
+      image,
+    } = body
 
-//   ws.on('close', (event) => {
-//     console.log(
-//       `Client disconnected: userId=${userId}, code=${event.code}, reason=${event.reason}`
-//     )
-//     clients.delete(userId)
-//   })
+    if (!type || !title || !message) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
 
-//   ws.on('error', (error) => {
-//     console.error(`WebSocket server error for userId=${userId}:`, error)
-//   })
-// })
+    const notification = {
+      id: notificationId++,
+      type,
+      title,
+      message,
+      userId: userId || 'system',
+      read: false,
+      createdAt: new Date().toISOString(),
+      metadata: metadata || {},
+      actionUrl,
+      actionText,
+      image,
+    }
 
-// export async function GET(req: Request) {
-//   try {
-//     console.log('WebSocket GET request:', req.url)
-//     await dbConnect()
-//     const user = await getCurrentUser()
-//     console.log('Authenticated user:', user ? user.email : 'None')
-//     if (!user) {
-//       console.log('Unauthorized: No user found')
-//       return new NextResponse('Unauthorized', { status: 401 })
-//     }
+    notifications.push(notification)
 
-//     if (req.headers.get('upgrade')?.toLowerCase() === 'websocket') {
-//       console.log('WebSocket upgrade requested')
-//       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//       const { socket }: { socket?: import('net').Socket } = (req as any).raw
-//       if (!socket) {
-//         console.log('No socket available')
-//         return new NextResponse('No socket available', { status: 400 })
-//       }
+    // Emit to Socket.IO if available
+    const { emitNotification } = await import('@/lib/socket-server')
+    emitNotification(
+      {
+        type: 'notification',
+        ...notification,
+      },
+      userId
+    )
 
-//       const incomingMessage = {
-//         headers: Object.fromEntries(req.headers.entries()),
-//         url: req.url,
-//         method: req.method,
-//       } as IncomingMessage
-
-//       console.log('Upgrading to WebSocket')
-//       wss.handleUpgrade(incomingMessage, socket, Buffer.alloc(0), (ws) => {
-//         console.log('WebSocket connection established')
-//         wss.emit('connection', ws, incomingMessage)
-//       })
-
-//       return new NextResponse(null, { status: 101 })
-//     }
-
-//     console.log('WebSocket upgrade required')
-//     return new NextResponse('WebSocket upgrade required', { status: 426 })
-//   } catch (error) {
-//     console.error('[WEBSOCKET_GET]', error)
-//     return new NextResponse('Internal error', { status: 500 })
-//   }
-// }
+    return NextResponse.json({ success: true, notification })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to create notification' },
+      { status: 500 }
+    )
+  }
+}
