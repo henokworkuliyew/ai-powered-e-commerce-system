@@ -64,10 +64,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       <div className="flex flex-col items-center w-full gap-1">
         <div className="aspect-square overflow-hidden relative w-full h-36">
+         
           <Image
-            src={product?.images?.[0]?.views?.front }
+            src={product?.images?.[0]?.views?.front}
             alt={product?.name || 'Product Image'}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
             className={`w-full h-36 object-cover rounded-md transition-transform duration-300 ${
               isHovered ? 'scale-110' : 'scale-100'
             }`}
@@ -119,7 +121,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           <div className="mt-1 font-bold">{FormatPrice(product?.price)}</div>
 
-          
           {product.images && product.images.length > 1 && (
             <div className="flex gap-1 mt-2">
               {product.images.slice(0, 4).map((img, index) => (
