@@ -25,3 +25,10 @@ export type User = Document & {
   currentShipment?: CurrentShipment
   warehouse?: string
 }
+
+export type UpdateProfileData = {
+  name: string
+  email: string
+  password?: string
+  image?: string
+}
