@@ -11,7 +11,6 @@
 // import Order from '@/server/models/Order'
 // import type mongoose from 'mongoose'
 
-
 // export async function createOrderStatusNotification(
 //   orderId: string | mongoose.Types.ObjectId,
 //   userId: string | mongoose.Types.ObjectId
@@ -28,7 +27,6 @@
 //     let description = ''
 //     let actionText = 'View Order'
 
-    
 //     switch (order.orderStatus) {
 //       case 'processing':
 //         title = 'Order Confirmed'
@@ -57,7 +55,6 @@
 //         description = `Your order #${order.orderNumber} has been updated.`
 //     }
 
-    
 //     const metadata: OrderMetadata = {
 //       orderNumber: order.orderNumber,
 //       orderStatus: order.orderStatus,
@@ -74,7 +71,7 @@
 //       actionUrl: `/orders/${order._id}`,
 //       actionText,
 //       relatedId: order._id,
-      
+
 //       image: order.items[0]?.imageUrl,
 //       metadata,
 //     })
@@ -85,7 +82,6 @@
 //     throw error
 //   }
 // }
-
 
 // export async function createPriceDropNotification(
 //   userId: string | mongoose.Types.ObjectId,
@@ -101,7 +97,6 @@
 
 //     const discount = Math.round(((oldPrice - newPrice) / oldPrice) * 100)
 
-    
 //     const metadata: PriceMetadata = {
 //       oldPrice,
 //       newPrice,
@@ -128,7 +123,6 @@
 //     throw error
 //   }
 // }
-
 
 // export async function createBackInStockNotification(
 //   userId: string | mongoose.Types.ObjectId,
@@ -168,7 +162,6 @@
 //   }
 // }
 
-
 // export async function createPromotionNotification(
 //   userId: string | mongoose.Types.ObjectId,
 //   title: string,
@@ -186,7 +179,6 @@
 //   try {
 //     await dbConnect()
 
-    
 //     const metadata: PromotionMetadata = {
 //       promotionId,
 //       code,
@@ -214,7 +206,6 @@
 //     throw error
 //   }
 // }
-
 
 // export async function createAccountNotification(
 //   userId: string | mongoose.Types.ObjectId,
@@ -254,7 +245,6 @@
 //     throw error
 //   }
 // }
-
 
 // export async function getUnreadNotificationCount(
 //   userId: string | mongoose.Types.ObjectId
