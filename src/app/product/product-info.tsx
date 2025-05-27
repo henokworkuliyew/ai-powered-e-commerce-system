@@ -22,6 +22,7 @@ import { toast } from 'react-toastify'
 import { FormatPrice } from '@/hooks/utils/formatPrice'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
+import { getCurrentUserId } from '@/action/CurrentUser'
 
 interface ReviewStats {
   totalReviews: number
@@ -42,8 +43,10 @@ interface ProductInfoProps {
   setSelectedSize: React.Dispatch<React.SetStateAction<string>>
 }
 
-const ProductInfo: React.FC<ProductInfoProps> = ({
+
+const ProductInfo: React.FC<ProductInfoProps > = ({
   product,
+ 
   cartProduct,
   handleQtyIncrease,
   handleQtyDecrease,
@@ -61,7 +64,6 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     useState(false)
   const [isProductInCart, setProductInCart] = useState(false)
   const [email, setEmail] = useState('')
-
   const handleStockNotification = (e: React.FormEvent): void => {
     e.preventDefault()
     setIsStockNotificationEnabled(true)
@@ -70,6 +72,39 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       autoClose: 3000,
     })
     setEmail('')
+  }
+  
+  const recordInteraction = async (
+    eventType: string,
+    rating: number | null = null
+  ) => {
+    try {
+
+     const userId = '682eeba48935dfe7ebc3c7ef'
+      const interactionData = {
+        user_id: userId,
+        item_id: product._id,
+        event_type: eventType,
+        rating: rating,
+      }
+
+      const response = await fetch(
+        'https://rec-system-8mee.onrender.com/interactions/record',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(interactionData),
+        }
+      )
+
+      if (!response.ok) {
+        console.error('Failed to record interaction:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error recording interaction:', error)
+    }
   }
 
   const { cartProducts } = useCart()
@@ -428,9 +463,10 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                 <div className="grid  gap-4">
                   <Button
                     label="Add to Cart"
-                    onClick={() => {
+                    onClick={async () => {
                       handleAddToCart()
                       setProductInCart(true)
+                      await recordInteraction('click')
                     }}
                     outline
                     icon={FaBox}

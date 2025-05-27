@@ -18,6 +18,7 @@ import ReviewList from '@/components/review/ReviewList'
 import ReviewForm from '@/components/review/ReveiwForm'
 
 import { QuestionForm } from './questions/Questions'
+import { SafeUser } from '@/type/SafeUser'
 
 interface ReviewStats {
   totalReviews: number
@@ -52,6 +53,7 @@ interface Question {
   createdAt: string
   updatedAt: string
 }
+
 const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   const router = useRouter()
   const [cartProduct, setCartProduct] = useState<CartProduct>({
@@ -68,14 +70,14 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     selectedSize: 'M',
   })
 
-  // State for reviews
+
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null)
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [reviewsError, setReviewsError] = useState<string | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [questionsLoading, setQuestionsLoading] = useState(false)
-  // Fetch reviews
+  
   useEffect(() => {
     const fetchReviews = async () => {
       if (!product._id) return
@@ -119,7 +121,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
         const data = await response.json()
         setQuestions(data)
-        console.log('Fetched questions:', questions)
+        
       } catch (err) {
         console.error('Error fetching questions:', err)
       } finally {
@@ -183,7 +185,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   const handleBuyNow = (): void => {
-    // handleAddProductToCart(cartProduct)
     router.push('/checkout')
   }
 
@@ -209,7 +210,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     }
   }
 
- console.log('questiond', questions)
 
   return (
     <div className="flex flex-col mr-5">
@@ -222,6 +222,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
         <ProductInfo
           product={product}
+          
           cartProduct={cartProduct}
           handleQtyIncrease={handleQtyIncrease}
           handleQtyDecrease={handleQtyDecrease}

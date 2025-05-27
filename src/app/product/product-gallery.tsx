@@ -63,8 +63,8 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
     <div className="relative">
       <ProductImage
         cartProduct={cartProduct}
-        product={product}
-        handleColorSelect={handleColorSelect}
+        // product={product}
+        // handleColorSelect={handleColorSelect}
       />
 
       {/* Video preview button */}
