@@ -37,10 +37,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import EditStockDialog from '@/components/manager/edit-stock-dialog'
 import { toast } from '@/components/ui/use-toast'
 import { Category } from '@/type/category'
-
 
 interface InventoryTabProps {
   searchInventory: string
@@ -51,7 +59,6 @@ interface InventoryTabProps {
   setLocationFilter: (value: string) => void
 }
 
-// Define Product interface based on your Mongoose schema
 interface Product {
   _id: string
   name: string
@@ -76,7 +83,14 @@ interface Product {
   price: number
 }
 
-export default function InventoryTab({
+interface PaginationInfo {
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export default function EnhancedInventoryTab({
   searchInventory,
   setSearchInventory,
   categoryFilter,
@@ -94,13 +108,42 @@ export default function InventoryTab({
   const [showLowStock, setShowLowStock] = useState(true)
   const [showOutOfStock, setShowOutOfStock] = useState(true)
   const [showInStock, setShowInStock] = useState(true)
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    limit: 20,
+    pages: 1,
+  })
 
-  const loadData = async () => {
+  const loadData = async (page: number = 1) => {
     setIsLoading(true)
     try {
-      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+      })
+
+      if (searchInventory) {
+        params.append('search', searchInventory)
+      }
+      if (categoryFilter !== 'all') {
+        params.append('category', categoryFilter)
+      }
+      if (locationFilter !== 'all') {
+        params.append('location', locationFilter)
+      }
+
+      // Add stock filters
+      const stockFilters = []
+      if (showLowStock) stockFilters.push('low')
+      if (showOutOfStock) stockFilters.push('out')
+      if (showInStock) stockFilters.push('in')
+      if (stockFilters.length > 0) {
+        params.append('stockFilter', stockFilters.join(','))
+      }
+
       const [productsResponse, categoriesResponse] = await Promise.all([
-        fetch('/api/product'),
+        fetch(`/api/product?${params.toString()}`),
         fetch('/api/product?type=categories'),
       ])
 
@@ -111,7 +154,15 @@ export default function InventoryTab({
       const productsData = await productsResponse.json()
       const categoriesData = await categoriesResponse.json()
 
-      setProducts(productsData.products)
+      setProducts(productsData.products || [])
+      setPagination(
+        productsData.pagination || {
+          total: productsData.products?.length || 0,
+          page: 1,
+          limit: 20,
+          pages: 1,
+        }
+      )
       setCategories(categoriesData.categories || [])
     } catch (error) {
       console.error('Error fetching inventory data:', error)
@@ -129,31 +180,20 @@ export default function InventoryTab({
   }
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData(1)
+  }, [
+    searchInventory,
+    categoryFilter,
+    locationFilter,
+    showLowStock,
+    showOutOfStock,
+    showInStock,
+  ])
 
-  const filteredProducts = products.filter((product) => {
-    
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchInventory.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchInventory.toLowerCase()) ||
-      product._id.toString().includes(searchInventory)
-
-    const matchesCategory =
-      categoryFilter === 'all' ||
-      product.category.name.toLowerCase() === categoryFilter.toLowerCase()
-
-    const isLowStock = product.quantity > 0 && product.quantity <= 10
-    const isOutOfStock = product.quantity === 0 || !product.inStock
-    const isInStock = product.quantity > 10 && product.inStock
-
-    const matchesStockFilter =
-      (showLowStock && isLowStock) ||
-      (showOutOfStock && isOutOfStock) ||
-      (showInStock && isInStock)
-
-    return matchesSearch && matchesCategory && matchesStockFilter
-  })
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, page }))
+    loadData(page)
+  }
 
   const handleExportInventory = () => {
     const headers = [
@@ -167,7 +207,7 @@ export default function InventoryTab({
     ]
     const csvContent = [
       headers.join(','),
-      ...filteredProducts.map((product) =>
+      ...products.map((product) =>
         [
           product._id,
           product.name.replace(/,/g, ' '),
@@ -194,6 +234,91 @@ export default function InventoryTab({
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product)
     setShowEditDialog(true)
+  }
+
+  const renderPagination = () => {
+    if (pagination.pages <= 1) return null
+
+    const pages = []
+    const currentPage = pagination.page
+    const totalPages = pagination.pages
+
+    // Always show first page
+    pages.push(1)
+
+    // Add ellipsis if there's a gap
+    if (currentPage > 3) {
+      pages.push('ellipsis1')
+    }
+
+    // Add pages around current page
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (!pages.includes(i)) {
+        pages.push(i)
+      }
+    }
+
+    // Add ellipsis if there's a gap
+    if (currentPage < totalPages - 2) {
+      pages.push('ellipsis2')
+    }
+
+    // Always show last page if more than 1 page
+    if (totalPages > 1 && !pages.includes(totalPages)) {
+      pages.push(totalPages)
+    }
+
+    return (
+      <Pagination className="mt-6">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() =>
+                currentPage > 1 && handlePageChange(currentPage - 1)
+              }
+              className={
+                currentPage <= 1
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+
+          {pages.map((page, index) => (
+            <PaginationItem key={index}>
+              {typeof page === 'string' ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  onClick={() => handlePageChange(page)}
+                  isActive={page === currentPage}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                currentPage < totalPages && handlePageChange(currentPage + 1)
+              }
+              className={
+                currentPage >= totalPages
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    )
   }
 
   if (isLoading) {
@@ -303,6 +428,16 @@ export default function InventoryTab({
         </div>
       </div>
 
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <span>
+          Showing {products.length} of {pagination.total} products
+        </span>
+        <span>
+          Page {pagination.page} of {pagination.pages}
+        </span>
+      </div>
+
       <Card className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm">
         <CardHeader className="border-b border-emerald-100 bg-emerald-50/50">
           <CardTitle className="text-emerald-800 flex items-center">
@@ -352,7 +487,7 @@ export default function InventoryTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.length === 0 ? (
+                {products.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={8}
@@ -362,7 +497,7 @@ export default function InventoryTab({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredProducts.map((product) => (
+                  products.map((product) => (
                     <TableRow
                       key={product._id.toString()}
                       className="hover:bg-emerald-50"
@@ -386,7 +521,7 @@ export default function InventoryTab({
                           </Badge>
                         ) : product.quantity <= 10 ? (
                           <Badge
-                            variant={"outline"}
+                            variant={'outline'}
                             className="flex items-center w-fit gap-1 bg-orange-500 text-white"
                           >
                             <AlertTriangle className="h-3 w-3" />
@@ -424,6 +559,9 @@ export default function InventoryTab({
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {renderPagination()}
         </CardContent>
       </Card>
 
@@ -432,7 +570,7 @@ export default function InventoryTab({
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
           product={selectedProduct}
-          onProductUpdated={loadData}
+          onProductUpdated={() => loadData(pagination.page)}
         />
       )}
     </div>

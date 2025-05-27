@@ -44,28 +44,72 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import AddCarrierDialog from '@/components/manager/add-new-cerrier'
 
+interface PaginationInfo {
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
 
-export default function CarrierManagementPage() {
+export default function EnhancedCarriersTab() {
+  const router = useRouter()
   const [carriers, setCarriers] = useState<Carrier[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterZone, setFilterZone] = useState('all')
   const [sortBy, setSortBy] = useState('name')
   const [showAddCarrierDialog, setShowAddCarrierDialog] = useState(false)
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    limit: 20,
+    pages: 1,
+  })
   const { toast } = useToast()
-  
 
-  const fetchCarriers = async () => {
+  const fetchCarriers = async (page = 1) => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/carrier')
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+      })
+
+      if (searchQuery) {
+        params.append('search', searchQuery)
+      }
+      if (filterZone !== 'all') {
+        params.append('zone', filterZone)
+      }
+      if (sortBy) {
+        params.append('sortBy', sortBy)
+      }
+
+      const response = await fetch(`/api/carrier?${params.toString()}`)
       if (!response.ok) {
         throw new Error('Failed to fetch carriers')
       }
       const data = await response.json()
       setCarriers(data.carriers || [])
+      setPagination(
+        data.pagination || {
+          total: data.carriers?.length || 0,
+          page: 1,
+          limit: 20,
+          pages: 1,
+        }
+      )
     } catch (error) {
       if (error instanceof Error) {
         toast({
@@ -86,8 +130,13 @@ export default function CarrierManagementPage() {
   }
 
   useEffect(() => {
-    fetchCarriers()
-  }, [])
+    fetchCarriers(1)
+  }, [searchQuery, filterZone, sortBy])
+
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, page }))
+    fetchCarriers(page)
+  }
 
   const handleStatusToggle = async (
     carrierId: string,
@@ -101,7 +150,6 @@ export default function CarrierManagementPage() {
         },
         body: JSON.stringify({
           isActive: !currentStatus,
-          // If becoming active, set the activation time
           ...(currentStatus === false
             ? { activatedAt: new Date().toISOString() }
             : {}),
@@ -112,7 +160,6 @@ export default function CarrierManagementPage() {
         throw new Error('Failed to update carrier status')
       }
 
-      // Update the local state
       setCarriers((prevCarriers) =>
         prevCarriers.map((carrier) =>
           carrier._id === carrierId
@@ -149,62 +196,107 @@ export default function CarrierManagementPage() {
   }
 
   const handleCarrierAdded = () => {
-    fetchCarriers()
+    fetchCarriers(pagination.page)
     toast({
       title: 'Success',
       description: 'New carrier has been added to the system',
     })
   }
 
-  // Filter carriers based on search query and zone filter
-  const filteredCarriers = carriers
-    .filter(
-      (carrier) =>
-        carrier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (carrier.contactPhone && carrier.contactPhone.includes(searchQuery)) ||
-        (carrier.contactEmail &&
-          carrier.contactEmail
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()))
-    )
-    .filter((carrier) => filterZone === 'all' || carrier.zone === filterZone)
-    .sort((a, b) => {
-      if (sortBy === 'name') {
-        return a.name.localeCompare(b.name)
-      } else if (sortBy === 'status') {
-        return Number(b.isActive) - Number(a.isActive)
-      } else if (sortBy === 'activation') {
-        if (!a.activatedAt && !b.activatedAt) return 0
-        if (!a.activatedAt) return 1
-        if (!b.activatedAt) return -1
-        return (
-          new Date(a.activatedAt).getTime() - new Date(b.activatedAt).getTime()
-        )
-      }
-      return 0
-    })
-
-  const activeCarriers = filteredCarriers.filter((carrier) => carrier.isActive)
-  const inactiveCarriers = filteredCarriers.filter(
-    (carrier) => !carrier.isActive
-  )
-
-  // Get unique zones for filter dropdown
+  const activeCarriers = carriers.filter((carrier) => carrier.isActive)
+  const inactiveCarriers = carriers.filter((carrier) => !carrier.isActive)
   const zones = Array.from(
     new Set(carriers.map((carrier) => carrier.zone).filter(Boolean))
   )
 
+  const renderPagination = () => {
+    if (pagination.pages <= 1) return null
+
+    const pages = []
+    const currentPage = pagination.page
+    const totalPages = pagination.pages
+
+    pages.push(1)
+
+    if (currentPage > 3) {
+      pages.push('ellipsis1')
+    }
+
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (!pages.includes(i)) {
+        pages.push(i)
+      }
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('ellipsis2')
+    }
+
+    if (totalPages > 1 && !pages.includes(totalPages)) {
+      pages.push(totalPages)
+    }
+
+    return (
+      <Pagination className="mt-6">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() =>
+                currentPage > 1 && handlePageChange(currentPage - 1)
+              }
+              className={
+                currentPage <= 1
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+
+          {pages.map((page, index) => (
+            <PaginationItem key={index}>
+              {typeof page === 'string' ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  onClick={() => handlePageChange(page)}
+                  isActive={page === currentPage}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                currentPage < totalPages && handlePageChange(currentPage + 1)
+              }
+              className={
+                currentPage >= totalPages
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    )
+  }
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold flex items-center">
-          <UserCog className="mr-2 h-6 w-6 text-[#4a6bff]" />
-          Carrier Management
-        </h1>
+       
         <div className="flex space-x-2">
           <Button
             variant="outline"
-            onClick={fetchCarriers}
+            onClick={() => fetchCarriers(pagination.page)}
             className="flex items-center"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -232,7 +324,7 @@ export default function CarrierManagementPage() {
                   <p className="text-sm text-muted-foreground">
                     Total Carriers
                   </p>
-                  <p className="text-2xl font-bold">{carriers.length}</p>
+                  <p className="text-2xl font-bold">{pagination.total}</p>
                 </div>
                 <Truck className="h-8 w-8 text-[#4a6bff] opacity-70" />
               </CardContent>
@@ -253,7 +345,7 @@ export default function CarrierManagementPage() {
             <Card className="bg-orange-50">
               <CardContent className="p-4 flex justify-between items-center">
                 <div>
-                  <p className="text-sm text-muted-foreground">Shipping</p>
+                  <p className="text-sm text-muted-foreground">Inactive</p>
                   <p className="text-2xl font-bold text-orange-600">
                     {inactiveCarriers.length}
                   </p>
@@ -323,25 +415,37 @@ export default function CarrierManagementPage() {
             </div>
           </div>
 
+          {/* Results Summary */}
+          <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+            <span>
+              Showing {carriers.length} of {pagination.total} carriers
+            </span>
+            <span>
+              Page {pagination.page} of {pagination.pages}
+            </span>
+          </div>
+
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="all">
-                All Carriers ({filteredCarriers.length})
+                All Carriers ({carriers.length})
               </TabsTrigger>
               <TabsTrigger value="active">
                 Active ({activeCarriers.length})
               </TabsTrigger>
               <TabsTrigger value="inactive">
-                Shipping ({inactiveCarriers.length})
+                Inactive ({inactiveCarriers.length})
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
               <CarrierTable
-                carriers={filteredCarriers}
+                carriers={carriers}
                 onStatusToggle={handleStatusToggle}
                 isLoading={isLoading}
+                router={router}
               />
+              {renderPagination()}
             </TabsContent>
 
             <TabsContent value="active">
@@ -349,6 +453,7 @@ export default function CarrierManagementPage() {
                 carriers={activeCarriers}
                 onStatusToggle={handleStatusToggle}
                 isLoading={isLoading}
+                router={router}
               />
             </TabsContent>
 
@@ -357,6 +462,7 @@ export default function CarrierManagementPage() {
                 carriers={inactiveCarriers}
                 onStatusToggle={handleStatusToggle}
                 isLoading={isLoading}
+                router={router}
               />
             </TabsContent>
           </Tabs>
@@ -376,15 +482,15 @@ interface CarrierTableProps {
   carriers: Carrier[]
   onStatusToggle: (carrierId: string, currentStatus: boolean) => void
   isLoading: boolean
+  router: any
 }
 
 function CarrierTable({
   carriers,
   onStatusToggle,
   isLoading,
+  router,
 }: CarrierTableProps) {
-  const router = useRouter()
-
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -429,7 +535,7 @@ function CarrierTable({
                         : 'border-orange-500 text-orange-800'
                     }
                   >
-                    {carrier.isActive ? 'Active' : 'Shipping'}
+                    {carrier.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                   {carrier.activatedAt && carrier.isActive && (
                     <span className="text-xs text-muted-foreground">

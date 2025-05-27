@@ -21,6 +21,15 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import { format } from 'date-fns'
 import ViewOrderDialog from '@/components/manager/view-order-dialog'
 import { toast } from '@/components/ui/use-toast'
@@ -72,7 +81,14 @@ interface Order {
   }
 }
 
-export default function OrdersTab({
+interface PaginationInfo {
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export default function EnhancedOrdersTab({
   searchOrders,
   setSearchOrders,
   statusFilter,
@@ -83,18 +99,44 @@ export default function OrdersTab({
   const [error, setError] = useState<string | null>(null)
   const [showViewDialog, setShowViewDialog] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    limit: 20,
+    pages: 1,
+  })
 
-  const loadOrders = async () => {
+  const loadOrders = async (page = 1) => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/orders')
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+      })
+
+      if (searchOrders) {
+        params.append('search', searchOrders)
+      }
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter)
+      }
+
+      const response = await fetch(`/api/orders?${params.toString()}`)
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`)
       }
 
       const data = await response.json()
-      setOrders(data.orders)
+      setOrders(data.orders || [])
+      setPagination(
+        data.pagination || {
+          total: data.orders?.length || 0,
+          page: 1,
+          limit: 20,
+          pages: 1,
+        }
+      )
     } catch (error) {
       console.error('Error fetching orders:', error)
       setError(
@@ -111,25 +153,16 @@ export default function OrdersTab({
   }
 
   useEffect(() => {
-    loadOrders()
-  }, [])
+    loadOrders(1)
+  }, [searchOrders, statusFilter])
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.orderNumber.toLowerCase().includes(searchOrders.toLowerCase()) ||
-      order._id.toString().includes(searchOrders) ||
-      (order.userId && order.userId.toString().includes(searchOrders)) ||
-      (order.customer?.name &&
-        order.customer.name.toLowerCase().includes(searchOrders.toLowerCase()))
-
-    const matchesStatus =
-      statusFilter === 'all' || order.orderStatus === statusFilter
-
-    return matchesSearch && matchesStatus
-  })
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, page }))
+    loadOrders(page)
+  }
 
   const handleExportOrders = () => {
-    if (filteredOrders.length === 0) {
+    if (orders.length === 0) {
       toast({
         title: 'No orders to export',
         description: 'There are no orders matching your current filters.',
@@ -148,7 +181,7 @@ export default function OrdersTab({
     ]
     const csvContent = [
       headers.join(','),
-      ...filteredOrders.map((order) => {
+      ...orders.map((order) => {
         const total = (order.subtotal + order.tax + order.shipping).toFixed(2)
         return [
           order.orderNumber,
@@ -174,7 +207,7 @@ export default function OrdersTab({
 
     toast({
       title: 'Export successful',
-      description: `${filteredOrders.length} orders exported to CSV.`,
+      description: `${orders.length} orders exported to CSV.`,
     })
   }
 
@@ -239,6 +272,86 @@ export default function OrdersTab({
     }
   }
 
+  const renderPagination = () => {
+    if (pagination.pages <= 1) return null
+
+    const pages = []
+    const currentPage = pagination.page
+    const totalPages = pagination.pages
+
+    pages.push(1)
+
+    if (currentPage > 3) {
+      pages.push('ellipsis1')
+    }
+
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (!pages.includes(i)) {
+        pages.push(i)
+      }
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('ellipsis2')
+    }
+
+    if (totalPages > 1 && !pages.includes(totalPages)) {
+      pages.push(totalPages)
+    }
+
+    return (
+      <Pagination className="mt-6">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() =>
+                currentPage > 1 && handlePageChange(currentPage - 1)
+              }
+              className={
+                currentPage <= 1
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+
+          {pages.map((page, index) => (
+            <PaginationItem key={index}>
+              {typeof page === 'string' ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  onClick={() => handlePageChange(page)}
+                  isActive={page === currentPage}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                currentPage < totalPages && handlePageChange(currentPage + 1)
+              }
+              className={
+                currentPage >= totalPages
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-48">
@@ -297,6 +410,16 @@ export default function OrdersTab({
         </Button>
       </div>
 
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <span>
+          Showing {orders.length} of {pagination.total} orders
+        </span>
+        <span>
+          Page {pagination.page} of {pagination.pages}
+        </span>
+      </div>
+
       <Card className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 shadow-sm">
         <CardHeader className="border-b border-blue-100 bg-blue-50/50">
           <CardTitle className="text-blue-800 flex items-center">
@@ -335,7 +458,7 @@ export default function OrdersTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.length === 0 ? (
+                {orders.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={8}
@@ -345,7 +468,7 @@ export default function OrdersTab({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredOrders.map((order) => (
+                  orders.map((order) => (
                     <TableRow
                       key={order._id.toString()}
                       className="hover:bg-blue-50"
@@ -388,6 +511,9 @@ export default function OrdersTab({
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {renderPagination()}
         </CardContent>
       </Card>
 
@@ -396,7 +522,7 @@ export default function OrdersTab({
           open={showViewDialog}
           onOpenChange={setShowViewDialog}
           order={selectedOrder}
-          onOrderUpdated={loadOrders}
+          onOrderUpdated={() => loadOrders(pagination.page)}
         />
       )}
     </div>

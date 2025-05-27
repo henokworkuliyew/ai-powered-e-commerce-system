@@ -1,34 +1,28 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Download, Plus, Eye, Filter, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button2'
-import { Input } from '@/components/ui/input'
+import { useState, useEffect } from "react"
+import { Download, Plus, Eye, Filter, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button2"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-
-import { format } from 'date-fns'
-
-import { useToast } from '@/components/ui/use-toast'
-import ViewShipmentDialog from '@/components/manager/view-shipment-dialog'
-import { Shipment } from '@/type/Shipment'
-import { Carrier } from '@/type/Carrier'
-import AddShipmentDialog from '@/components/manager/add-shippment'
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import { format } from "date-fns"
+import { useToast } from "@/components/ui/use-toast"
+import ViewShipmentDialog from "@/components/manager/view-shipment-dialog"
+import type { Shipment } from "@/type/Shipment"
+import type { Carrier } from "@/type/Carrier"
+import AddShipmentDialog from "@/components/manager/add-shippment"
 
 interface ShipmentsTabProps {
   searchShipment: string
@@ -39,9 +33,14 @@ interface ShipmentsTabProps {
   setCarrierFilter: (value: string) => void
 }
 
+interface PaginationInfo {
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
 
-
-export default function ShipmentsTab({
+export default function EnhancedShipmentsTab({
   searchShipment,
   setSearchShipment,
   statusFilter,
@@ -56,71 +55,64 @@ export default function ShipmentsTab({
   const [error, setError] = useState<string | null>(null)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showViewDialog, setShowViewDialog] = useState(false)
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(
-    null
-  )
-  const [pagination, setPagination] = useState({
+  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null)
+  const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
     page: 1,
-    limit: 50,
+    limit: 20,
     pages: 1,
   })
-  console.log('pagenation',pagination)
-  const loadData = async () => {
+
+  const loadData = async (page = 1) => {
     setIsLoading(true)
     try {
-      
-      const params = new URLSearchParams()
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+      })
+
+      if (statusFilter !== "all") {
+        params.append("status", statusFilter)
       }
-      if (carrierFilter !== 'all') {
-        
-        const carrier = carriers.find(
-          (c) => c.name.toLowerCase() === carrierFilter.toLowerCase()
-        )
+      if (carrierFilter !== "all") {
+        const carrier = carriers.find((c) => c.name.toLowerCase() === carrierFilter.toLowerCase())
         if (carrier) {
-          params.append('carrierId', carrier._id)
+          params.append("carrierId", carrier._id)
         }
       }
       if (searchShipment) {
-        params.append('trackingNumber', searchShipment)
+        params.append("search", searchShipment)
       }
-      params.append('page', '1')
-      params.append('limit', '50')
 
-      // Load shipments and carriers in parallel
       const [shipmentsResponse, carriersResponse] = await Promise.all([
         fetch(`/api/shipments?${params.toString()}`),
-        fetch('/api/carrier'),
+        fetch("/api/carrier"),
       ])
 
       if (!shipmentsResponse.ok || !carriersResponse.ok) {
-        throw new Error('Failed to fetch data')
+        throw new Error("Failed to fetch data")
       }
 
       const shipmentsData = await shipmentsResponse.json()
       const carriersData = await carriersResponse.json()
 
-      setShipments(shipmentsData.shipments)
+      setShipments(shipmentsData.shipments || [])
       setPagination(
         shipmentsData.pagination || {
-          total: shipmentsData.shipments.length,
+          total: shipmentsData.shipments?.length || 0,
           page: 1,
-          limit: 50,
+          limit: 20,
           pages: 1,
-        }
+        },
       )
-      setCarriers(carriersData.carriers)
+      setCarriers(carriersData.carriers || [])
     } catch (error) {
-      console.error('Error fetching data:', error)
-      setError(
-        error instanceof Error ? error.message : 'Unknown error occurred'
-      )
+      console.error("Error fetching data:", error)
+      setError(error instanceof Error ? error.message : "Unknown error occurred")
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shipment data. Please try again.',
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load shipment data. Please try again.",
       })
     } finally {
       setIsLoading(false)
@@ -128,79 +120,53 @@ export default function ShipmentsTab({
   }
 
   useEffect(() => {
-    loadData()
-  }, [statusFilter, carrierFilter])
+    loadData(1)
+  }, [statusFilter, carrierFilter, searchShipment])
 
-  const filteredShipments = shipments.filter((shipment) => {
-    // Apply search filter if not already filtered by API
-    if (
-      searchShipment &&
-      !shipment.trackingNumber
-        .toLowerCase()
-        .includes(searchShipment.toLowerCase()) &&
-      !shipment._id.toString().includes(searchShipment) &&
-      !shipment.customer.name
-        .toLowerCase()
-        .includes(searchShipment.toLowerCase()) &&
-      !shipment.customer.email
-        .toLowerCase()
-        .includes(searchShipment.toLowerCase())
-    ) {
-      return false
-    }
-    return true
-  })
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, page }))
+    loadData(page)
+  }
 
   const handleExportShipments = () => {
-    if (filteredShipments.length === 0) {
+    if (shipments.length === 0) {
       toast({
-        title: 'No shipments to export',
-        description: 'There are no shipments matching your current filters.',
+        title: "No shipments to export",
+        description: "There are no shipments matching your current filters.",
       })
       return
     }
 
-    // Create CSV content
-    const headers = [
-      'ID',
-      'Tracking #',
-      'Customer',
-      'Status',
-      'Carrier',
-      'Date Shipped',
-      'Date Delivered',
-      'Items',
-    ]
+    const headers = ["ID", "Tracking #", "Customer", "Status", "Carrier", "Date Shipped", "Date Delivered", "Items"]
     const csvContent = [
-      headers.join(','),
-      ...filteredShipments.map((shipment) => {
+      headers.join(","),
+      ...shipments.map((shipment) => {
         return [
           shipment._id,
           shipment.trackingNumber,
-          shipment.customer.name.replace(/,/g, ' '),
+          shipment.customer.name.replace(/,/g, " "),
           shipment.status,
-          shipment.carrier.name.replace(/,/g, ' '),
-          shipment.dateShipped || '',
-          shipment.dateDelivered || '',
+          shipment.carrier.name.replace(/,/g, " "),
+          shipment.dateShipped || "",
+          shipment.dateDelivered || "",
           shipment.items.reduce((total, item) => total + item.quantity, 0),
-        ].join(',')
+        ].join(",")
       }),
-    ].join('\n')
+    ].join("\n")
 
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const blob = new Blob([csvContent], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = `shipments-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `shipments-${new Date().toISOString().split("T")[0]}.csv`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
     toast({
-      title: 'Export successful',
-      description: `${filteredShipments.length} shipments exported to CSV.`,
+      title: "Export successful",
+      description: `${shipments.length} shipments exported to CSV.`,
     })
   }
 
@@ -210,32 +176,96 @@ export default function ShipmentsTab({
   }
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return '—'
+    if (!dateString) return "—"
     try {
-      return format(new Date(dateString), 'MMM dd, yyyy')
+      return format(new Date(dateString), "MMM dd, yyyy")
     } catch (e) {
       if (e instanceof Error) {
-        console.error('Error formatting date:', e.message)
+        console.error("Error formatting date:", e.message)
       }
-      return 'Invalid date'
+      return "Invalid date"
     }
   }
 
-  const getStatusBadge = (status: Shipment['status']) => {
+  const getStatusBadge = (status: Shipment["status"]) => {
     switch (status) {
-      case 'processing':
+      case "processing":
         return <Badge className="bg-orange-500 text-white">Processing</Badge>
-      case 'in_transit':
+      case "in_transit":
         return <Badge className="bg-blue-500 text-white">In Transit</Badge>
-      case 'delivered':
+      case "delivered":
         return <Badge className="bg-green-600 text-white">Delivered</Badge>
-      case 'failed':
+      case "failed":
         return <Badge className="bg-red-500 text-white">Failed</Badge>
-      case 'returned':
+      case "returned":
         return <Badge className="bg-purple-500 text-white">Returned</Badge>
       default:
         return <Badge>{status}</Badge>
     }
+  }
+
+  const renderPagination = () => {
+    if (pagination.pages <= 1) return null
+
+    const pages = []
+    const currentPage = pagination.page
+    const totalPages = pagination.pages
+
+    pages.push(1)
+
+    if (currentPage > 3) {
+      pages.push("ellipsis1")
+    }
+
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      if (!pages.includes(i)) {
+        pages.push(i)
+      }
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push("ellipsis2")
+    }
+
+    if (totalPages > 1 && !pages.includes(totalPages)) {
+      pages.push(totalPages)
+    }
+
+    return (
+      <Pagination className="mt-6">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+              className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            />
+          </PaginationItem>
+
+          {pages.map((page, index) => (
+            <PaginationItem key={index}>
+              {typeof page === "string" ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  onClick={() => handlePageChange(page)}
+                  isActive={page === currentPage}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+              className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    )
   }
 
   if (isLoading) {
@@ -254,9 +284,7 @@ export default function ShipmentsTab({
             <Filter className="h-5 w-5 text-destructive" />
           </div>
           <div className="ml-3">
-            <p className="text-sm text-destructive">
-              Error loading shipments: {error}
-            </p>
+            <p className="text-sm text-destructive">Error loading shipments: {error}</p>
           </div>
         </div>
       </div>
@@ -295,10 +323,7 @@ export default function ShipmentsTab({
             <SelectContent>
               <SelectItem value="all">All Carriers</SelectItem>
               {carriers.map((carrier) => (
-                <SelectItem
-                  key={carrier._id.toString()}
-                  value={carrier.name.toLowerCase()}
-                >
+                <SelectItem key={carrier._id.toString()} value={carrier.name.toLowerCase()}>
                   {carrier.name}
                 </SelectItem>
               ))}
@@ -316,6 +341,16 @@ export default function ShipmentsTab({
             New Shipment
           </Button>
         </div>
+      </div>
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <span>
+          Showing {shipments.length} of {pagination.total} shipments
+        </span>
+        <span>
+          Page {pagination.page} of {pagination.pages}
+        </span>
       </div>
 
       <Card className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 shadow-sm dark:from-purple-950/20 dark:to-background dark:border-purple-900/20">
@@ -344,69 +379,36 @@ export default function ShipmentsTab({
             <Table>
               <TableHeader>
                 <TableRow className="bg-purple-100 dark:bg-purple-950/30">
-                  <TableHead className="w-[80px] text-purple-900 dark:text-purple-300">
-                    ID
-                  </TableHead>
-                  <TableHead className="text-purple-900 dark:text-purple-300">
-                    Tracking #
-                  </TableHead>
-                  <TableHead className="text-purple-900 dark:text-purple-300">
-                    Customer
-                  </TableHead>
-                  <TableHead className="text-purple-900 dark:text-purple-300">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-purple-900 dark:text-purple-300">
-                    Carrier
-                  </TableHead>
-                  <TableHead className="text-purple-900 dark:text-purple-300">
-                    Date Shipped
-                  </TableHead>
-                  <TableHead className="text-purple-900 dark:text-purple-300">
-                    Date Delivered
-                  </TableHead>
-                  <TableHead className="text-right text-purple-900 dark:text-purple-300">
-                    Items
-                  </TableHead>
-                  <TableHead className="text-right text-purple-900 dark:text-purple-300">
-                    Actions
-                  </TableHead>
+                  <TableHead className="w-[80px] text-purple-900 dark:text-purple-300">ID</TableHead>
+                  <TableHead className="text-purple-900 dark:text-purple-300">Tracking #</TableHead>
+                  <TableHead className="text-purple-900 dark:text-purple-300">Customer</TableHead>
+                  <TableHead className="text-purple-900 dark:text-purple-300">Status</TableHead>
+                  <TableHead className="text-purple-900 dark:text-purple-300">Carrier</TableHead>
+                  <TableHead className="text-purple-900 dark:text-purple-300">Date Shipped</TableHead>
+                  <TableHead className="text-purple-900 dark:text-purple-300">Date Delivered</TableHead>
+                  <TableHead className="text-right text-purple-900 dark:text-purple-300">Items</TableHead>
+                  <TableHead className="text-right text-purple-900 dark:text-purple-300">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredShipments.length === 0 ? (
+                {shipments.length === 0 ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={9}
-                      className="h-24 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                       No shipments found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredShipments.map((shipment) => (
-                    <TableRow
-                      key={shipment._id.toString()}
-                      className="hover:bg-purple-50 dark:hover:bg-purple-950/10"
-                    >
-                      <TableCell className="font-mono text-xs">
-                        {shipment._id.toString().substring(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {shipment.trackingNumber}
-                      </TableCell>
+                  shipments.map((shipment) => (
+                    <TableRow key={shipment._id.toString()} className="hover:bg-purple-50 dark:hover:bg-purple-950/10">
+                      <TableCell className="font-mono text-xs">{shipment._id.toString().substring(0, 8)}...</TableCell>
+                      <TableCell className="font-medium">{shipment.trackingNumber}</TableCell>
                       <TableCell>{shipment.customer.name}</TableCell>
                       <TableCell>{getStatusBadge(shipment.status)}</TableCell>
                       <TableCell>{shipment.carrier.name}</TableCell>
                       <TableCell>{formatDate(shipment.dateShipped)}</TableCell>
-                      <TableCell>
-                        {formatDate(shipment.dateDelivered)}
-                      </TableCell>
+                      <TableCell>{formatDate(shipment.dateDelivered)}</TableCell>
                       <TableCell className="text-right">
-                        {shipment.items.reduce(
-                          (total, item) => total + item.quantity,
-                          0
-                        )}
+                        {shipment.items.reduce((total, item) => total + item.quantity, 0)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -425,13 +427,16 @@ export default function ShipmentsTab({
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {renderPagination()}
         </CardContent>
       </Card>
 
       <AddShipmentDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
-        onShipmentAdded={loadData}
+        onShipmentAdded={() => loadData(pagination.page)}
       />
 
       {selectedShipment && (
@@ -440,7 +445,7 @@ export default function ShipmentsTab({
           onOpenChange={setShowViewDialog}
           shipment={selectedShipment}
           carriers={carriers}
-          onShipmentUpdated={loadData}
+          onShipmentUpdated={() => loadData(pagination.page)}
         />
       )}
     </div>
