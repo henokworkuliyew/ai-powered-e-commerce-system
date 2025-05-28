@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import type React from 'react'
-
 import { MdClose, MdInfoOutline, MdLocalShipping } from 'react-icons/md'
 import {
   FaTruck,
@@ -22,7 +21,6 @@ import { toast } from 'react-toastify'
 import { FormatPrice } from '@/hooks/utils/formatPrice'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
-import { getCurrentUserId } from '@/action/CurrentUser'
 
 interface ReviewStats {
   totalReviews: number
@@ -41,12 +39,11 @@ interface ProductInfoProps {
   reviewStats: ReviewStats | null
   selectedSize: string
   setSelectedSize: React.Dispatch<React.SetStateAction<string>>
+  userId: string | null
 }
 
-
-const ProductInfo: React.FC<ProductInfoProps > = ({
+const ProductInfo: React.FC<ProductInfoProps> = ({
   product,
- 
   cartProduct,
   handleQtyIncrease,
   handleQtyDecrease,
@@ -56,6 +53,7 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
   reviewStats,
   selectedSize,
   setSelectedSize,
+  userId,
 }) => {
   const router = useRouter()
   const [showSizeGuide, setShowSizeGuide] = useState(false)
@@ -73,19 +71,21 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
     })
     setEmail('')
   }
-  
-  const recordInteraction = async (
-    eventType: string,
-    rating: number | null = null
-  ) => {
-    try {
 
-     const userId = '682eeba48935dfe7ebc3c7ef'
+  const recordInteraction = async (
+   
+  ) => {
+    if (!userId) {
+      console.log('No user ID available, skipping interaction recording')
+      return
+    }
+   
+    try {
       const interactionData = {
         user_id: userId,
         item_id: product._id,
-        event_type: eventType,
-        rating: rating,
+        event_type: "add_to_cart",
+        rating: null,
       }
 
       const response = await fetch(
@@ -101,15 +101,14 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
 
       if (!response.ok) {
         console.error('Failed to record interaction:', response.statusText)
-      }
-      else {
+      } else {
         console.log('Interaction recorded successfully')
       }
     } catch (error) {
       console.error('Error recording interaction:', error)
     }
   }
-
+  
   const { cartProducts } = useCart()
   const Horizontal = () => {
     return <hr className="border-t-4 w-1/2 mb-5 mt-2" />
@@ -328,7 +327,7 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
           <h2 className="text-3xl font-medium text-stone-900">
             {product?.name || 'No Name Available'}
           </h2>
-          <p className="text-sm text-gray-500">SKU: {product._id}</p>
+          
         </div>
         <WishlistButton productId={product._id} />
       </div>
@@ -340,7 +339,6 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
         />
         <button
           onClick={() => {
-            // Scroll to reviews section
             document
               .getElementById('product-tabs')
               ?.scrollIntoView({ behavior: 'smooth' })
@@ -463,13 +461,13 @@ const ProductInfo: React.FC<ProductInfoProps > = ({
                   />
                 </div>
                 <Horizontal />
-                <div className="grid  gap-4">
+                <div className="grid gap-4">
                   <Button
                     label="Add to Cart"
                     onClick={async () => {
                       handleAddToCart()
                       setProductInCart(true)
-                      await recordInteraction('click')
+                      await recordInteraction()
                     }}
                     outline
                     icon={FaBox}

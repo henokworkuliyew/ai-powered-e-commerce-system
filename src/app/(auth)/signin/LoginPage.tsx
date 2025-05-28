@@ -1,16 +1,12 @@
 'use client'
 import { Button } from '@/components/ui/button2'
-
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, Chrome } from 'lucide-react'
-
 import { Label } from '@/components/ui/label'
 import {
   Card,
@@ -21,7 +17,6 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
-
 import type { SafeUser } from '@/type/SafeUser'
 
 interface LoginFormData {
@@ -102,7 +97,6 @@ export default function LoginPage({ currentUser }: LoginProps) {
         router.refresh()
       } else {
         router.refresh()
-        
       }
     } catch (error) {
       console.log(error)
@@ -114,7 +108,7 @@ export default function LoginPage({ currentUser }: LoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 ">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-1 gap-8 items-center min-h-[calc(100vh-4rem)]">
           {/* Left Column - Form */}
@@ -159,9 +153,17 @@ export default function LoginPage({ currentUser }: LoginProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium">
-                      Password
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-sm font-medium">
+                        Password
+                      </Label>
+                      <Link
+                        href="/forgot-password"
+                        className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 underline hover:cursor-pointer hover:underline-offset-4"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                       <Input
@@ -206,36 +208,34 @@ export default function LoginPage({ currentUser }: LoginProps) {
                   </Button>
                 </form>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
+                <div className="space-y-4">
+                  <div className="relative flex items-center justify-center">
                     <Separator className="w-full" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white dark:bg-slate-900 px-2 text-slate-500">
+                    <span className="absolute bg-white dark:bg-slate-900 px-2 text-slate-500 text-xs uppercase">
                       Or continue with
                     </span>
                   </div>
-                </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                >
-                  <Chrome className="mr-2 h-4 w-4" />
-                  {isLoading ? 'Connecting...' : 'Continue with Google'}
-                </Button>
-
-                <div className="text-center text-sm text-slate-600 dark:text-slate-400">
-                  {"Don't have an account? "}
-                  <Link
-                    href="/signup"
-                    className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300 underline underline-offset-4"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
                   >
-                    Sign up
-                  </Link>
+                    <Chrome className="mr-2 h-4 w-4" />
+                    {isLoading ? 'Connecting...' : 'Continue with Google'}
+                  </Button>
+
+                  <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+                    {"Don't have an account? "}
+                    <Link
+                      href="/signup"
+                      className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300 underline underline-offset-4"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -243,7 +243,5 @@ export default function LoginPage({ currentUser }: LoginProps) {
         </div>
       </div>
     </div>
-
   )
 }
-

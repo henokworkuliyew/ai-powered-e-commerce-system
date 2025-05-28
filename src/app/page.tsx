@@ -6,7 +6,6 @@ let currentUser = await getCurrentUser()
 if (!currentUser) {
     currentUser = { _id: '' } 
   }
-  console.log('currentUser1', currentUser._id)
   return (
     <div>
       <Home currentUser={currentUser._id }/>

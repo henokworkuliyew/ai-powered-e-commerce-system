@@ -1,7 +1,7 @@
 import ProductDetail from '../ProductDetail'
+import { getCurrentUser } from '@/action/CurrentUser'
 
 export default async function Page({ params }: { params: { id: string } }) {
-  
   const { id } = params
 
   if (!id) {
@@ -30,9 +30,12 @@ export default async function Page({ params }: { params: { id: string } }) {
     return <div>Product not found</div>
   }
 
+  const currentUser = await getCurrentUser()
+  const userId = currentUser?._id || null
+
   return (
     <div className="grid grid-cols-1 gap-11 p-3" suppressHydrationWarning>
-      <ProductDetail product={productData}  />
+      <ProductDetail product={productData} userId={userId} />
     </div>
   )
 }

@@ -18,11 +18,10 @@ const RatingDisplay: React.FC<RatingDisplayProps> = ({
   size = 'medium',
   className = '',
 }) => {
-  // Calculate percentage of each star rating (for a more detailed view)
+  
   const getStarPercentage = (starValue: number) => {
-    // This would normally come from your API
-    // For now, we'll generate random percentages
-    console.log(`Calculating percentage for ${starValue} star`)
+    
+    
     return Math.floor(Math.random() * 100)
   }
 

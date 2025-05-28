@@ -15,7 +15,7 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react'
-import { useNotificationContext } from '@/provider/NotificationProvider'
+// import { useNotificationContext } from '@/provider/NotificationProvider'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   )
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { addNotification } = useNotificationContext()
+  // const { addNotification } = useNotificationContext()
 
   useEffect(() => {
     fetchDashboardData()
@@ -127,11 +127,11 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
-      addNotification({
-        title: 'Error',
-        message: 'Failed to load dashboard data',
-        type: 'system',
-      })
+      // addNotification({
+      //   title: 'Error',
+      //   message: 'Failed to load dashboard data',
+      //   type: 'system',
+      // })
     } finally {
       setIsLoading(false)
     }

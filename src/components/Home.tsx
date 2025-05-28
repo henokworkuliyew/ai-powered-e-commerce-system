@@ -13,9 +13,14 @@ interface HomeProps {
   currentUser: string | null
 }
 
+interface ProductWithRating extends Product {
+  averageRating: number
+  totalReviews: number
+}
+
 export default function Home({ currentUser }: HomeProps) {
   const searchParams = useSearchParams()
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductWithRating[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [recommendations, setRecommendations] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,8 +50,37 @@ export default function Home({ currentUser }: HomeProps) {
         const productsData = await productsRes.json()
         const categoriesData = await categoriesRes.json()
 
-        setProducts(productsData.products || [])
+        const productsList = productsData.products || []
         setCategories(categoriesData.categories || [])
+
+        // Fetch ratings for each product
+        const productsWithRatings = await Promise.all(
+          productsList.map(async (product: Product) => {
+            try {
+              const response = await fetch(
+                `/api/product/review?productId=${product._id}`
+              )
+              if (!response.ok) {
+                throw new Error('Failed to fetch reviews')
+              }
+              const data = await response.json()
+              const stats = data.stats || { averageRating: 0, totalReviews: 0 }
+              return {
+                ...product,
+                averageRating: stats.averageRating,
+                totalReviews: stats.totalReviews,
+              }
+            } catch (err) {
+              console.error(
+                `Error fetching reviews for product ${product._id}:`,
+                err
+              )
+              return { ...product, averageRating: 0, totalReviews: 0 }
+            }
+          })
+        )
+
+        setProducts(productsWithRatings)
       } catch (error) {
         console.error(error)
       } finally {
@@ -112,6 +146,14 @@ export default function Home({ currentUser }: HomeProps) {
     setSelectedSubcategory(null)
   }, [selectedCategory])
 
+  // Get top 5 products with highest ratings
+  const topRatedProducts = useMemo(() => {
+    return [...products]
+      .filter((product) => product.averageRating > 0) // Only include products with ratings
+      .sort((a, b) => b.averageRating - a.averageRating) // Sort by rating (highest first)
+      .slice(0, 5) // Take only the top 5
+  }, [products])
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       if (searchQuery) {
@@ -125,10 +167,8 @@ export default function Home({ currentUser }: HomeProps) {
             product.name || '',
             product.description || '',
             product.brand || '',
-            product.category?.name ||  '',
-            ...(product.category?.subCategories ||
-              
-              []),
+            product.category?.name || '',
+            ...(product.category?.subCategories || []),
             ...(product.images?.map((img) => img.color || '') || []),
           ]
             .join(' ')
@@ -146,15 +186,13 @@ export default function Home({ currentUser }: HomeProps) {
         return true
       }
 
-      const productCategoryName =
-        product.category?.name 
+      const productCategoryName = product.category?.name
       if (!productCategoryName || productCategoryName !== selectedCategory) {
         return false
       }
 
       if (selectedSubcategory) {
-        const subCategories =
-          product.category?.subCategories || []
+        const subCategories = product.category?.subCategories || []
         if (subCategories.includes(selectedSubcategory)) {
           return true
         }
@@ -200,18 +238,35 @@ export default function Home({ currentUser }: HomeProps) {
         />
       </div>
 
-      <RecommendationsSection
-        recommendations={recommendations}
-        loading={recommendationsLoading}
-        userId={currentUser}
-      />
+      {/* Show recommendations if user is logged in, otherwise show top rated products */}
+      {currentUser ? (
+        <RecommendationsSection
+          recommendations={recommendations}
+          loading={recommendationsLoading}
+          userId={currentUser}
+        />
+      ) : (
+        <RecommendationsSection
+          recommendations={[]}
+          loading={loading}
+          userId={null}
+          topRatedProducts={topRatedProducts}
+          showTopRated={true}
+        />
+      )}
 
       <h2 className="text-2xl font-bold mt-8 mb-6">{displayTitle}</h2>
 
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-2 gap-8 w-full sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filteredProducts.map((product, index) => (
-            <ProductCard key={index} product={product} />
+            <ProductCard
+              key={index}
+              product={product}
+              userId={currentUser || null}
+              averageRating={product.averageRating}
+              totalReviews={product.totalReviews}
+            />
           ))}
         </div>
       ) : (
@@ -234,7 +289,7 @@ export default function Home({ currentUser }: HomeProps) {
   )
 }
 
-function getCategoryCounts(products: Product[]) {
+function getCategoryCounts(products: ProductWithRating[]) {
   const counts: Record<string, number> = { all: products.length }
 
   products.forEach((product) => {

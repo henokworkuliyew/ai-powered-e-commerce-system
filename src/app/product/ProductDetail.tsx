@@ -1,7 +1,6 @@
 'use client'
 import { useCallback, useState, useEffect } from 'react'
 import type React from 'react'
-
 import { MdCheckCircle, MdSecurity, MdLoop } from 'react-icons/md'
 import { FaTruck, FaQuestion } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
@@ -13,21 +12,14 @@ import { useCart } from '@/hooks/useCart'
 import RecentlyViewed from '@/components/ProductCard/RecentlyViewed'
 import ProductGallery from './product-gallery'
 import ProductInfo from './product-info'
-
 import ReviewList from '@/components/review/ReviewList'
 import ReviewForm from '@/components/review/ReveiwForm'
-
 import { QuestionForm } from './questions/Questions'
-import { SafeUser } from '@/type/SafeUser'
 
 interface ReviewStats {
   totalReviews: number
   averageRating: number
   ratingDistribution: Record<number, number>
-}
-
-interface ProductDetailsProps {
-  product: Product
 }
 
 interface Answer {
@@ -54,7 +46,12 @@ interface Question {
   updatedAt: string
 }
 
-const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
+interface ProductDetailsProps {
+  product: Product
+  userId: string | null
+}
+
+const ProductDetail: React.FC<ProductDetailsProps> = ({ product, userId }) => {
   const router = useRouter()
   const [cartProduct, setCartProduct] = useState<CartProduct>({
     _id: product._id,
@@ -70,14 +67,13 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     selectedSize: 'M',
   })
 
-
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null)
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [reviewsError, setReviewsError] = useState<string | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [questionsLoading, setQuestionsLoading] = useState(false)
-  
+
   useEffect(() => {
     const fetchReviews = async () => {
       if (!product._id) return
@@ -104,9 +100,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
       }
     }
 
-   
     const fetchQuestions = async () => {
-
       if (!product._id) return
 
       try {
@@ -121,18 +115,15 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
         const data = await response.json()
         setQuestions(data)
-        
       } catch (err) {
         console.error('Error fetching questions:', err)
       } finally {
         setQuestionsLoading(false)
       }
     }
-     fetchReviews()
+    fetchReviews()
     fetchQuestions()
   }, [product._id])
-
-
 
   const handleColorSelect = useCallback(
     (value: SelectedImg) => {
@@ -188,9 +179,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     router.push('/checkout')
   }
 
-
   const handleReviewSubmitted = async () => {
-    
     if (!product._id) return
 
     try {
@@ -210,7 +199,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
     }
   }
 
-
   return (
     <div className="flex flex-col mr-5">
       <div className="grid grid-cols-1 md:grid-cols-2 md:w-full gap-10">
@@ -222,7 +210,6 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
 
         <ProductInfo
           product={product}
-          
           cartProduct={cartProduct}
           handleQtyIncrease={handleQtyIncrease}
           handleQtyDecrease={handleQtyDecrease}
@@ -232,6 +219,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
           reviewStats={reviewStats}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
+          userId={userId}
         />
       </div>
 
@@ -392,12 +380,11 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
                 {questionsLoading && (
                   <div className="text-center py-8">Loading questions...</div>
                 )}
-                {questions.length === 0 && !questionsLoading && ( 
-                    
-                    <div className="text-center py-8 text-gray-500">
-                      No questions have been asked yet.
-                    </div>
-                  )}
+                {questions.length === 0 && !questionsLoading && (
+                  <div className="text-center py-8 text-gray-500">
+                    No questions have been asked yet.
+                  </div>
+                )}
 
                 {questions.map((q) => (
                   <div key={q._id} className="border-b pb-4 mb-4">
@@ -409,10 +396,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product }) => {
                           Asked by {q.askedBy} •{' '}
                           {new Date(q.createdAt).toLocaleDateString() +
                             ' at ' +
-                            new Date(
-                              q.createdAt
-                            ).toLocaleTimeString() 
-                            }
+                            new Date(q.createdAt).toLocaleTimeString()}
                         </p>
                       </div>
                     </div>
