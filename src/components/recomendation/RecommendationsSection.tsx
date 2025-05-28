@@ -122,7 +122,7 @@ export default function RecommendationsSection({
                   <ProductCard
                     product={product}
                     userId={userId}
-                    
+                    averageRating={5}
                   />
                 </div>
               </div>

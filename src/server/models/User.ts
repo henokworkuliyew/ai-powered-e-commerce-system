@@ -1,14 +1,13 @@
-import mongoose, { Schema, type Document, model } from 'mongoose'
+import mongoose, { Document, Schema } from 'mongoose'
 
-type CurrentShipment = {
-  shipmentId: string
+interface CurrentShipment {
+  shipmentId: mongoose.Types.ObjectId
   trackingNumber: string
   orderNumber: string
   estimatedDelivery: string
 }
 
 export interface IUser extends Document {
-  _id: string
   name: string
   email: string
   hashedPassword?: string
@@ -18,54 +17,24 @@ export interface IUser extends Document {
   createdAt: Date
   updatedAt: Date
   role: 'USER' | 'ADMIN' | 'MANAGER' | 'CARRIER'
-  isActive?: boolean
-  vehicle?: string
-  zone?: string
-  activatedAt?: Date
-  currentShipment?: CurrentShipment
-  warehouse?: string
-  resetPasswordToken?: string
-  resetPasswordExpire?: Date
+  isActive?: boolean 
+  vehicle?: string 
+  zone?: string 
+  activatedAt?: Date 
+  currentShipment?: CurrentShipment 
+  warehouse?: string 
 }
 
-const CurrentShipmentSchema = new Schema(
+const userSchema = new Schema<IUser>(
   {
-    shipmentId: { type: String, required: true },
-    trackingNumber: { type: String, required: true },
-    orderNumber: { type: String, required: true },
-    estimatedDelivery: { type: String, required: true },
-  },
-  { _id: false }
-)
-
-const UserSchema = new Schema<IUser>(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true, // This implicitly creates an index
-      lowercase: true,
-      trim: true,
-    },
-    hashedPassword: {
-      type: String,
-      select: false,
-    },
-    emailVerified: {
-      type: Date,
-    },
-    image: {
-      type: String,
-    },
-    contactPhone: {
-      type: String,
-      trim: true,
-    },
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    hashedPassword: { type: String, required: false },
+    emailVerified: { type: Date },
+    image: { type: String },
+    contactPhone: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
     role: {
       type: String,
       enum: ['USER', 'ADMIN', 'MANAGER', 'CARRIER'],
@@ -73,53 +42,48 @@ const UserSchema = new Schema<IUser>(
     },
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
+      
     },
     vehicle: {
       type: String,
-      trim: true,
+      
     },
     zone: {
       type: String,
-      trim: true,
+      
     },
     activatedAt: {
-      type: Date,
+      type: Date, 
+      
     },
     currentShipment: {
       shipmentId: {
         type: Schema.Types.ObjectId,
-        ref: 'Shipment',
+        ref: 'Shipment', 
+       
       },
       trackingNumber: {
         type: String,
+       
       },
       orderNumber: {
         type: String,
+       
       },
       estimatedDelivery: {
         type: String,
+        
       },
     },
     warehouse: {
       type: String,
-      required: function (this: IUser) {
+      required: function () {
         return this.role === 'MANAGER'
       },
-      trim: true,
-    },
-    resetPasswordToken: {
-      type: String,
-      select: false,
-    },
-    resetPasswordExpire: {
-      type: Date,
-      select: false,
     },
   },
   {
-    timestamps: true,
-    collection: 'users',
     toJSON: {
       getters: true,
       transform: (doc, ret) => {
@@ -133,20 +97,17 @@ const UserSchema = new Schema<IUser>(
         if (ret.role !== 'MANAGER') {
           delete ret.warehouse
         }
-        delete ret.resetPasswordToken
-        delete ret.resetPasswordExpire
         return ret
       },
     },
   }
 )
 
-// Add indexes (remove the duplicate email index)
-UserSchema.index({ resetPasswordToken: 1 })
-UserSchema.index({ resetPasswordExpire: 1 })
-UserSchema.index({ role: 1 })
-UserSchema.index({ isActive: 1 })
+userSchema.pre('save', function (next) {
+  this.updatedAt = new Date()
+  next()
+})
 
+const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema)
 
-const User = mongoose.models.User || model<IUser>('User', UserSchema)
 export default User

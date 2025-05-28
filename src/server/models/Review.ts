@@ -38,7 +38,6 @@ const ReviewSchema = new Schema<IReview>(
   { timestamps: true }
 )
 
-// Create compound index for efficient querying
 ReviewSchema.index({ productId: 1, status: 1 })
 
 export const Review = models.Review || model<IReview>('Review', ReviewSchema)

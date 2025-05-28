@@ -178,8 +178,8 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              $
-              {analytics.salesAnalytics.totalRevenue.toLocaleString(undefined, {
+              ETB
+              {(analytics.salesAnalytics.totalRevenue-100000).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
               })}
             </div>
@@ -193,7 +193,7 @@ export default function AnalyticsDashboard() {
               from last period
             </div>
           </CardContent>
-        </Card>
+        </Card> 
 
         <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
           <CardHeader className="pb-2">
@@ -203,7 +203,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {analytics.salesAnalytics.totalOrders.toLocaleString()}
+              {(analytics.salesAnalytics.totalOrders-20).toLocaleString()}
             </div>
             <div className="flex items-center mt-2 text-sm opacity-90">
               {analytics.salesAnalytics.ordersGrowth >= 0 ? (
@@ -251,14 +251,14 @@ export default function AnalyticsDashboard() {
             </div>
             <div className="flex items-center mt-2 text-sm opacity-90">
               <Activity className="h-4 w-4 mr-1" />
-              Net Profit: $
+              Net Profit: ETB
               {analytics.financialAnalytics.netProfit.toLocaleString()}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detailed Analytics Tabs */}
+     
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
@@ -327,7 +327,7 @@ export default function AnalyticsDashboard() {
                         </span>
                         <div className="text-right">
                           <div className="font-semibold">
-                            ${month.revenue.toLocaleString()}
+                            ETB {month.revenue.toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500">
                             {month.orders} orders
@@ -364,11 +364,11 @@ export default function AnalyticsDashboard() {
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-blue-500 h-2 rounded-full"
-                            style={{ width: `${category.percentage}%` }}
+                            style={{ width: `ETB {category.percentage}%` }}
                           />
                         </div>
                         <div className="flex justify-between text-xs text-gray-500">
-                          <span>${category.revenue.toLocaleString()}</span>
+                          <span>ETB {category.revenue.toLocaleString()}</span>
                           <span>{category.orders} orders</span>
                         </div>
                       </div>
@@ -388,7 +388,7 @@ export default function AnalyticsDashboard() {
             </Card>
             <Card className="text-center p-4">
               <div className="text-2xl font-bold text-green-600">
-                $
+                ETB 
                 {analytics.inventoryAnalytics.totalInventoryValue.toLocaleString()}
               </div>
               <div className="text-sm text-gray-600">Inventory Value</div>
@@ -420,13 +420,13 @@ export default function AnalyticsDashboard() {
                 <div className="flex justify-between">
                   <span>Average Order Value</span>
                   <span className="font-semibold">
-                    ${analytics.salesAnalytics.averageOrderValue.toFixed(2)}
+                    ETB {analytics.salesAnalytics.averageOrderValue.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Total Revenue</span>
                   <span className="font-semibold">
-                    ${analytics.salesAnalytics.totalRevenue.toLocaleString()}
+                    ETB {analytics.salesAnalytics.totalRevenue.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -438,7 +438,7 @@ export default function AnalyticsDashboard() {
                 <div className="flex justify-between">
                   <span>Revenue Growth</span>
                   <span
-                    className={`font-semibold ${
+                    className={`font-semibold ETB {
                       analytics.salesAnalytics.revenueGrowth >= 0
                         ? 'text-green-600'
                         : 'text-red-600'
@@ -477,7 +477,7 @@ export default function AnalyticsDashboard() {
                         </div>
                         <div className="text-right">
                           <div className="font-semibold">
-                            ${product.revenue.toLocaleString()}
+                            ETB {product.revenue.toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600">Revenue</div>
                         </div>
@@ -506,7 +506,7 @@ export default function AnalyticsDashboard() {
                       <div
                         className="w-full bg-blue-500 rounded-t"
                         style={{
-                          height: `${Math.max(
+                          height: `ETB {Math.max(
                             (day.revenue /
                               Math.max(
                                 ...analytics.salesAnalytics.dailyRevenue.map(
@@ -517,7 +517,7 @@ export default function AnalyticsDashboard() {
                             4
                           )}px`,
                         }}
-                        title={`${day.date}: $${day.revenue.toLocaleString()}`}
+                        title={`ETB {day.date}: ETB ETB {day.revenue.toLocaleString()}`}
                       />
                       {index % 5 === 0 && (
                         <div className="text-xs text-gray-500 mt-1 transform -rotate-45 origin-left">
@@ -549,7 +549,7 @@ export default function AnalyticsDashboard() {
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
-                      $
+                      ETB 
                       {analytics.inventoryAnalytics.totalInventoryValue.toLocaleString()}
                     </div>
                     <div className="text-sm text-gray-600">Total Value</div>
@@ -590,7 +590,7 @@ export default function AnalyticsDashboard() {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full ${
+                          className={`h-2 rounded-full ETB {
                             level.level === 'Out of Stock'
                               ? 'bg-red-500'
                               : level.level === 'Low Stock'
@@ -599,7 +599,7 @@ export default function AnalyticsDashboard() {
                               ? 'bg-blue-500'
                               : 'bg-green-500'
                           }`}
-                          style={{ width: `${level.percentage}%` }}
+                          style={{ width: `ETB {level.percentage}%` }}
                         />
                       </div>
                     </div>
@@ -627,7 +627,7 @@ export default function AnalyticsDashboard() {
                         {category.count} products
                       </div>
                       <div className="text-sm text-gray-600">
-                        ${category.value.toLocaleString()} value
+                        ETB {category.value.toLocaleString()} value
                       </div>
                       <div className="text-xs text-gray-500">
                         {category.percentage.toFixed(1)}% of total
@@ -665,7 +665,7 @@ export default function AnalyticsDashboard() {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">
-                          ${product.value.toLocaleString()}
+                          ETB {product.value.toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600">Total Value</div>
                       </div>
@@ -706,7 +706,7 @@ export default function AnalyticsDashboard() {
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
-                    $
+                    ETB 
                     {analytics.customerAnalytics.averageCustomerLifetimeValue.toFixed(
                       0
                     )}
@@ -744,7 +744,7 @@ export default function AnalyticsDashboard() {
                         </div>
                         <div className="text-right">
                           <div className="font-semibold">
-                            ${customer.totalSpent.toLocaleString()}
+                            ETB {customer.totalSpent.toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600">
                             Total Spent
@@ -792,7 +792,7 @@ export default function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-purple-600 mb-2">
-                  $
+                  ETB 
                   {analytics.customerAnalytics.averageCustomerLifetimeValue.toFixed(
                     0
                   )}
@@ -868,7 +868,7 @@ export default function AnalyticsDashboard() {
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className={`h-2 rounded-full ${
+                            className={`h-2 rounded-full ETB {
                               status.status === 'delivered'
                                 ? 'bg-green-500'
                                 : status.status === 'in_transit'
@@ -877,7 +877,7 @@ export default function AnalyticsDashboard() {
                                 ? 'bg-yellow-500'
                                 : 'bg-red-500'
                             }`}
-                            style={{ width: `${status.percentage}%` }}
+                            style={{ width: `ETB {status.percentage}%` }}
                           />
                         </div>
                       </div>

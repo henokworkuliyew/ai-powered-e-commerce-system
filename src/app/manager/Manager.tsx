@@ -183,7 +183,7 @@ export default function ManagerLayoutWithSidebar() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${stats.monthlyRevenue.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ETB{stats.monthlyRevenue.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </div>
                     <div className="flex items-center mt-2 text-sm opacity-90">
                       {stats.monthlyRevenue.percentChange >= 0 ? (
@@ -214,7 +214,7 @@ export default function ManagerLayoutWithSidebar() {
                     <CardTitle className="text-sm font-medium opacity-90">Inventory Value</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$2.4M</div>
+                    <div className="text-2xl font-bold">2.4</div>
                     <div className="flex items-center mt-2 text-sm opacity-90">
                       <TrendingUp className="h-4 w-4 mr-1" />
                       Total inventory worth
@@ -310,7 +310,7 @@ export default function ManagerLayoutWithSidebar() {
                     <CardTitle className="text-sm font-medium opacity-90">Revenue Today</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$12.4K</div>
+                    <div className="text-2xl font-bold">ETB12.4K</div>
                     <div className="flex items-center mt-2 text-sm opacity-90">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
                       Daily revenue
@@ -495,7 +495,7 @@ export default function ManagerLayoutWithSidebar() {
                   <CardContent>
                     <div className="text-2xl font-bold">7</div>
                     <div className="flex items-center mt-2 text-sm opacity-90">
-                      <Truck className="h-4 w-4 mr-1" />
+                     <Truck className="h-4 w-4 mr-1" />
                       Currently delivering
                     </div>
                   </CardContent>

@@ -50,7 +50,6 @@ export async function POST(req: Request) {
     const body = await req.json()
     console.log('Received data:', body)
 
-    
     const baseValidation = baseUserSchema.safeParse(body)
     if (!baseValidation.success) {
       return new Response(
@@ -62,7 +61,6 @@ export async function POST(req: Request) {
       )
     }
 
- 
     const existingUser = await User.findOne({ email: body.email })
     if (existingUser) {
       return new Response(JSON.stringify({ error: 'Email already in use' }), {
@@ -71,10 +69,8 @@ export async function POST(req: Request) {
       })
     }
 
-  
     const hashedPassword = await bcrypt.hash(body.password, 10)
 
- 
     let userData: Partial<IUser> = {
       name: body.name,
       email: body.email,
@@ -86,7 +82,6 @@ export async function POST(req: Request) {
     }
 
     if (body.role === 'CARRIER') {
-      
       const carrierValidation = carrierSchema.safeParse(body)
       if (!carrierValidation.success) {
         return new Response(
@@ -114,7 +109,6 @@ export async function POST(req: Request) {
           : undefined,
       }
     } else if (body.role === 'MANAGER') {
-      
       const managerValidation = managerSchema.safeParse(body)
       if (!managerValidation.success) {
         return new Response(
@@ -132,11 +126,9 @@ export async function POST(req: Request) {
       }
     }
 
-    
     const user = new User(userData)
     const savedUser = await user.save()
 
-   
     const userResponse = {
       _id: savedUser._id,
       name: savedUser.name,
