@@ -1,4 +1,3 @@
-'use client'
 import type React from 'react'
 import { useState } from 'react'
 import type { Product } from '@/type/Product'
@@ -12,33 +11,73 @@ import { useCart } from '@/hooks/useCart'
 import { toast } from 'react-toastify'
 import { MdCheckCircle } from 'react-icons/md'
 import { JSX } from 'react'
+
 interface ProductCardProps {
   product: Product
+  averageRating?: number
+  totalReviews?: number
+  userId: string | null
 }
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  averageRating,
+  totalReviews,
+  userId,
 }): JSX.Element => {
   const router = useRouter()
   const { handleAddProductToCart, cartProducts } = useCart()
   const [isHovered, setIsHovered] = useState(false)
- 
+
   const isInCart = cartProducts?.some((item) => item._id === product._id)
 
-  const handleQuickAdd = (e: React.MouseEvent): void => {
-    e.stopPropagation() 
+  const handleQuickAdd = async (e: React.MouseEvent): Promise<void> => {
+    e.stopPropagation()
+
+    if (!userId) {
+      toast.error('Please log in to add to cart')
+      return
+    }
+
+    try {
+      const interactionData = {
+        user_id: userId,
+        item_id: product._id,
+        event_type: 'add_to_cart',
+        rating: null,
+      }
+
+      const response = await fetch(
+        'https://rec-system-8mee.onrender.com/interactions/record',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(interactionData),
+        }
+      )
+
+      if (!response.ok) {
+        console.error('Failed to record interaction:', response.statusText)
+      } else {
+        console.log('Interaction recorded successfully')
+      }
+    } catch (error) {
+      console.error('Error recording interaction:', error)
+    }
 
     const cartProduct = {
       _id: product._id,
       name: product.name,
       description: product.description,
       brand: product.brand,
-      category: product.category.name, 
+      category: product.category.name,
       selectedImg: {
         ...product.images[0],
       },
       qty: 1,
       price: product.price,
-      
     }
 
     handleAddProductToCart(cartProduct)
@@ -53,41 +92,63 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     })
   }
 
+  const handleCardClick = async () => {
+    if (!userId) {
+      console.warn('No user ID available, skipping interaction recording')
+      router.push(`/product/${product._id}`)
+      return
+    }
+
+    try {
+      const interactionData = {
+        user_id: userId,
+        item_id: product._id,
+        event_type: 'click',
+        rating: null,
+      }
+
+      const response = await fetch(
+        'https://rec-system-8mee.onrender.com/interactions/record',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(interactionData),
+        }
+      )
+
+      if (!response.ok) {
+        console.error('Failed to record interaction:', response.statusText)
+      } else {
+        console.log('Interaction recorded successfully')
+      }
+    } catch (error) {
+      console.error('Error recording interaction:', error)
+    }
+
+    router.push(`/product/${product._id}`)
+  }
+
   return (
     <div
       className="col-span-1 cursor-pointer rounded-sm p-2 transition hover:shadow-lg text-center text-sm relative group"
-      onClick={() => {
-        router.push(`/product/${product._id}`)
-      }}
+      onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex flex-col items-center w-full gap-1">
         <div className="aspect-square overflow-hidden relative w-full h-36">
-         
           <Image
             src={product?.images?.[0]?.views?.front}
             alt={product?.name || 'Product Image'}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={`w-full h-36 object-cover rounded-md transition-transform duration-300 ${
               isHovered ? 'scale-110' : 'scale-100'
             }`}
           />
 
-          {/* Badge for new or sale items
-          {product.isNew && (
-            <div className="absolute top-2 left-2 bg-teal-500 text-white text-xs px-2 py-1 rounded">
-              NEW
-            </div>
-          )}
-          {product.onSale && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-              SALE
-            </div>
-          )} */}
-
-          {/* Quick actions overlay */}
           <div
             className={`absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center gap-2 transition-opacity duration-300 ${
               isHovered ? 'opacity-100' : 'opacity-0'
@@ -96,6 +157,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="absolute top-2 right-2">
               <WishlistButton
                 productId={product._id || ''}
+              
                 size={18}
                 className="bg-white p-2 rounded-full"
               />
@@ -115,8 +177,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {truncateText(product?.name || 'No Name Available')}
           </div>
 
-          <div className="mt-1">
-            <Rating value={product.rating || 3} readOnly size="small" />
+          <div className="mt-1 flex items-center gap-1">
+            <Rating
+              value={averageRating}
+              readOnly
+              size="small"
+              precision={0.5}
+            />
+            <span className="text-xs text-gray-500">({totalReviews})</span>
           </div>
 
           <div className="mt-1 font-bold">{FormatPrice(product?.price)}</div>

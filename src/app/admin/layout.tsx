@@ -1,7 +1,7 @@
 import type React from 'react'
 import { getCurrentUser } from '@/action/CurrentUser'
 import { Toaster } from '@/components/ui/toaster'
-import { NotificationBell } from '@/components/admin/notification-bell'
+// import { NotificationBell } from '@/components/admin/notification-bell'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import AdminSidebar from '@/components/admin/adminSideBar'
 
@@ -25,7 +25,7 @@ export default async function AdminLayout({
           <header className="h-16 border-b flex items-center justify-between px-6 bg-background sticky top-0 z-10">
             <h1 className="text-xl font-semibold md:hidden">Admin Portal</h1>
             <div className="flex items-center gap-4 ml-auto">
-              <NotificationBell />
+              {/* <NotificationBell /> */}
             </div>
           </header>
           <main className="p-6 bg-gray-50  flex-1 overflow-auto">

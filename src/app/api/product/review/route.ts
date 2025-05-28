@@ -1,10 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
-
-
 import dbConnect from '@/lib/dbConnect'
 import { Review } from '@/server/models/Review'
+import { Product } from '@/server/models/Product'
+import  Order  from '@/server/models/Order' 
 import { getCurrentUser } from '@/action/CurrentUser'
-
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,23 +19,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-   
     const reviews = await Review.find({
       productId,
-    //   status: 'approved',
     })
       .populate('userId', 'name image')
       .sort({ createdAt: -1 })
       .lean()
 
-   
     const totalReviews = reviews.length
-
-    
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0)
     const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0
 
-  
     const ratingDistribution = {
       1: 0,
       2: 0,
@@ -81,7 +74,6 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json()
 
-  
     if (!data.productId || !data.rating || !data.comment) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -89,7 +81,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    
     const existingReview = await Review.findOne({
       userId: currentUser._id,
       productId: data.productId,
@@ -102,12 +93,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user has purchased the product (for verified status)
-    // This would require integration with your order system
-    // For now, we'll set a placeholder logic
-    const hasVerifiedPurchase = true // Replace with actual verification logic
+    
+    const hasVerifiedPurchase = await Order.exists({
+      userId: currentUser._id,
+      orderStatus: 'delivered',
+      'items.productId': data.productId,
+    })
 
-    // Create the review
+    
     const review = new Review({
       userId: currentUser._id,
       productId: data.productId,
@@ -115,11 +108,30 @@ export async function POST(request: NextRequest) {
       title: data.title,
       comment: data.comment,
       images: data.images || [],
-      status: 'pending', 
-      verified: hasVerifiedPurchase,
+      status: 'pending',
+      verified: !!hasVerifiedPurchase, 
     })
 
     await review.save()
+
+    const productReviews = await Review.find({
+      productId: data.productId,
+      status: 'published',
+    }).lean()
+
+    const totalReviews = productReviews.length
+    const totalRating = productReviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    )
+    const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0
+
+   
+    await Product.findByIdAndUpdate(
+      data.productId,
+      { rating: averageRating },
+      { new: true }
+    )
 
     return NextResponse.json({
       message: 'Review submitted successfully and is pending approval',
