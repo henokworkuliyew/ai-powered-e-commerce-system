@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 next build",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "start:socket": "node server.js",
     "lint": "next lint"
   },
