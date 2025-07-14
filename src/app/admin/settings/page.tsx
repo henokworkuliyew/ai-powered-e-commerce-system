@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useNotificationContext } from '@/provider/NotificationProvider'
+// import { useNotificationContext } from '@/provider/NotificationProvider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 
@@ -58,14 +58,14 @@ export default function SettingsPage() {
     },
   })
 
-  const { addNotification } = useNotificationContext()
+  // const { addNotification } = useNotificationContext()
 
   const handleSaveSettings = (section: string) => {
-    addNotification({
-      title: 'Settings Saved',
-      message: `${section} settings have been updated successfully`,
-      type: 'system',
-    })
+    // addNotification({
+    //   title: 'Settings Saved',
+    //   message: `${section} settings have been updated successfully`,
+    //   type: 'system',
+    // })
   }
 
   type Settings = typeof settings
