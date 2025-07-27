@@ -2,7 +2,7 @@ import React from 'react'
 import Login from './LoginPage'
 
 import { getCurrentUser } from '@/action/CurrentUser'
-
+export const dynamic = 'force-dynamic'
 
 const page = async () => {
   const currentUser = await getCurrentUser()
