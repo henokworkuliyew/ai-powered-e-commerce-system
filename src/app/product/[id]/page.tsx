@@ -1,6 +1,6 @@
 import ProductDetail from '../ProductDetail'
 import { getCurrentUser } from '@/action/CurrentUser'
-
+export const dynamic = 'force-dynamic'
 export default async function Page({ params }: { params: { id: string } }) {
   const { id } = params
 
