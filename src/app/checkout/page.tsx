@@ -1,9 +1,9 @@
-//import WrapForm from '@/components/ui/WrapForm'
+
 import { Toaster } from '@/components/ui/toaster'
 import Checkout from './Checkout'
 import { getCurrentUser } from '@/action/CurrentUser'
 import UnauthorizedPage from '@/components/unauthorized'
-
+export const dynamic = 'force-dynamic'
 const CheckoutPage = async () => {
   const currentUser = await getCurrentUser()
   if(!currentUser) {
