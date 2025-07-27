@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/action/CurrentUser"
 import Home from "@/components/Home"
-
+export const dynamic = 'force-dynamic'
 const page = async() => {
 let currentUser = await getCurrentUser()
 if (!currentUser) {
