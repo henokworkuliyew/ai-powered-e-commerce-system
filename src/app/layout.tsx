@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     images: ['https://yourwebsite.com/og-image.jpg'],
   },
 }
-
+export const dynamic = 'force-dynamic'
 export default async function RootLayout({
   children,
 }: Readonly<{
