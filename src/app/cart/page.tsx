@@ -1,7 +1,7 @@
 
 import { getCurrentUser } from "@/action/CurrentUser"
 import Cart from "./CartPage"
-
+export const dynamic = 'force-dynamic'
 const  CartPage =  async () => {
   const currentUser = await getCurrentUser()
   return (
