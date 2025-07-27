@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 
-import type { SafeUser } from '@/type/SafeUser'
+// import type { SafeUser } from '@/type/SafeUser'
 
 interface RegisterFormData {
   name: string
@@ -36,11 +36,11 @@ interface RegisterFormData {
   password: string
 }
 
-interface RegisterProps {
-  currentUser: SafeUser | null
-}
+// interface RegisterProps {
+//   currentUser: SafeUser | null
+// }
 
-export default function RegisterPage({ currentUser }: RegisterProps) {
+export default function RegisterPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -60,13 +60,13 @@ export default function RegisterPage({ currentUser }: RegisterProps) {
 
   const password = watch('password')
 
-  useEffect(() => {
-    if (currentUser) {
-      toast('You are already logged in.')
-      router.push('/cart')
-      router.refresh()
-    }
-  }, [router])
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     toast('You are already logged in.')
+  //     router.push('/cart')
+  //     router.refresh()
+  //   }
+  // }, [router])
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
