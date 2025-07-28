@@ -11,12 +11,9 @@ export function useProducts() {
   const fetchProducts = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/product`,
-        {
-          cache: 'no-store',
-        }
-      )
+      const res = await fetch(`${process.env.NEXTAUTH_URL}/api/product`, {
+        cache: 'no-store',
+      })
 
       if (!res.ok) {
         throw new Error('Failed to fetch products')
