@@ -36,10 +36,10 @@ export default function Home({ currentUser }: HomeProps) {
     const fetchData = async () => {
       try {
         const [productsRes, categoriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/product`, {
+          fetch(`${process.env.NEXTAUTH_URL}/api/product`, {
             cache: 'no-store',
           }),
-          fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/category`, {
+          fetch(`${process.env.NEXTAUTH_URL}/api/category`, {
             cache: 'no-store',
           }),
         ])
