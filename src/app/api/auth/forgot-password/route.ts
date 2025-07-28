@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Construct reset URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const resetUrl = `${baseUrl}/reset-password/${resetToken}`
 
     // Configure nodemailer
