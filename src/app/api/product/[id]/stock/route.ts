@@ -57,7 +57,7 @@ export async function PATCH(
     if (stock <= 10 && oldStock > 10) {
       await fetch(
         `${
-          process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          process.env.NEXTAUTH_URL || 'http://localhost:3000'
         }/api/notifications`,
         {
           method: 'POST',
@@ -85,7 +85,7 @@ export async function PATCH(
     if (stock > 0 && oldStock === 0) {
       await fetch(
         `${
-          process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          process.env.NEXTAUTH_URL || 'http://localhost:3000'
         }/api/notifications`,
         {
           method: 'POST',
