@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
       first_name: customerInfo.firstName,
       last_name: customerInfo.lastName,
       tx_ref: `tx-${order.orderNumber}`,
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/callback`,
-      return_url: `http://localhost:3000/checkout/orders/${order._id}/confirmation?tx_ref=tx-${order.orderNumber}`,
+      callback_url: `${process.env.NEXTAUTH_URL}/api/payment/callback`,
+      return_url: `${process.env.NEXTAUTH_URL}/checkout/orders/${order._id}/confirmation?tx_ref=tx-${order.orderNumber}`,
       customization: {
         title: 'Order Payment',
         description: `Payment for order ${order.orderNumber}`,
