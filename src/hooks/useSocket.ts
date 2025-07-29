@@ -8,8 +8,7 @@ export function useSocket(): Socket | null {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    const socketUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'
+    const socketUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
     socketRef.current = io(socketUrl, {
       path: '/api/socket',
