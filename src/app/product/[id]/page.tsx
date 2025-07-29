@@ -8,7 +8,7 @@ export default async function Page({ params }: { params: { id: string } }) {
     return <div className="text-red-500">Invalid product ID</div>
   }
 
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/product/${id}`, {
+  const res = await fetch(`/api/product/${id}`, {
     cache: 'no-store',
     next: { revalidate: 0 },
   })
