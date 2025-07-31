@@ -146,7 +146,7 @@ export default function Home({ currentUser }: HomeProps) {
         clearTimeout(timeoutId)
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch recommendations: ${response.status}`)
+          console.log(`Failed to fetch recommendations: ${response.status}`)
         }
 
         const data = await response.json()
