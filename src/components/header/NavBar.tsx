@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react'
 
 import Heading from '../input/Heading'
 import UserMenu from './UserMenu'
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 
 import type { SafeUser } from '@/type/SafeUser'
 import type { Product } from '@/type/Product'
@@ -22,7 +22,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ currentUser, products = [] }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { cartProducts } = useCart()
+  const { cartProducts } = useReduxCart()
   const [cartCount, setCartCount] = useState(0)
 
   // Get search query from URL
@@ -64,6 +64,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser, products = [] }) => {
           <FaBell className="text-2xl text-blue-500" />
         </button>
 
+        
         <UserMenu currentUser={currentUser} />
       </div>
     </header>
