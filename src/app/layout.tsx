@@ -2,9 +2,10 @@ import SessionProvider from '@/components/auth/SessionProvider'
 import './globals.css'
 import Footer from '@/components/footer/Footer'
 import Header from '@/components/header/Header'
-import { CartContextProvider } from '@/hooks/useCart'
+
 import { Metadata } from 'next'
 import { Toaster } from 'react-hot-toast'
+import { ReduxProvider } from '@/store/provider'
 
 export const metadata: Metadata = {
   title: 'Gulit Gebeya',
@@ -21,7 +22,9 @@ export const metadata: Metadata = {
     images: ['https://yourwebsite.com/og-image.jpg'],
   },
 }
+
 export const dynamic = 'force-dynamic'
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -30,23 +33,21 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
-        
-          <Toaster
-            toastOptions={{
-              style: {
-                background: 'rgb(51 65 85)',
-                color: '#fff',
-              },
-            }}
-          />
-          <SessionProvider>
-            <CartContextProvider>
-              <Header />
-              <main className="flex-grow pt-24">{children}</main>
-              <Footer />
-            </CartContextProvider>
-          </SessionProvider>
-        
+        <Toaster
+          toastOptions={{
+            style: {
+              background: 'rgb(51 65 85)',
+              color: '#fff',
+            },
+          }}
+        />
+        <SessionProvider>
+          <ReduxProvider>
+            <Header />
+            <main className="flex-grow pt-24">{children}</main>
+            <Footer />
+          </ReduxProvider>
+        </SessionProvider>
       </body>
     </html>
   )
