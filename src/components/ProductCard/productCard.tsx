@@ -7,7 +7,7 @@ import { truncateText } from '@/hooks/utils/truncateText'
 import { Rating } from '@mui/material'
 import { FormatPrice } from '@/hooks/utils/formatPrice'
 import WishlistButton from './WishlistButton'
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 import { toast } from 'react-toastify'
 import { MdCheckCircle } from 'react-icons/md'
 import { JSX } from 'react'
@@ -26,7 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   userId,
 }): JSX.Element => {
   const router = useRouter()
-  const { handleAddProductToCart, cartProducts } = useCart()
+  const { handleAddProductToCart, cartProducts } = useReduxCart()
   const [isHovered, setIsHovered] = useState(false)
 
   const isInCart = cartProducts?.some((item) => item._id === product._id)
