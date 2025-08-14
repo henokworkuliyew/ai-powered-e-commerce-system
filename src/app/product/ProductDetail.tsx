@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 import type { Product } from '@/type/Product'
 import type { CartProduct, SelectedImg } from '@/type/CartProduct'
 import type { Review } from '@/type/Review'
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 import RecentlyViewed from '@/components/ProductCard/RecentlyViewed'
 import ProductGallery from './product-gallery'
 import ProductInfo from './product-info'
@@ -132,7 +132,7 @@ const ProductDetail: React.FC<ProductDetailsProps> = ({ product, userId }) => {
     [cartProduct.selectedImg]
   )
 
-  const { handleAddProductToCart } = useCart()
+  const { handleAddProductToCart } = useReduxCart()
   const [activeTab, setActiveTab] = useState<
     'description' | 'reviews' | 'questions' | 'shipping'
   >('description')
