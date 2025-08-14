@@ -17,13 +17,13 @@ import {
   type AddressData,
 } from '@/components/checkout/address-form'
 import { OrderSummary } from '@/components/checkout/order-summary'
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 import { MapPin, CreditCard } from 'lucide-react'
 import { type UseFormReturn } from 'react-hook-form'
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { cartProducts } = useCart()
+  const { cartProducts } = useReduxCart()
   const [loading, setLoading] = useState(false)
   const [sameAsBilling, setSameAsBilling] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
