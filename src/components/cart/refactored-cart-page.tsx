@@ -2,7 +2,7 @@
 
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 import Link from 'next/link'
 import { ShoppingCart, X, ArrowLeft } from 'lucide-react'
 import Button from '@/components/input/Button'
@@ -20,7 +20,7 @@ const Cart: React.FC<CartPageProps> = ({ currentUser }) => {
     handleRemoveProductFromCart,
     handleUpdateQuantity,
     clearCart,
-  } = useCart()
+  } = useReduxCart()
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
