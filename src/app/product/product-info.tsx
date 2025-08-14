@@ -20,7 +20,7 @@ import RatingDisplay from '@/components/ProductCard/RatingDisplay'
 import { toast } from 'react-toastify'
 import { FormatPrice } from '@/hooks/utils/formatPrice'
 import { useRouter } from 'next/navigation'
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 
 interface ReviewStats {
   totalReviews: number
@@ -109,7 +109,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     }
   }
   
-  const { cartProducts } = useCart()
+  const { cartProducts } = useReduxCart()
   const Horizontal = () => {
     return <hr className="border-t-4 w-1/2 mb-5 mt-2" />
   }
