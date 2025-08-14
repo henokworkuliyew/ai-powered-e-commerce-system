@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { useReduxCart } from '@/hooks/useReduxCart'
 
 export default function ConfirmationPage() {
   const params = useParams()
@@ -23,6 +24,7 @@ export default function ConfirmationPage() {
     'verifying'
   )
   const [loading, setLoading] = useState(true)
+  const { clearCart } = useReduxCart()
 
   useEffect(() => {
     async function verifyPayment() {
@@ -48,6 +50,8 @@ export default function ConfirmationPage() {
 
         if (data.success) {
           setStatus('success')
+          // Clear cart on successful payment
+          clearCart()
         } else {
           setStatus('failed')
         }
