@@ -5,9 +5,10 @@ import { NextResponse } from 'next/server'
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params
     const currentUser = await getCurrentUser()
 
     if (!currentUser || currentUser.role !== 'ADMIN') {
@@ -21,7 +22,7 @@ export async function PATCH(
       return new NextResponse('Status is required', { status: 400 })
     }
 
-    const user = await User.findByIdAndUpdate(params.userId, {
+    const user = await User.findByIdAndUpdate(userId, {
       status,
     })
 
@@ -34,16 +35,17 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params
     const currentUser = await getCurrentUser()
 
     if (!currentUser || currentUser.role !== 'ADMIN') {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    const user = await User.findByIdAndDelete(params.userId)
+    const user = await User.findByIdAndDelete(userId)
 
     return NextResponse.json(user)
   } catch (error) {
