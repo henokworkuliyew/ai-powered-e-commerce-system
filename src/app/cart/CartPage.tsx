@@ -3,7 +3,7 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
 
-import { useCart } from '@/hooks/useCart'
+import { useReduxCart } from '@/hooks/useReduxCart'
 import Link from 'next/link'
 import { ShoppingCart, X, ArrowLeft, Trash2 } from 'lucide-react'
 import Image from 'next/image'
@@ -23,7 +23,7 @@ const Cart: React.FC<CartProps> = ({ currentUser }) => {
     handleRemoveProductFromCart,
     handleUpdateQuantity,
     clearCart,
-  } = useCart()
+  } = useReduxCart()
   const [isClient, setIsClient] = useState(false)
   const router = useRouter()
 
