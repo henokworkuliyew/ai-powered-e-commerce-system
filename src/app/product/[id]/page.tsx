@@ -12,6 +12,12 @@ export const revalidate = 0
 async function ProductDetailWrapper({ id }: { id: string }) {
   try {
     await dbConnect()
+    
+    // Validate the ID format
+    if (!id || typeof id !== 'string' || id.length < 10) {
+      notFound()
+    }
+
     const productData = await Product.findById(id).populate('category').lean()
 
     if (!productData) {
@@ -27,7 +33,8 @@ async function ProductDetailWrapper({ id }: { id: string }) {
     return <ProductDetail product={serializedProduct} userId={userId} />
   } catch (error) {
     console.error('Error fetching product:', error)
-    throw new Error('Failed to load product')
+    // Return a more specific error message
+    throw new Error(`Failed to load product: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
