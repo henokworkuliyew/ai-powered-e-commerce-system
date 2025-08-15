@@ -34,10 +34,6 @@ const ProductCard = memo<ProductCardProps>(({
   const handleQuickAdd = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation()
 
-    if (!userId) {
-      toast.error('Please log in to add to cart')
-      return
-    }
 
     try {
       const interactionData = {
