@@ -44,9 +44,8 @@ export default function Home({ currentUser }: HomeProps) {
 
   
   useEffect(() => {
-    if (currentUser) {
-      setCurrentUser({ _id: currentUser })
-    }
+    // Don't set currentUser in Redux for now to avoid TypeScript issues
+    // The currentUser prop is passed directly to components that need it
   }, [currentUser, setCurrentUser])
 
   const fetchData = useCallback(async () => {
@@ -139,10 +138,11 @@ export default function Home({ currentUser }: HomeProps) {
     }
   }, [setReduxProducts, setReduxLoading, setReduxError])
 
-  // Fetch recommendations for logged-in users
+  // Fetch recommendations for logged-in users only
   const fetchRecommendations = useCallback(async () => {
     if (!currentUser) {
       setRecommendations([])
+      setRecommendationsLoading(false)
       return
     }
 
@@ -318,17 +318,27 @@ export default function Home({ currentUser }: HomeProps) {
           />
         )}
 
-        {/* Recommendations Error Message */}
-        {!searchQuery && selectedCategory === 'all' && currentUser && recommendationsError && (
-          <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-              <p className="text-yellow-800">
-                {recommendationsError}
-              </p>
+        {/* Top Rated Products for Non-Logged Users */}
+        {!searchQuery && selectedCategory === 'all' && !currentUser && topRatedProducts.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Top Rated Products
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {topRatedProducts.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  averageRating={product.averageRating}
+                  totalReviews={product.totalReviews}
+                  userId={currentUser}
+                />
+              ))}
             </div>
           </div>
         )}
+
+
 
         {/* Products Grid */}
         <div className="mb-8">
