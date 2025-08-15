@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
         session.endSession()
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
         message: 'Payment processed successfully',
-        redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.vercel.app'}/checkout/orders/${orderNumber}/confirmation`
+        redirectUrl: `${process.env.NEXTAUTH_URL}/checkout/orders/${orderNumber}/confirmation`,
       })
     } else {
       
@@ -70,9 +70,11 @@ export async function POST(request: NextRequest) {
       await Order.findOneAndUpdate({ orderNumber }, { paymentStatus: 'failed' })
 
       return NextResponse.json(
-        { 
+        {
           error: 'Payment verification failed',
-          redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.vercel.app'}/checkout/orders/${orderNumber}/confirmation`
+          redirectUrl: `${
+            process.env.NEXTAUTH_URL
+          }/checkout/orders/${orderNumber}/confirmation`,
         },
         { status: 400 }
       )
