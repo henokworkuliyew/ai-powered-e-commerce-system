@@ -59,14 +59,21 @@ export async function POST(request: NextRequest) {
         session.endSession()
       }
 
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ 
+        success: true,
+        message: 'Payment processed successfully',
+        redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.vercel.app'}/checkout/orders/${orderNumber}/confirmation`
+      })
     } else {
       
       const orderNumber = tx_ref.split('tx-')[1]
       await Order.findOneAndUpdate({ orderNumber }, { paymentStatus: 'failed' })
 
       return NextResponse.json(
-        { error: 'Payment verification failed' },
+        { 
+          error: 'Payment verification failed',
+          redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.vercel.app'}/checkout/orders/${orderNumber}/confirmation`
+        },
         { status: 400 }
       )
     }
