@@ -72,9 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Payment verification failed',
-          redirectUrl: `${
-            process.env.NEXTAUTH_URL
-          }/checkout/orders/${orderNumber}/confirmation`,
+          redirectUrl: `${process.env.NEXTAUTH_URL}/checkout/orders/${orderNumber}/confirmation`,
         },
         { status: 400 }
       )
