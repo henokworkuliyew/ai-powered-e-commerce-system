@@ -12,6 +12,7 @@ import type { Category } from '@/type/category'
 import RecommendationsSection from '@/components/recomendation/RecommendationsSection'
 import { useReduxProducts } from '@/hooks/useReduxProducts'
 import { useReduxUser } from '@/hooks/useReduxUser'
+import Chatbot from '@/components/chatbot'
 
 interface HomeProps {
   currentUser: string | null
@@ -37,7 +38,13 @@ export default function Home({ currentUser }: HomeProps) {
   )
 
  
-  const { setProducts: setReduxProducts, setLoading: setReduxLoading, setError: setReduxError } = useReduxProducts()
+  const { 
+    setProducts: setReduxProducts, 
+    setLoading: setReduxLoading, 
+    setError: setReduxError,
+    isLoading: reduxLoading,
+    error: reduxError
+  } = useReduxProducts()
   const { setCurrentUser } = useReduxUser()
 
   const searchQuery = searchParams?.get('q') || ''
@@ -234,16 +241,16 @@ export default function Home({ currentUser }: HomeProps) {
   }, [])
 
   // Loading state
-  if (loading) {
+  if (loading || reduxLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Loading />
+        <Loading message="Loading products..." size="lg" />
       </div>
     )
   }
 
   // Error state
-  if (error) {
+  if (error || reduxError) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-md mx-auto">
@@ -252,7 +259,7 @@ export default function Home({ currentUser }: HomeProps) {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Error Loading Products
             </h2>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <p className="text-gray-600 mb-4">{error || reduxError}</p>
             <Button onClick={fetchData} className="w-full">
               Try Again
             </Button>
@@ -376,6 +383,9 @@ export default function Home({ currentUser }: HomeProps) {
           )}
         </div>
       </div>
+
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   )
 }
