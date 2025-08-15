@@ -240,7 +240,7 @@ export default function Home({ currentUser }: HomeProps) {
     setSelectedSubcategory(subcategory)
   }, [])
 
-  // Loading state
+  
   if (loading || reduxLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -249,7 +249,7 @@ export default function Home({ currentUser }: HomeProps) {
     )
   }
 
-  // Error state
+  
   if (error || reduxError) {
     return (
       <div className="container mx-auto px-4 py-8">

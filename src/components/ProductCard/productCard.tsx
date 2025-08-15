@@ -34,11 +34,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleQuickAdd = async (e: React.MouseEvent): Promise<void> => {
     e.stopPropagation()
 
-    if (!userId) {
-      toast.error('Please log in to add to cart')
-      return
-    }
-
+   
     try {
       const interactionData = {
         user_id: userId,
