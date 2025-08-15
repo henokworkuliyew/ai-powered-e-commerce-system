@@ -5,6 +5,7 @@ import dbConnect from '@/lib/dbConnect'
 import { Product } from '@/server/models/Product'
 import { notFound } from 'next/navigation'
 import { serializeProduct } from '@/lib/utils/serialization'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -33,8 +34,8 @@ async function ProductDetailWrapper({ id }: { id: string }) {
     return <ProductDetail product={serializedProduct} userId={userId} />
   } catch (error) {
     console.error('Error fetching product:', error)
-    // Return a more specific error message
-    throw new Error(`Failed to load product: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    // Throw error to be caught by error boundary
+    throw new Error('Failed to load product')
   }
 }
 
@@ -46,18 +47,20 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
 
   return (
-    <div className="grid grid-cols-1 gap-11 p-3" suppressHydrationWarning>
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-500 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-700">Loading product...</h2>
-            <p className="text-gray-500 mt-2">Please wait while we fetch the product details.</p>
+    <ErrorBoundary>
+      <div className="grid grid-cols-1 gap-11 p-3" suppressHydrationWarning>
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-500 mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold text-gray-700">Loading product...</h2>
+              <p className="text-gray-500 mt-2">Please wait while we fetch the product details.</p>
+            </div>
           </div>
-        </div>
-      }>
-        <ProductDetailWrapper id={id} />
-      </Suspense>
-    </div>
+        }>
+          <ProductDetailWrapper id={id} />
+        </Suspense>
+      </div>
+    </ErrorBoundary>
   )
 }
