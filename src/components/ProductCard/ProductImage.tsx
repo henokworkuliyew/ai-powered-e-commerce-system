@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 
-
- type SelectedImg = {
+type SelectedImg = {
   color: string
   colorCode: string
   views: {
@@ -27,7 +26,13 @@ interface Props {
     selectedSize?: string
   }
 }
-const ProductImage = ( {cartProduct}:Props ) => {
+
+const FALLBACK_IMAGE = '/images/download.jpg'
+
+const getSafeSrc = (src?: string) =>
+  src && src.trim() !== '' ? src : FALLBACK_IMAGE
+
+const ProductImage = ({ cartProduct }: Props) => {
   const [selectedView, setSelectedView] = useState<'front' | 'side' | 'back'>(
     'front'
   )
@@ -36,9 +41,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
     <div className="col-span-5 flex flex-col gap-2">
       <div className="relative aspect-square">
         <Image
-          src={
-            cartProduct.selectedImg.views[selectedView] 
-          }
+          src={getSafeSrc(cartProduct.selectedImg.views[selectedView])}
           alt={cartProduct.name}
           fill
           className="object-contain
@@ -50,7 +53,6 @@ const ProductImage = ( {cartProduct}:Props ) => {
         />
       </div>
 
-      {/* View thumbnails */}
       <div className="flex gap-2 justify-center">
         <div
           className={`relative w-16 h-16 cursor-pointer border-2 ${
@@ -59,7 +61,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
           onClick={() => setSelectedView('front')}
         >
           <Image
-            src={cartProduct.selectedImg.views.front}
+            src={getSafeSrc(cartProduct.selectedImg.views.front)}
             alt={`${cartProduct.name} front view`}
             fill
             className="object-contain"
@@ -73,7 +75,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
           onClick={() => setSelectedView('side')}
         >
           <Image
-            src={cartProduct.selectedImg.views.side}
+            src={getSafeSrc(cartProduct.selectedImg.views.side)}
             alt={`${cartProduct.name} side view`}
             fill
             className="object-contain"
@@ -87,7 +89,7 @@ const ProductImage = ( {cartProduct}:Props ) => {
           onClick={() => setSelectedView('back')}
         >
           <Image
-            src={cartProduct.selectedImg.views.back }
+            src={getSafeSrc(cartProduct.selectedImg.views.back)}
             alt={`${cartProduct.name} back view`}
             fill
             className="object-contain"

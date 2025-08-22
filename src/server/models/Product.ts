@@ -1,13 +1,11 @@
 
 import { Schema, Document, Types, models, model } from 'mongoose'
 
-
 export interface IProduct extends Document {
   name: string
   description: string
   category: Types.ObjectId
   brand: string
-
   images: {
     color: string
     colorCode: string

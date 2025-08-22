@@ -14,7 +14,7 @@ async function ProductDetailWrapper({ id }: { id: string }) {
   try {
     await dbConnect()
     
-    // Validate the ID format
+    
     if (!id || typeof id !== 'string' || id.length < 10) {
       notFound()
     }
@@ -25,7 +25,6 @@ async function ProductDetailWrapper({ id }: { id: string }) {
       notFound()
     }
 
-    // Use the serialization utility
     const serializedProduct = serializeProduct(productData)
 
     const currentUser = await getCurrentUser()
@@ -34,7 +33,6 @@ async function ProductDetailWrapper({ id }: { id: string }) {
     return <ProductDetail product={serializedProduct} userId={userId} />
   } catch (error) {
     console.error('Error fetching product:', error)
-    // Throw error to be caught by error boundary
     throw new Error('Failed to load product')
   }
 }
