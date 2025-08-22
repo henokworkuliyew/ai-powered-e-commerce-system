@@ -19,7 +19,7 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    // Serialize product for client components
+    
     const serializedProduct = serializeProduct(product)
 
     return NextResponse.json(serializedProduct, { status: 200 })

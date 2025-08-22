@@ -22,7 +22,7 @@ export async function GET() {
   try {
     await dbConnect()
     
-    // Add timeout to prevent hanging requests
+   
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Database timeout')), 10000)
     })
